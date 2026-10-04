@@ -7,9 +7,11 @@ export function Toast() {
       id="toast"
       role="status"
       aria-live="polite"
-      className={toastMessage ? 'show' : ''}
+      className={`pointer-events-none select-none ${
+        toastMessage ? 'show' : ''
+      }`}
     >
-      {toastMessage ?? ''}
+      <span className="block">{toastMessage ?? ''}</span>
     </div>
   )
 }

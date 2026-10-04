@@ -1,0 +1,982 @@
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useApp, type ModalState } from '../context/AppContext'
+import type {
+  AppData,
+  Client,
+  Exercise,
+  Measurement,
+  Payment,
+  Routine,
+  Session,
+  SessionStatus,
+} from '../types'
+import {
+  findClient,
+  findRoutine,
+  longDate,
+  progressFor,
+  TODAY,
+  uid,
+} from '../lib/utils'
+import { exportData } from '../lib/backup'
+import { Icon } from './Icon'
+import { Avatar } from './Avatar'
+import { Field, SelectField, TextField } from './form'
+
+const PLANS = ['Personal', 'Premium', 'Online']
+const ROUTINE_CATEGORIES = ['Fuerza', 'Hipertrofia', 'Movilidad', 'Cardio', 'Funcional', 'Mixto']
+const ROUTINE_LEVELS = ['Inicial', 'Intermedio', 'Avanzado']
+const SESSION_STATUSES: SessionStatus[] = ['Programada', 'Completada', 'Cancelada']
+const METHODS = ['Transferencia', 'Efectivo', 'Tarjeta', 'Otro']
+
+const timeToMin = (t: string) =>
+  t.split(':').reduce((a, b, i) => a + Number(b) * (i ? 1 : 60), 0)
+
+function upsert<T extends { id: string }>(arr: T[], item: T) {
+  const idx = arr.findIndex((x) => x.id === item.id)
+  if (idx < 0) arr.push(item)
+  else arr[idx] = item
+}
+
+function FormWrap({
+  kind,
+  id,
+  children,
+  extra,
+  error,
+  onSubmit,
+}: {
+  kind: string
+  id?: string
+  children: ReactNode
+  extra?: ReactNode
+  error: string
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void
+}) {
+  const { closeModal } = useApp()
+  return (
+    <form id="entityForm" data-kind={kind} data-id={id ?? ''} onSubmit={onSubmit}>
+      <div className="form-grid">{children}</div>
+      <div id="formError" className="form-error" role="alert">
+        {error}
+      </div>
+      <div className="form-foot">
+        {extra}
+        <button className="button light" type="button" onClick={closeModal}>
+          Cancelar
+        </button>
+        <button className="button dark" type="submit">
+          Guardar <Icon name="check" />
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function useForm() {
+  const { data, commit, closeModal, toast, ui, patchUi } = useApp()
+  const activeClients = data.clients.filter((c) => !c.archived)
+  const [error, setError] = useState('')
+  const fail = (e: unknown) => setError((e as Error).message)
+  return {
+    data,
+    commit,
+    closeModal,
+    toast,
+    ui,
+    patchUi,
+    activeClients,
+    error,
+    setError,
+    fail,
+  }
+}
+
+/* ------------------------- Cliente ------------------------- */
+
+export function ClientFormModal({ id }: { id?: string }) {
+  const { data, commit, closeModal, toast, ui, patchUi, error, fail } = useForm()
+  const c = data.clients.find((x) => x.id === id)
+  const newId = id || uid()
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      if (!x.name?.trim() || !x.goal?.trim())
+        throw new Error('Nombre y objetivo son obligatorios.')
+      commit((d) => {
+        const existing = d.clients.find((cc) => cc.id === id)
+        const client: Client = {
+          id: newId,
+          name: x.name.trim(),
+          email: x.email ?? '',
+          phone: x.phone ?? '',
+          birth: x.birth ?? '',
+          goal: x.goal,
+          plan: x.plan ?? 'Personal',
+          fee: Number(x.fee),
+          weight: x.weight ? Number(x.weight) : null,
+          height: x.height ? Number(x.height) : null,
+          routine: x.routine ?? '',
+          notes: x.notes ?? '',
+          tone: id ? existing?.tone ?? 0 : d.clients.length,
+          archived: id ? existing?.archived ?? false : false,
+          joined: id ? existing?.joined ?? TODAY : TODAY,
+        }
+        upsert(d.clients, client)
+      })
+      if (!ui.progressClient) patchUi({ progressClient: newId })
+      closeModal()
+      toast('Registro guardado.')
+    } catch (err) {
+      fail(err)
+    }
+  }
+
+  return (
+    <FormWrap kind="client" id={id} error={error} onSubmit={onSubmit}>
+      <Field name="name" label="Nombre completo" value={c?.name} required maxLength={80} />
+      <Field name="email" label="Correo electrónico" type="email" value={c?.email} maxLength={120} />
+      <Field name="phone" label="Teléfono" type="tel" value={c?.phone} maxLength={40} />
+      <Field name="birth" label="Fecha de nacimiento" type="date" value={c?.birth} max={TODAY} />
+      <Field name="goal" label="Objetivo principal" value={c?.goal} required maxLength={150} />
+      <SelectField name="plan" label="Plan" value={c?.plan}>
+        {PLANS.map((p) => (
+          <option key={p} value={p}>
+            {p}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        name="fee"
+        label="Mensualidad"
+        type="number"
+        value={c?.fee ?? 80}
+        min={0}
+        max={100000}
+        step={0.01}
+        required
+      />
+      <SelectField name="routine" label="Rutina asignada" value={c?.routine}>
+        <option value="">Sin asignar</option>
+        {data.routines.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.name}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        name="weight"
+        label="Peso inicial / actual (kg)"
+        type="number"
+        value={c?.weight ?? ''}
+        min={20}
+        max={400}
+        step={0.1}
+      />
+      <Field name="height" label="Estatura (cm)" type="number" value={c?.height ?? ''} min={80} max={250} />
+      <TextField
+        name="notes"
+        label="Observaciones, limitaciones y preferencias"
+        value={c?.notes}
+      />
+    </FormWrap>
+  )
+}
+
+export function ClientDetailModal({ id }: { id: string }) {
+  const { data, commit, closeModal, toast, patchUi, go, money: fmt, openModal } = useApp()
+  const c = findClient(data, id)
+  const r = findRoutine(data, c.routine)
+  const ms = data.measurements
+    .filter((m) => m.client === id)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const pending = data.payments
+    .filter((p) => p.client === id && !p.paid)
+    .reduce((v, p) => v + Number(p.amount), 0)
+  const last = ms.at(-1)
+
+  return (
+    <>
+      <div className="detail-title">
+        <Avatar client={c} />
+        <div>
+          <h2>{c.name}</h2>
+          <p className="form-hint">{c.goal}</p>
+        </div>
+      </div>
+      <div className="detail-grid">
+        <section>
+          <div className="info-list">
+            <div>
+              <span>Plan</span>
+              <b>
+                {c.plan} / {fmt(c.fee)}
+              </b>
+            </div>
+            <div>
+              <span>Email</span>
+              <b>{c.email || 'No registrado'}</b>
+            </div>
+            <div>
+              <span>Teléfono</span>
+              <b>{c.phone || 'No registrado'}</b>
+            </div>
+            <div>
+              <span>Nacimiento</span>
+              <b>
+                {c.birth
+                  ? longDate(c.birth, { day: 'numeric', month: 'short', year: 'numeric' })
+                  : 'No registrado'}
+              </b>
+            </div>
+            <div>
+              <span>Estatura</span>
+              <b>{c.height ? `${c.height} cm` : '—'}</b>
+            </div>
+            <div>
+              <span>Rutina</span>
+              <b>{r?.name || 'Sin asignar'}</b>
+            </div>
+          </div>
+        </section>
+        <section style={{ background: '#f2f6eb', padding: 17, borderRadius: 17 }}>
+          <div className="info-list">
+            <div>
+              <span>Último peso</span>
+              <b>{last?.weight || c.weight || '—'} kg</b>
+            </div>
+            <div>
+              <span>Asistencia</span>
+              <b>{progressFor(data, id)}%</b>
+            </div>
+            <div>
+              <span>Saldo pendiente</span>
+              <b>{fmt(pending)}</b>
+            </div>
+          </div>
+        </section>
+      </div>
+      <h3 style={{ margin: '25px 0 10px' }}>Observaciones</h3>
+      <p className="notes">{c.notes || 'Sin observaciones.'}</p>
+      <div className="form-foot">
+        <button
+          className="button light"
+          onClick={() => {
+            commit((d) => {
+              const target = d.clients.find((x) => x.id === id)
+              if (target) target.archived = !target.archived
+            })
+            closeModal()
+            toast(
+              c.archived
+                ? 'Cliente restaurado.'
+                : 'Cliente archivado. Puedes restaurarlo desde Archivo.',
+            )
+          }}
+        >
+          {c.archived ? 'Restaurar cliente' : 'Archivar cliente'}
+        </button>
+        <button
+          className="button light"
+          onClick={() => {
+            patchUi({ progressClient: id })
+            closeModal()
+            go('progreso')
+          }}
+        >
+          Ver progreso
+        </button>
+        <button className="button dark" onClick={() => openModal({ kind: 'client-form', id })}>
+          Editar ficha <Icon name="edit" />
+        </button>
+      </div>
+    </>
+  )
+}
+
+/* ------------------------- Sesión ------------------------- */
+
+export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
+  const { data, commit, closeModal, toast, ui, error, fail } = useForm()
+  const s = data.sessions.find((x) => x.id === id)
+  const activeClients = data.clients.filter((c) => !c.archived)
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      if (!x.client || !x.date || !x.time)
+        throw new Error('Selecciona cliente, fecha y hora.')
+      const duration = Number(x.duration)
+      const start = timeToMin(x.time)
+      const conflict = data.sessions.some(
+        (session) =>
+          session.id !== id &&
+          session.date === x.date &&
+          session.status !== 'Cancelada' &&
+          x.status !== 'Cancelada' &&
+          (() => {
+            const t = timeToMin(session.time)
+            return start < t + Number(session.duration) && start + duration > t
+          })(),
+      )
+      if (conflict)
+        throw new Error('Ese horario coincide con otra sesión. Ajusta la hora o la duración.')
+      commit((d) => {
+        const session: Session = {
+          id: id || uid(),
+          client: x.client,
+          title: x.title,
+          date: x.date,
+          time: x.time,
+          duration,
+          status: (x.status as SessionStatus) ?? 'Programada',
+          routine: x.routine ?? '',
+          notes: x.notes ?? '',
+        }
+        upsert(d.sessions, session)
+      })
+      closeModal()
+      toast('Registro guardado.')
+    } catch (err) {
+      fail(err)
+    }
+  }
+
+  return (
+    <FormWrap kind="session" id={id} error={error} onSubmit={onSubmit}>
+      <SelectField name="client" label="Cliente" value={s?.client}>
+        {activeClients.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        name="title"
+        label="Nombre de la sesión"
+        value={s?.title ?? 'Entrenamiento personal'}
+        required
+        maxLength={120}
+      />
+      <Field
+        name="date"
+        label="Fecha"
+        type="date"
+        value={s?.date ?? date ?? ui.calendarDate}
+        required
+      />
+      <Field name="time" label="Hora" type="time" value={s?.time ?? '09:00'} required />
+      <Field
+        name="duration"
+        label="Duración (minutos)"
+        type="number"
+        value={s?.duration ?? 60}
+        min={10}
+        max={300}
+        required
+      />
+      <SelectField name="status" label="Estado" value={s?.status ?? 'Programada'}>
+        {SESSION_STATUSES.map((x) => (
+          <option key={x} value={x}>
+            {x}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField name="routine" label="Rutina de esta sesión" value={s?.routine}>
+        <option value="">Sin asignar</option>
+        {data.routines.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.name}
+          </option>
+        ))}
+      </SelectField>
+      <TextField
+        name="notes"
+        label="Notas de la sesión: cargas, esfuerzo y observaciones"
+        value={s?.notes}
+      />
+    </FormWrap>
+  )
+}
+
+/* ------------------------- Pago ------------------------- */
+
+export function PaymentFormModal({
+  id,
+  receive = false,
+}: {
+  id?: string
+  receive?: boolean
+}) {
+  const { data, commit, closeModal, toast, ui, error, fail } = useForm()
+  const p = data.payments.find((x) => x.id === id)
+  const activeClients = data.clients.filter((c) => !c.archived)
+  const paidValue = p?.paid || receive ? 'yes' : 'no'
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      if (!x.client || !x.due || Number(x.amount) <= 0)
+        throw new Error('Cliente, importe y fecha son obligatorios.')
+      if (x.paid === 'yes' && !x.paidDate)
+        throw new Error('Indica la fecha en la que recibiste el pago.')
+      commit((d) => {
+        const payment: Payment = {
+          id: id || uid(),
+          client: x.client,
+          amount: Number(x.amount),
+          due: x.due,
+          paid: x.paid === 'yes',
+          paidDate: x.paid === 'yes' ? x.paidDate : '',
+          method: x.method ?? 'Transferencia',
+          note: x.note ?? 'Mensualidad',
+        }
+        upsert(d.payments, payment)
+      })
+      closeModal()
+      toast('Registro guardado.')
+    } catch (err) {
+      fail(err)
+    }
+  }
+
+  return (
+    <FormWrap kind="payment" id={id} error={error} onSubmit={onSubmit}>
+      <SelectField name="client" label="Cliente" value={p?.client}>
+        {activeClients.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        name="amount"
+        label={`Importe (${data.profile.currency})`}
+        type="number"
+        value={p?.amount ?? activeClients[0]?.fee ?? 80}
+        min={0.01}
+        max={1000000}
+        step={0.01}
+        required
+      />
+      <Field
+        name="due"
+        label="Fecha de vencimiento"
+        type="date"
+        value={p?.due ?? ui.calendarDate}
+        required
+      />
+      <SelectField name="paid" label="Estado" value={paidValue}>
+        <option value="no">Pendiente</option>
+        <option value="yes">Pagado</option>
+      </SelectField>
+      <Field
+        name="paidDate"
+        label="Fecha de cobro (si está pagado)"
+        type="date"
+        value={p?.paidDate ?? (receive ? TODAY : '')}
+      />
+      <SelectField name="method" label="Método" value={p?.method ?? 'Transferencia'}>
+        {METHODS.map((x) => (
+          <option key={x} value={x}>
+            {x}
+          </option>
+        ))}
+      </SelectField>
+      <TextField name="note" label="Concepto o referencia" value={p?.note ?? 'Mensualidad'} />
+    </FormWrap>
+  )
+}
+
+/* ------------------------- Rutina ------------------------- */
+
+function ExerciseEditorRow({
+  exercise,
+  onChange,
+  onRemove,
+}: {
+  exercise: Exercise
+  onChange: (patch: Partial<Exercise>) => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="exercise-row exercise-editor-card">
+      <div className="exercise-editor-name">
+        <label>
+          Ejercicio
+          <input
+            aria-label="Nombre del ejercicio"
+            className="ex-name"
+            value={exercise.name}
+            placeholder="Por ejemplo, sentadilla"
+            required
+            maxLength={120}
+            onChange={(e) => onChange({ name: e.target.value })}
+          />
+        </label>
+        <button type="button" onClick={onRemove} aria-label="Quitar ejercicio">
+          <Icon name="close" />
+        </button>
+      </div>
+      <div className="exercise-editor-values">
+        <label>
+          Series
+          <input
+            aria-label="Series"
+            className="ex-sets"
+            type="number"
+            value={exercise.sets}
+            min={1}
+            max={20}
+            required
+            onChange={(e) => onChange({ sets: Number(e.target.value) })}
+          />
+        </label>
+        <label>
+          Repeticiones
+          <input
+            aria-label="Repeticiones"
+            className="ex-reps"
+            value={exercise.reps}
+            required
+            maxLength={30}
+            onChange={(e) => onChange({ reps: e.target.value })}
+          />
+        </label>
+        <label>
+          Descanso (s)
+          <input
+            aria-label="Descanso en segundos"
+            className="ex-rest"
+            type="number"
+            value={exercise.rest}
+            min={0}
+            max={600}
+            required
+            onChange={(e) => onChange({ rest: Number(e.target.value) })}
+          />
+        </label>
+      </div>
+    </div>
+  )
+}
+
+export function RoutineFormModal({ id }: { id?: string }) {
+  const { data, commit, closeModal, toast, error, setError } = useForm()
+  const r = data.routines.find((x) => x.id === id)
+  const [exercises, setExercises] = useState<Exercise[]>(
+    r?.exercises?.length
+      ? r.exercises.map((e) => ({ ...e }))
+      : [{ name: '', sets: 3, reps: '10–12', rest: 60 }],
+  )
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    setError('')
+    try {
+      const clean = exercises.map((ex) => ({
+        name: ex.name.trim(),
+        sets: Number(ex.sets),
+        reps: ex.reps.trim(),
+        rest: Number(ex.rest),
+      }))
+      if (!x.name?.trim() || !clean.length || clean.some((ex) => !ex.name || !ex.reps))
+        throw new Error('Añade un nombre y completa todos los ejercicios.')
+      commit((d) => {
+        const routine: Routine = {
+          id: id || uid(),
+          name: x.name.trim(),
+          category: x.category ?? 'Fuerza',
+          level: x.level ?? 'Inicial',
+          duration: Number(x.duration),
+          notes: x.notes ?? '',
+          exercises: clean,
+        }
+        upsert(d.routines, routine)
+      })
+      closeModal()
+      toast('Registro guardado.')
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  return (
+    <FormWrap kind="routine" id={id} error={error} onSubmit={onSubmit}>
+      <div className="full editor-intro">
+        <span className="editor-step">01</span>
+        <div>
+          <h3>Define la intención.</h3>
+          <p>Un nombre, un enfoque y a quién va dirigido.</p>
+        </div>
+      </div>
+      <div className="full">
+        <Field name="name" label="Nombre del plan" value={r?.name} required maxLength={100} />
+      </div>
+      <SelectField name="category" label="Enfoque" value={r?.category ?? 'Fuerza'}>
+        {ROUTINE_CATEGORIES.map((x) => (
+          <option key={x} value={x}>
+            {x}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField name="level" label="Nivel" value={r?.level ?? 'Inicial'}>
+        {ROUTINE_LEVELS.map((x) => (
+          <option key={x} value={x}>
+            {x}
+          </option>
+        ))}
+      </SelectField>
+      <Field
+        name="duration"
+        label="Duración (minutos)"
+        type="number"
+        value={r?.duration ?? 50}
+        min={10}
+        max={300}
+        required
+      />
+      <div className="full editor-intro">
+        <span className="editor-step">02</span>
+        <div>
+          <h3>Construye el movimiento.</h3>
+          <p>Ajusta cada ejercicio en su propia tarjeta.</p>
+        </div>
+      </div>
+      <div className="full">
+        <div className="exercise-fields" id="exercises">
+          {exercises.map((ex, i) => (
+            <ExerciseEditorRow
+              key={i}
+              exercise={ex}
+              onChange={(patch) =>
+                setExercises((prev) =>
+                  prev.map((item, j) => (j === i ? { ...item, ...patch } : item)),
+                )
+              }
+              onRemove={() => {
+                if (exercises.length > 1)
+                  setExercises((prev) => prev.filter((_, j) => j !== i))
+                else toast('La rutina necesita al menos un ejercicio.')
+              }}
+            />
+          ))}
+        </div>
+        <button
+          className="button light add-exercise-button"
+          type="button"
+          onClick={() =>
+            setExercises((prev) => [
+              ...prev,
+              { name: '', sets: 3, reps: '10–12', rest: 60 },
+            ])
+          }
+        >
+          <Icon name="plus" />
+          Añadir otro movimiento
+        </button>
+      </div>
+      <TextField
+        name="notes"
+        label="La indicación que hace la diferencia"
+        value={r?.notes}
+      />
+    </FormWrap>
+  )
+}
+
+/* ------------------------- Medición ------------------------- */
+
+export function MeasurementFormModal() {
+  const { data, commit, closeModal, toast, ui, patchUi, error, fail } = useForm()
+  const activeClients = data.clients.filter((c) => !c.archived)
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      if (!x.client || Number(x.weight) < 20)
+        throw new Error('Selecciona un cliente e indica su peso.')
+      commit((d) => {
+        const measurement: Measurement = {
+          id: uid(),
+          client: x.client,
+          date: x.date,
+          weight: Number(x.weight),
+          waist: x.waist ? Number(x.waist) : null,
+          fat: x.fat ? Number(x.fat) : null,
+          note: x.note ?? '',
+        }
+        upsert(d.measurements, measurement)
+        const client = d.clients.find((c) => c.id === x.client)
+        if (client) client.weight = Number(x.weight)
+      })
+      patchUi({ progressClient: x.client })
+      closeModal()
+      toast('Registro guardado.')
+    } catch (err) {
+      fail(err)
+    }
+  }
+
+  return (
+    <FormWrap kind="measurement" error={error} onSubmit={onSubmit}>
+      <SelectField name="client" label="Cliente" value={ui.progressClient}>
+        {activeClients.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </SelectField>
+      <Field name="date" label="Fecha de medición" type="date" value={TODAY} required />
+      <Field
+        name="weight"
+        label="Peso (kg)"
+        type="number"
+        min={20}
+        max={400}
+        step={0.1}
+        required
+      />
+      <Field name="waist" label="Cintura (cm)" type="number" min={20} max={300} step={0.1} />
+      <Field name="fat" label="Grasa corporal (%)" type="number" min={1} max={70} step={0.1} />
+      <TextField name="note" label="Observaciones" />
+    </FormWrap>
+  )
+}
+
+/* ------------------------- Asignar rutina ------------------------- */
+
+export function AssignRoutineModal({ id }: { id: string }) {
+  const { data, commit, closeModal, toast, error, fail } = useForm()
+  const routine = findRoutine(data, id) ?? null
+  const activeClients = data.clients.filter((c) => !c.archived)
+
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      const target = data.clients.find((c) => c.id === x.client)
+      if (!target) throw new Error('Selecciona un cliente.')
+      commit((d) => {
+        const c = d.clients.find((cc) => cc.id === x.client)
+        if (c) c.routine = id
+      })
+      closeModal()
+      toast('Rutina asignada.')
+    } catch (err) {
+      fail(err)
+    }
+  }
+
+  return (
+    <FormWrap kind="assign" id={id} error={error} onSubmit={onSubmit}>
+      <SelectField name="client" label="Cliente" value="">
+        {activeClients.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </SelectField>
+      <div className="full alert-info">
+        Plan: <b>{routine?.name}</b>. Se reemplazará la rutina asignada a este
+        cliente; sus sesiones anteriores se conservan.
+      </div>
+    </FormWrap>
+  )
+}
+
+/* ------------------------- Empezar vacío / Importar ------------------------- */
+
+export function StartEmptyModal() {
+  const { data, replaceData, closeModal, go, toast, patchUi } = useApp()
+  return (
+    <>
+      <p className="notes">
+        Se quitarán los datos de ejemplo de este navegador. Primero descarga un
+        respaldo para conservar cualquier registro que hayas agregado.
+      </p>
+      <div className="form-foot">
+        <button className="button light" onClick={() => exportData(data)}>
+          Descargar respaldo
+        </button>
+        <button
+          className="button dark"
+          onClick={() => {
+            exportData(data)
+            replaceData({
+              version: 1,
+              profile: data.profile,
+              clients: [],
+              routines: [],
+              sessions: [],
+              payments: [],
+              measurements: [],
+              demo: false,
+            })
+            patchUi({ progressClient: '' })
+            closeModal()
+            go('clientes')
+            toast('Espacio vacío creado. Se descargó el respaldo anterior.')
+          }}
+        >
+          Crear espacio vacío
+        </button>
+      </div>
+    </>
+  )
+}
+
+export function ImportConfirmModal({ candidate }: { candidate: AppData }) {
+  const { data, replaceData, closeModal, toast, patchUi } = useApp()
+  const candidateData = candidate
+  return (
+    <>
+      <p className="notes">
+        Este respaldo contiene {candidateData.clients.length} clientes,{' '}
+        {candidateData.sessions.length} sesiones y {candidateData.payments.length}{' '}
+        pagos. Reemplazará los registros actuales de este navegador; antes se
+        descargará una copia de seguridad.
+      </p>
+      <div className="form-foot">
+        <button className="button light" onClick={closeModal}>
+          Cancelar
+        </button>
+        <button
+          className="button dark"
+          onClick={() => {
+            exportData(data)
+            replaceData(candidateData)
+            patchUi({
+              progressClient:
+                candidateData.clients.find((c) => !c.archived)?.id ?? '',
+            })
+            closeModal()
+            toast('Respaldo importado.')
+          }}
+        >
+          Importar respaldo
+        </button>
+      </div>
+    </>
+  )
+}
+
+/* ------------------------- Host ------------------------- */
+
+const TITLES: Record<ModalState['kind'], string> = {
+  'client-form': '',
+  'client-detail': 'Ficha del cliente',
+  'session-form': '',
+  'payment-form': '',
+  'routine-form': '',
+  'measurement-form': 'Añadir medición',
+  'assign-routine': 'Asignar rutina',
+  'start-empty': 'Empezar tu espacio',
+  'import-confirm': 'Importar respaldo',
+}
+
+function modalTitle(modal: ModalState, data: ReturnType<typeof useApp>['data']): string {
+  switch (modal.kind) {
+    case 'client-form':
+      return modal.id ? 'Editar cliente' : 'Añadir cliente'
+    case 'session-form':
+      return modal.id ? 'Detalle de sesión' : 'Nueva sesión'
+    case 'payment-form': {
+      const p = data.payments.find((x) => x.id === modal.id)
+      return modal.receive
+        ? 'Registrar cobro recibido'
+        : p?.id
+          ? 'Editar pago'
+          : 'Registrar pago'
+    }
+    case 'routine-form':
+      return modal.id ? 'Afinar el plan' : 'Diseñar una rutina'
+    default:
+      return TITLES[modal.kind]
+  }
+}
+
+export function ModalHost() {
+  const { modal, closeModal, data } = useApp()
+  const ref = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const d = ref.current
+    if (!d) return
+    if (modal) {
+      if (!d.open) d.showModal()
+    } else if (d.open) {
+      d.close()
+    }
+  }, [modal])
+
+  let body: ReactNode = null
+  if (modal) {
+    switch (modal.kind) {
+      case 'client-form':
+        body = <ClientFormModal id={modal.id} />
+        break
+      case 'client-detail':
+        body = <ClientDetailModal id={modal.id} />
+        break
+      case 'session-form':
+        body = <SessionFormModal id={modal.id} date={modal.date} />
+        break
+      case 'payment-form':
+        body = <PaymentFormModal id={modal.id} receive={modal.receive} />
+        break
+      case 'routine-form':
+        body = <RoutineFormModal id={modal.id} />
+        break
+      case 'measurement-form':
+        body = <MeasurementFormModal />
+        break
+      case 'assign-routine':
+        body = <AssignRoutineModal id={modal.id} />
+        break
+      case 'start-empty':
+        body = <StartEmptyModal />
+        break
+      case 'import-confirm':
+        body = <ImportConfirmModal candidate={modal.candidate} />
+        break
+    }
+  }
+
+  return (
+    <dialog
+      id="modal"
+      ref={ref}
+      onClose={closeModal}
+      onClick={(e) => {
+        if (e.target === ref.current) {
+          const r = ref.current.getBoundingClientRect()
+          if (
+            e.clientX < r.left ||
+            e.clientX > r.right ||
+            e.clientY < r.top ||
+            e.clientY > r.bottom
+          )
+            ref.current.close()
+        }
+      }}
+    >
+      <div className="dialog-head">
+        <div>
+          <span className="eyebrow">PROTRAINER / TU ESPACIO</span>
+          <h2 id="dialogTitle">{modal ? modalTitle(modal, data) : ''}</h2>
+        </div>
+        <button className="icon-button" onClick={closeModal} aria-label="Cerrar ventana">
+          <Icon name="close" />
+        </button>
+      </div>
+      <div id="dialogBody">{body}</div>
+    </dialog>
+  )
+}

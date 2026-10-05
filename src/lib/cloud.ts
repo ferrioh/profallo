@@ -274,6 +274,32 @@ export async function cloudGetProfile(userId: string): Promise<CloudProfileRow |
   return data as CloudProfileRow
 }
 
+/** Devuelve el perfil; si no existe (p. ej. el trigger no corrió), lo crea. */
+export async function cloudEnsureProfile(userId: string): Promise<CloudProfileRow | null> {
+  if (!supabase) return null
+  const existing = await cloudGetProfile(userId)
+  if (existing) return existing
+  const { data: userData } = await supabase.auth.getUser()
+  const user = userData.user
+  if (!user) return null
+  const meta = (user.user_metadata ?? {}) as Record<string, string>
+  const email = user.email ?? null
+  const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true })
+  const isFirst = (count ?? 0) === 0
+  await supabase.from('profiles').upsert({
+    id: userId,
+    email,
+    name: meta.name || email?.split('@')[0] || 'Entrenador',
+    phone: meta.phone ?? null,
+    id_number: meta.idNumber ?? null,
+    instagram: meta.instagram ?? null,
+    gym: meta.gym ?? null,
+    role: isFirst ? 'admin' : 'trainer',
+    status: 'approved',
+  })
+  return cloudGetProfile(userId)
+}
+
 export async function cloudListProfiles(): Promise<CloudProfileRow[] | null> {
   if (!supabase) return null
   const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })

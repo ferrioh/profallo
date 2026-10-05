@@ -19,7 +19,7 @@ import { clone, loadData, persist } from '../lib/storage'
 import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../lib/utils'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
-  cloudGetProfile,
+  cloudEnsureProfile,
   cloudGetSessionUserId,
   cloudOnAuth,
   loadCloudData,
@@ -205,7 +205,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setCloudReady(true)
         return
       }
-      const prof = await cloudGetProfile(uid)
+      const prof = await cloudEnsureProfile(uid)
       if (!alive) return
       setCloudProfile(prof)
       // Solo recargamos datos al iniciar sesión (no en cada refresh de token,

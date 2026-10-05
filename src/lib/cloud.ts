@@ -506,9 +506,11 @@ export interface PublicTrainer {
   bio: string
   username: string
   gym: string
+  verified: boolean
   clients: number
   routines: number
   sessionsMonth: number
+  photos: string[]
 }
 
 export async function cloudPublicProfile(username: string): Promise<PublicTrainer | null> {

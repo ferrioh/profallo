@@ -341,6 +341,7 @@ declare
   v_clients int;
   v_routines int;
   v_sessions int;
+  v_photos jsonb;
 begin
   select * into v from public.profiles where lower(username) = lower(p_username) limit 1;
   if not found then return null; end if;
@@ -348,11 +349,16 @@ begin
   select count(*) into v_routines from public.routines where trainer_id = v.id;
   select count(*) into v_sessions from public.sessions
     where trainer_id = v.id and date >= date_trunc('month', current_date);
+  select coalesce(jsonb_agg(photo), '[]'::jsonb) into v_photos from (
+    select photo from public.clients
+     where trainer_id = v.id and photo is not null and photo <> '' limit 6
+  ) s;
   return jsonb_build_object(
     'name', v.name, 'specialty', v.specialty, 'photo', v.photo_url,
     'phone', v.phone, 'instagram', v.instagram, 'email', v.email,
-    'username', v.username, 'gym', v.gym, 'bio', v.bio,
-    'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions
+    'username', v.username, 'gym', v.gym, 'bio', v.bio, 'verified', v.verified,
+    'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions,
+    'photos', v_photos
   );
 end; $$;
 

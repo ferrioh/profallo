@@ -5,6 +5,7 @@ import { cloudPublicProfile, type PublicTrainer as PublicTrainerData } from '../
 export function PublicTrainer({ username }: { username: string }) {
   const [t, setT] = useState<PublicTrainerData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [slide, setSlide] = useState(0)
 
   useEffect(() => {
     cloudPublicProfile(username)
@@ -12,16 +13,26 @@ export function PublicTrainer({ username }: { username: string }) {
       .catch(() => setLoading(false))
   }, [username])
 
+  const photos = t?.photos ?? []
+  useEffect(() => {
+    if (photos.length < 2) return
+    const timer = window.setInterval(() => setSlide((s) => (s + 1) % photos.length), 6000)
+    return () => window.clearInterval(timer)
+  }, [photos.length])
+
   if (loading) {
     return (
-      <div className="public-trainer"><div className="pt-card"><span className="verify-spinner" /></div></div>
+      <div className="entry-loader" aria-hidden="true">
+        <span className="entry-loader-logo">p</span>
+        <span className="entry-loader-line" />
+      </div>
     )
   }
 
   if (!t) {
     return (
       <div className="public-trainer">
-        <div className="pt-card">
+        <div className="pt-card pt-glass">
           <h1>Entrenador no encontrado</h1>
           <p className="muted">El enlace <b>@{username}</b> no existe o no está disponible.</p>
         </div>
@@ -32,32 +43,42 @@ export function PublicTrainer({ username }: { username: string }) {
   const wa = t.phone
     ? `https://wa.me/${t.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${t.name}, quiero unirme a tu equipo 💪`)}`
     : ''
-  const ig = t.instagram
-    ? t.instagram.startsWith('http') ? t.instagram : `https://instagram.com/${t.instagram.replace(/^@/, '')}`
-    : ''
 
   return (
     <div className="public-trainer">
-      <div className="pt-card">
+      {photos.length ? (
+        <div className="pt-bg" aria-hidden="true">
+          {photos.map((src, i) => (
+            <div key={i} className={`pt-bg-slide ${i === slide ? 'active' : ''}`} style={{ backgroundImage: `url(${src})` }} />
+          ))}
+          <div className="pt-bg-shade" />
+        </div>
+      ) : null}
+
+      <div className="pt-card pt-glass">
         <div className="pt-photo">{t.photo ? <img src={t.photo} alt={t.name} /> : <Icon name="user" />}</div>
         <span className="pt-role">{t.specialty || 'Entrenador personal'}</span>
-        <h1>{t.name}</h1>
+        <h1>
+          {t.name}
+          {t.verified ? <span className="verified" title="Entrenador verificado"><Icon name="check" /></span> : null}
+        </h1>
         {t.bio ? <p className="pt-bio">{t.bio}</p> : null}
         {t.gym ? <span className="pt-gym"><Icon name="dumbbell" /> {t.gym}</span> : null}
+
         <div className="pt-stats">
           <div><b>{t.routines}</b><span>Rutinas</span></div>
           <div><b>{t.clients}</b><span>Clientes</span></div>
           <div><b>{t.sessionsMonth}</b><span>Sesiones/mes</span></div>
         </div>
-        <button className="button primary pt-join" type="button" disabled={!wa} onClick={() => wa && window.open(wa, '_blank', 'noopener')}>
+
+        <button className="pt-join" type="button" disabled={!wa} onClick={() => wa && window.open(wa, '_blank', 'noopener')}>
           <Icon name="whatsapp" /> Únete a mi equipo
         </button>
-        <div className="pt-contact">
-          {wa ? <a href={wa} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" /> WhatsApp</a> : null}
-          {ig ? <a href={ig} target="_blank" rel="noopener noreferrer"><Icon name="instagram" /> Instagram</a> : null}
-          {t.email ? <a href={`mailto:${t.email}`}><Icon name="arrow" /> {t.email}</a> : null}
-        </div>
-        <footer className="pt-foot">Profallo · @{t.username || username}</footer>
+
+        <footer className="pt-foot">
+          <span className="pt-brand">PROFALLO</span>
+          <span>profallo.vercel.app</span>
+        </footer>
       </div>
     </div>
   )

@@ -5,7 +5,7 @@ import { Icon, type IconName } from './Icon'
 import { initials } from '../lib/utils'
 import { currentAccount, useAuthVersion } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
-import { buildNotifications } from '../lib/notifications'
+import { buildNotifications, notificationStateOf } from '../lib/notifications'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
@@ -157,15 +157,15 @@ export function Topbar() {
   const admin = cloudEnabled ? cloudProfile?.role === 'admin' : data.profile.role === 'admin'
   const label = PAGE_LABELS[view] ?? 'Inicio'
   const notifications = buildNotifications(data)
-  const readIds = new Set(data.notificationState?.read ?? [])
+  const readIds = new Set(notificationStateOf(data).read)
   const unread = notifications.filter((n) => !readIds.has(n.id)).length
 
   function openNotifications() {
     commit((d) => {
-      if (!d.notificationState) d.notificationState = { deleted: [], muted: [], read: [] }
-      const set = new Set(d.notificationState.read)
+      const ns = notificationStateOf(d)
+      const set = new Set(ns.read)
       notifications.forEach((n) => set.add(n.id))
-      d.notificationState.read = [...set]
+      d.notificationState = { ...ns, read: [...set] }
     })
     go('notificaciones')
   }

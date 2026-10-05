@@ -43,6 +43,15 @@ describe('notifications', () => {
     expect(list.find((n) => n.id === 'ses:s1')?.muted).toBe(true)
   })
 
+  it('no revienta si el estado de notificaciones viene vacío o parcial (nube)', () => {
+    const d = data()
+    d.notificationState = {} as AppData['notificationState']
+    expect(() => buildNotifications(d)).not.toThrow()
+    d.notificationState = { deleted: ['pay:p1'] } as AppData['notificationState']
+    expect(() => buildNotifications(d)).not.toThrow()
+    expect(buildNotifications(d).map((n) => n.id)).not.toContain('pay:p1')
+  })
+
   it('timeAgo devuelve "ahora" y tiempos relativos', () => {
     expect(timeAgo(new Date().toISOString())).toBe('ahora')
     expect(timeAgo(new Date(Date.now() - 2 * 3600 * 1000).toISOString())).toMatch(/hace/)

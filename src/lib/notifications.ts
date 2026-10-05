@@ -39,8 +39,20 @@ export function timeAgo(iso: string): string {
   return past ? `hace ${value}` : `en ${value}`
 }
 
+/** Normaliza el estado de notificaciones (la nube puede devolver un objeto parcial o vacío). */
+export function notificationStateOf(data: AppData): { deleted: string[]; muted: string[]; read: string[] } {
+  const raw = data.notificationState as
+    | Partial<NonNullable<AppData['notificationState']>>
+    | undefined
+  return {
+    deleted: Array.isArray(raw?.deleted) ? raw!.deleted : [],
+    muted: Array.isArray(raw?.muted) ? raw!.muted : [],
+    read: Array.isArray(raw?.read) ? raw!.read : [],
+  }
+}
+
 export function buildNotifications(data: AppData): AppNotification[] {
-  const ns = data.notificationState ?? { deleted: [], muted: [], read: [] }
+  const ns = notificationStateOf(data)
   const currency = data.profile.currency
   const nameOf = (id: string) => data.clients.find((c) => c.id === id)?.name ?? 'Cliente'
   const out: AppNotification[] = []

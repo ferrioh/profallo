@@ -334,6 +334,17 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
     supabase.from('payments').select('*').eq('trainer_id', userId),
   ])
   if (clients.error || routines.error || sessions.error || measurements.error || payments.error) return null
+  const rawNs = (prof.data as Row | null)?.notification_state as
+    | Partial<NonNullable<AppData['notificationState']>>
+    | undefined
+  const notificationState: AppData['notificationState'] =
+    rawNs && typeof rawNs === 'object'
+      ? {
+          deleted: Array.isArray(rawNs.deleted) ? rawNs.deleted : [],
+          muted: Array.isArray(rawNs.muted) ? rawNs.muted : [],
+          read: Array.isArray(rawNs.read) ? rawNs.read : [],
+        }
+      : undefined
   return {
     version: 1,
     profile: prof.data ? rowToProfile(prof.data as Row, base) : base,
@@ -342,7 +353,7 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
     sessions: (sessions.data ?? []).map(rowToSession),
     measurements: (measurements.data ?? []).map(rowToMeasurement),
     payments: (payments.data ?? []).map(rowToPayment),
-    notificationState: ((prof.data as Row | null)?.notification_state as AppData['notificationState']) ?? undefined,
+    notificationState,
     demo: false,
   }
 }

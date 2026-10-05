@@ -3,14 +3,15 @@ import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
-import { buildNotifications, timeAgo, type AppNotification } from '../lib/notifications'
+import { buildNotifications, notificationStateOf, timeAgo, type AppNotification } from '../lib/notifications'
 import { cloudMyPremiumRequests, type PremiumRequestRow } from '../lib/cloud'
 import { month } from '../lib/utils'
 import type { AppData } from '../types'
 
 function ensure(d: AppData) {
-  if (!d.notificationState) d.notificationState = { deleted: [], muted: [], read: [] }
-  return d.notificationState
+  const ns = notificationStateOf(d)
+  d.notificationState = ns
+  return ns
 }
 
 const TONE: Record<string, string> = { lime: 'accent', amber: 'white', red: 'red', slate: 'smoke' }

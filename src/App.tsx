@@ -29,7 +29,7 @@ export default function App() {
 
   // Ruta de administración: login de admin dedicado + panel.
   if (view === 'admin') {
-    if (cloudEnabled && cloudUser && !cloudReady) {
+    if (cloudEnabled && cloudUser && (!cloudReady || !cloudProfile)) {
       return (
         <div className="verify-wrap">
           <div className="verify-overlay">
@@ -44,7 +44,7 @@ export default function App() {
     const adminSession = cloudEnabled
       ? cloudProfile?.role === 'admin'
       : (currentAccount()?.role ?? data.profile.role) === 'admin'
-    return adminSession ? <AdminPage /> : <AdminLogin />
+    return adminSession ? <AdminPage /> : <AdminLogin signedIn={cloudEnabled ? !!cloudUser : false} />
   }
 
   if (!isIn) return <PublicHome />

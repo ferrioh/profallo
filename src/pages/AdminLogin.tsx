@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
+import { PasswordInput } from '../components/PasswordInput'
 import { currentAccount, login as localLogin, useAuthVersion } from '../lib/auth'
 import { cloudSignIn } from '../lib/cloud'
 
-export function AdminLogin() {
+export function AdminLogin({ signedIn = false }: { signedIn?: boolean }) {
   const { cloudEnabled, go, toast } = useApp()
   useAuthVersion()
   const [error, setError] = useState('')
@@ -25,7 +26,7 @@ export function AdminLogin() {
   }
 
   const account = currentAccount()
-  const wrongAccount = !cloudEnabled && account && account.role !== 'admin'
+  const wrongAccount = signedIn || (!cloudEnabled && !!account && account.role !== 'admin')
 
   return (
     <div className="admin-login">
@@ -36,7 +37,7 @@ export function AdminLogin() {
         <p className="muted">Entra con tu cuenta admin para gestionar entrenadores, cuentas y pagos.</p>
         {wrongAccount ? <p className="entry-error">Has iniciado con una cuenta que no es admin. Entra con la cuenta administradora.</p> : null}
         <label>Correo del administrador<input name="email" type="email" required autoComplete="email" placeholder="admin@tucorreo.com" /></label>
-        <label>Contraseña<input name="password" type="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
+        <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
         {error ? <p className="entry-error">{error}</p> : null}
         <button className="button primary" type="submit"><Icon name="check" /> Entrar al panel</button>
         <button className="entry-back" type="button" onClick={() => go('inicio')}>‹ Volver a la app</button>

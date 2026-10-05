@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
+import { PasswordInput } from '../components/PasswordInput'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
 import { cloudSignIn, cloudSignUp } from '../lib/cloud'
 
@@ -122,7 +123,7 @@ export function PublicHome() {
             <h1 id="login-title">Bienvenido de vuelta<span>.</span></h1>
             <form className="entry-form" onSubmit={onLogin}>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
-              <label>Contraseña<input name="password" type="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
+              <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
               {error ? <p className="entry-error">{error}</p> : null}
               <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
             </form>
@@ -137,8 +138,8 @@ export function PublicHome() {
               <label>Nombre completo<input name="name" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
               <div className="entry-row">
-                <label>Contraseña<input name="password" type="password" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
-                <label>Repetir contraseña<input name="confirm" type="password" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
+                <label>Contraseña<PasswordInput name="password" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
+                <label>Repetir contraseña<PasswordInput name="confirm" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
               </div>
               <div className="entry-row">
                 <label>Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>

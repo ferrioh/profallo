@@ -368,4 +368,110 @@ end; $$;
 
 grant execute on function public.public_profile(text) to anon, authenticated;
 
+-- ------------------------------------------------------------
+-- Links cortos para la semana de entrenamiento de un cliente
+-- profallo.vercel.app/c/<codigo>
+-- ------------------------------------------------------------
+create table if not exists public.client_links (
+  code       text primary key,
+  trainer_id text not null references public.profiles(id) on delete cascade,
+  client_id  text not null references public.clients(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+create index if not exists client_links_client_idx on public.client_links (client_id);
+alter table public.client_links enable row level security;
+drop policy if exists client_links_owner on public.client_links;
+create policy client_links_owner on public.client_links
+  for select using (public.is_admin() or trainer_id = auth.uid()::text);
+
+-- Crea (o reutiliza) un código corto para el cliente del entrenador.
+create or replace function public.create_client_link(p_client_id text)
+returns text
+language plpgsql security definer set search_path = public as $$
+declare
+  v_code text;
+  v_owner boolean;
+begin
+  if auth.uid() is null then return null; end if;
+  select exists(
+    select 1 from public.clients
+     where id = p_client_id and trainer_id = auth.uid()::text
+  ) into v_owner;
+  if not v_owner then return null; end if;
+
+  select code into v_code from public.client_links
+   where client_id = p_client_id and trainer_id = auth.uid()::text limit 1;
+  if v_code is not null then return v_code; end if;
+
+  loop
+    v_code := lower(substr(md5(random()::text || clock_timestamp()::text), 1, 7));
+    begin
+      insert into public.client_links (code, trainer_id, client_id)
+      values (v_code, auth.uid()::text, p_client_id);
+      return v_code;
+    exception when unique_violation then
+      -- vuelve a intentar con otro código
+    end;
+  end loop;
+end; $$;
+grant execute on function public.create_client_link(text) to authenticated;
+
+-- Devuelve la semana actual (lunes a domingo) del cliente para su link corto.
+create or replace function public.public_client_week(p_code text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_link    public.client_links;
+  v_client  public.clients;
+  v_trainer public.profiles;
+  v_monday  date;
+  v_week    text;
+  v_sessions jsonb;
+begin
+  select * into v_link from public.client_links where code = p_code limit 1;
+  if not found then return null; end if;
+  select * into v_client from public.clients where id = v_link.client_id limit 1;
+  if not found then return null; end if;
+  select * into v_trainer from public.profiles where id = v_link.trainer_id limit 1;
+
+  v_monday := date_trunc('week', current_date)::date;
+  v_week := to_char(v_monday, 'YYYY-MM-DD');
+
+  select coalesce(jsonb_agg(x.row order by x.row_date, x.row_time), '[]'::jsonb) into v_sessions
+  from (
+    select s.date as row_date, s.time as row_time,
+      jsonb_build_object(
+        'date', s.date,
+        'time', s.time,
+        'duration', s.duration,
+        'title', s.title,
+        'status', s.status,
+        'routineName', r.name,
+        'category', r.category,
+        'level', r.level,
+        'notes', r.notes,
+        'exercises', coalesce(r.exercises, '[]'::jsonb)
+      ) as row
+    from public.sessions s
+    left join public.routines r
+      on r.id = coalesce(nullif(s.routine_id, ''), v_client.routine_id)
+    where s.client_id = v_client.id
+      and s.status <> 'Cancelada'
+      and s.date >= v_monday
+      and s.date <= v_monday + 6
+  ) x;
+
+  return jsonb_build_object(
+    'trainerName', v_trainer.name,
+    'trainerPhone', v_trainer.phone,
+    'trainerUsername', v_trainer.username,
+    'clientName', v_client.name,
+    'clientPhoto', v_client.photo,
+    'clientGoal', v_client.goal,
+    'weekStart', v_week,
+    'sessions', v_sessions
+  );
+end; $$;
+grant execute on function public.public_client_week(text) to anon, authenticated;
+
 commit;

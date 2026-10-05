@@ -7,6 +7,7 @@ import { Icon } from '../components/Icon'
 import { LineChart } from '../components/ui'
 import { MuscleGuide, getRoutineZones } from '../components/MuscleGuide'
 import { planOf } from '../lib/plans'
+import { cloudCreateClientLink } from '../lib/cloud'
 import {
   buildClientShareLink,
   findRoutine,
@@ -36,7 +37,7 @@ function ActivityRings({ attendance, training, payments }: { attendance: number;
 }
 
 export function ClientProfilePage() {
-  const { data, ui, go, patchUi, money, toast, commit, openModal } = useApp()
+  const { data, ui, go, patchUi, money, toast, commit, openModal, cloudEnabled } = useApp()
   const actions = useActions()
   const [metric, setMetric] = useState<MetricKey>('weight')
   const [openSession, setOpenSession] = useState<string | null>(ui.focusSession || null)
@@ -80,15 +81,21 @@ export function ClientProfilePage() {
   }
 
   async function shareFicha() {
-    if (!isPremium) { toast('Compartir la ficha es una opción Premium.'); openModal({ kind: 'membership' }); return }
-    const url = buildClientShareLink(activeClient, data)
+    if (!isPremium) { toast('Compartir la semana es una opción Premium.'); openModal({ kind: 'membership' }); return }
+    // Link corto (profallo.vercel.app/c/xxxxxxx). Si no hay nube, se usa el link largo de respaldo.
+    let url = ''
+    if (cloudEnabled) {
+      const code = await cloudCreateClientLink(activeClient.id)
+      if (code) url = `${location.origin}/c/${code}`
+    }
+    if (!url) url = buildClientShareLink(activeClient, data)
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     if (nav.share) {
-      try { await nav.share({ title: `Ficha de ${activeClient.name}`, text: url }); return } catch { /* cancelado */ }
+      try { await nav.share({ title: `Semana de ${activeClient.name}`, text: 'Tus entrenamientos de esta semana', url }); return } catch { /* cancelado */ }
     }
     try {
       await navigator.clipboard.writeText(url)
-      toast('Link copiado. Envíalo a tu cliente.')
+      toast('Link corto copiado: ' + url)
     } catch {
       toast(`Comparte este link: ${url}`)
     }
@@ -104,7 +111,7 @@ export function ClientProfilePage() {
       <button className="button primary" onClick={() => actions.editClient(client.id)}><Icon name="edit" /> Editar perfil</button>
     </header>
     <div className="client-profile-actions reveal">
-      <button className="button" onClick={shareFicha}><Icon name="share" /> Compartir ficha del cliente {!isPremium ? <span className="premium-tag">Premium</span> : null}</button>
+      <button className="button" onClick={shareFicha}><Icon name="share" /> Compartir semana del cliente {!isPremium ? <span className="premium-tag">Premium</span> : null}</button>
     </div>
     <div className="client-visual-dashboard reveal">
       <section className="client-visual-card daily-card"><div className="visual-card-top"><span>Actividad del cliente</span><small>Progreso registrado</small></div><div className="daily-card-content"><div className="activity-metrics"><div><span>Asistencia</span><strong>{attendance}<small>%</small></strong><small>{completed.length} sesiones realizadas</small></div><div><span>Entrenamientos</span><strong>{completed.length}<small> / {pastSessions.length}</small></strong><small>{training}% completados</small></div><div><span>Pagos</span><strong>{paid.length}<small> / {payments.length}</small></strong><small>{paymentRate}% realizados</small></div></div><ActivityRings attendance={attendance} training={training} payments={paymentRate} /></div><div className="ring-legend"><span><i /> Asistencia</span><span><i /> Entrenamientos</span><span><i /> Pagos</span></div></section>

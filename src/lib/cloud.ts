@@ -544,3 +544,52 @@ export async function cloudPublicProfile(username: string): Promise<PublicTraine
   if (error || !data) return null
   return data as PublicTrainer
 }
+
+/* ------------------- Semana del cliente (link corto) ------------------- */
+
+export interface ClientWeekExercise {
+  name: string
+  sets: number
+  reps: string
+  rest: number
+}
+
+export interface ClientWeekSession {
+  date: string
+  time: string
+  duration: number
+  title: string
+  status: string
+  routineName: string | null
+  category: string | null
+  level: string | null
+  notes: string | null
+  exercises: ClientWeekExercise[]
+}
+
+export interface ClientWeek {
+  trainerName: string
+  trainerPhone: string | null
+  trainerUsername: string | null
+  clientName: string
+  clientPhoto: string | null
+  clientGoal: string | null
+  weekStart: string
+  sessions: ClientWeekSession[]
+}
+
+/** Crea (o reutiliza) un código corto para la semana del cliente. */
+export async function cloudCreateClientLink(clientId: string): Promise<string | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.rpc('create_client_link', { p_client_id: clientId })
+  if (error || !data) return null
+  return String(data)
+}
+
+/** Lee la semana del cliente a partir del código corto (público). */
+export async function cloudPublicClientWeek(code: string): Promise<ClientWeek | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.rpc('public_client_week', { p_code: code })
+  if (error || !data) return null
+  return data as ClientWeek
+}

@@ -18,6 +18,7 @@ import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
 import { AdminLogin } from './pages/AdminLogin'
 import { PublicTrainer } from './pages/PublicTrainer'
+import { PublicClient } from './pages/PublicClient'
 import { currentAccount, useAuthVersion } from './lib/auth'
 
 function AppLoader() {
@@ -34,6 +35,10 @@ export default function App() {
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
+
+  // Semana de entrenamiento del cliente (link corto): profallo.vercel.app/c/<codigo>
+  const cm = location.pathname.match(/^\/c\/([^/]+)\/?$/)
+  if (cm) return <PublicClient code={decodeURIComponent(cm[1])} />
 
   // Ficha pública del entrenador: profallo.vercel.app/<usuario>
   const slug = location.pathname.replace(/^\/+|\/+$/g, '')

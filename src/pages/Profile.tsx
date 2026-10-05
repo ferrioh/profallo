@@ -5,17 +5,25 @@ import { PageHead } from '../components/ui'
 import { Verified } from '../components/Layout'
 import { CoachStage } from './Dashboard'
 import { planOf, trialDaysLeft } from '../lib/plans'
+import { logout } from '../lib/auth'
+import { cloudSignOut } from '../lib/cloud'
 
 const CURRENCIES = ['USD', 'EUR', 'VES']
 
 export function ProfilePage() {
-  const { data, stats, commit, toast, openModal } = useApp()
+  const { data, stats, commit, toast, openModal, leave, cloudEnabled } = useApp()
   const photoInput = useRef<HTMLInputElement>(null)
   const [openOpt, setOpenOpt] = useState<string | null>(null)
   const count = data.sessions.filter((x) => x.status === 'Completada').length
   const plan = planOf(data.profile.membership)
   const totalExercises = data.routines.reduce((n, r) => n + r.exercises.length, 0)
   const categories = new Set(data.routines.map((r) => r.category)).size
+
+  function handleLogout() {
+    if (cloudEnabled) void cloudSignOut()
+    else logout()
+    leave()
+  }
 
   async function changePhoto(file?: File) {
     if (!file) return
@@ -74,6 +82,11 @@ export function ProfilePage() {
           </>
         }
         sub="Tu identidad y lo que estás construyendo con tu equipo."
+        actions={
+          <button className="button glass-button" onClick={handleLogout}>
+            <Icon name="close" /> Cerrar sesión
+          </button>
+        }
       />
       <CoachStage full />
       <div className="profile-photo-action"><input ref={photoInput} type="file" accept="image/*" hidden onChange={e => changePhoto(e.target.files?.[0])} /><button className="button" onClick={() => photoInput.current?.click()}><Icon name="edit" /> Cambiar foto de perfil</button><span>JPG, PNG o WebP · máximo 1 MB</span></div>

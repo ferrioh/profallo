@@ -19,7 +19,7 @@ import {
 } from '../lib/utils'
 import { exportData } from '../lib/backup'
 import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
-import { cloudCreatePremiumRequest, cloudGetAppSettings, type AppSettings, type PremiumMethod } from '../lib/cloud'
+import { cloudCreatePremiumRequest, cloudGetAppSettings, cloudMyPremiumRequests, type AppSettings, type PremiumMethod, type PremiumRequestRow } from '../lib/cloud'
 import { Icon } from './Icon'
 import { Field, SelectField, TextField } from './form'
 import { TimeWheelPicker } from './TimeWheelPicker'
@@ -723,11 +723,22 @@ export function MembershipModal() {
   const [capture, setCapture] = useState('')
   const [reference, setReference] = useState('')
   const [sending, setSending] = useState(false)
+  const [reading, setReading] = useState(false)
+  const [existing, setExisting] = useState<PremiumRequestRow | null>(null)
   const price = MEMBERSHIP_PLANS.premium.price
 
   useEffect(() => {
     if (cloudEnabled) cloudGetAppSettings().then(setSettings)
   }, [cloudEnabled])
+
+  useEffect(() => {
+    if (cloudEnabled && cloudUser) {
+      cloudMyPremiumRequests(cloudUser).then((reqs) => {
+        const pend = reqs.find((r) => r.status === 'pending')
+        if (pend) { setExisting(pend); setStep('sent') }
+      })
+    }
+  }, [cloudEnabled, cloudUser])
 
   function activateLocal(id: 'free' | 'premium') {
     commit((d) => {
@@ -749,8 +760,10 @@ export function MembershipModal() {
     if (!file) return
     if (!file.type.startsWith('image/')) { toast('Sube una imagen (captura).'); return }
     if (file.size > 2 * 1024 * 1024) { toast('La imagen debe pesar menos de 2 MB.'); return }
+    setReading(true)
     const reader = new FileReader()
-    reader.onload = () => setCapture(String(reader.result))
+    reader.onload = () => { setCapture(String(reader.result)); setReading(false) }
+    reader.onerror = () => { setReading(false); toast('No se pudo leer la imagen.') }
     reader.readAsDataURL(file)
   }
 
@@ -790,7 +803,7 @@ export function MembershipModal() {
           Elige cómo pagar <b>${price}</b> para activar Premium.
         </p>
         <div className="pay-methods">
-          {(['pagomovil', 'binance', 'zelle'] as const).map((m) => (
+          {(['pagomovil', 'binance'] as const).map((m) => (
             <button key={m} className="pay-method" type="button" onClick={() => { setMethod(m); setStep('pay') }}>
               <b>{m === 'pagomovil' ? 'Pago Móvil' : m === 'binance' ? 'Binance' : 'Zelle'}</b>
               <Icon name="chevron" />
@@ -824,9 +837,15 @@ export function MembershipModal() {
           <input type="file" accept="image/*" onChange={(e) => onCapture(e.target.files?.[0])} />
         </label>
         {capture ? <img className="pay-capture" src={capture} alt="Comprobante" /> : null}
+        {(reading || sending) ? (
+          <div className="pay-progress">
+            <span style={{ width: sending ? '100%' : '60%' }} />
+            <small>{reading ? 'Cargando captura…' : 'Enviando comprobante…'}</small>
+          </div>
+        ) : null}
         <div className="form-foot">
           <button className="button light" type="button" onClick={() => setStep('method')}>Volver</button>
-          <button className="button primary" type="button" disabled={sending || !capture} onClick={submitPremium}>
+          <button className="button primary" type="button" disabled={sending || reading || !capture} onClick={submitPremium}>
             {sending ? 'Enviando…' : 'Enviar comprobante'}
           </button>
         </div>
@@ -838,8 +857,10 @@ export function MembershipModal() {
     return (
       <div className="pay-sent">
         <span className="entry-confirm-icon"><Icon name="check" /></span>
-        <h3>Esperando verificación</h3>
-        <p>Recibimos tu comprobante. El administrador lo revisará y activará tu <b>Premium</b>. Te avisaremos cuando el pago sea procesado.</p>
+        <span className="pay-badge-review">POR VERIFICAR</span>
+        <h3>Pago en revisión</h3>
+        <p>Tu comprobante fue enviado y está <b>POR VERIFICAR por la plataforma</b>. El administrador lo revisará y activará tu Premium. Te avisaremos aquí cuando sea procesado.</p>
+        {existing ? <p className="form-hint">Referencia: {existing.reference || '—'} · ${existing.amount} · {existing.method === 'pagomovil' ? 'Pago Móvil' : 'Binance'}</p> : null}
         <button className="button primary" type="button" onClick={closeModal}>Entendido</button>
       </div>
     )

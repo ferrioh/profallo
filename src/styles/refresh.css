@@ -401,6 +401,11 @@ dialog.app-sheet{max-width:none}
 .pay-sent p{color:#c3c7cb;font-size:14px;line-height:1.6;max-width:360px}
 .capture-thumb{width:52px;height:52px;border-radius:12px;overflow:hidden;flex:none;border:1px solid #444;display:block}
 .capture-thumb img{width:100%;height:100%;object-fit:cover}
+.pay-progress{margin:10px 0;display:grid;gap:6px}
+.pay-progress span{display:block;height:6px;border-radius:99px;background:#d2ff62;width:0;transition:width .4s ease;animation:payPulse 1.4s ease-in-out infinite}
+.pay-progress small{font-size:11px;color:#a9aeb2}
+@keyframes payPulse{50%{opacity:.55}}
+.pay-badge-review{font-size:11px;font-weight:800;letter-spacing:.12em;color:#182a0c;background:#d2ff62;border-radius:99px;padding:4px 12px}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

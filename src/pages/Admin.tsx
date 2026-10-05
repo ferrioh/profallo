@@ -349,6 +349,13 @@ export function AdminPage() {
                     <span className={`admin-status ${a.status === 'approved' ? 'premium' : a.status === 'pending' ? 'trial' : 'expired'}`}>
                       {a.status === 'approved' ? 'Acceso permitido' : a.status === 'pending' ? 'Pendiente' : 'Denegado'}
                     </span>
+                    {a.membership === 'premium' ? (
+                      <span className="admin-status premium">Premium</span>
+                    ) : trialDaysLeft(a.trial_start ?? undefined) > 0 ? (
+                      <span className="admin-status trial">Prueba · {trialDaysLeft(a.trial_start ?? undefined)} d</span>
+                    ) : (
+                      <span className="admin-status expired">Prueba vencida</span>
+                    )}
                   </div>
                   <div className="admin-trainer-actions">
                     {a.status !== 'approved' ? <button className="button primary" onClick={() => setCloudStatus(a.id, 'approved')}>Permitir acceso</button> : null}

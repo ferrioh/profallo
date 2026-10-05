@@ -26,6 +26,7 @@ export function rowToClient(r: Row): Client {
     email: or(r.email),
     phone: or(r.phone),
     idNumber: or(r.id_number),
+    photo: or(r.photo),
     birth: or(r.birth),
     goal: or(r.goal),
     plan: or(r.plan) || 'Personal',
@@ -52,6 +53,7 @@ export function clientToRow(c: Client, trainerId: string): Row {
     phone: c.phone,
     id_number: c.idNumber ?? '',
     gym: c.gym ?? '',
+    photo: c.photo ?? null,
     birth: nz(c.birth),
     goal: c.goal,
     plan: c.plan,
@@ -188,6 +190,8 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     membership: r.membership === 'premium' ? 'premium' : 'free',
     verified: Boolean(r.verified),
     trialStart: or(r.trial_start) || base.trialStart,
+    username: or(r.username) || base.username,
+    bio: or(r.bio) || base.bio,
   }
 }
 
@@ -203,6 +207,8 @@ export function profileToRow(p: Profile, id: string): Row {
     role: p.role ?? 'trainer',
     trial_start: nz(p.trialStart),
     photo_url: p.photo ?? null,
+    username: p.username ?? null,
+    bio: p.bio ?? null,
   }
 }
 
@@ -454,4 +460,28 @@ export async function cloudRejectPremium(id: string): Promise<boolean> {
     .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
     .eq('id', id)
   return !error
+}
+
+/* ------------------- Ficha pública del entrenador ------------------- */
+
+export interface PublicTrainer {
+  name: string
+  specialty: string
+  photo: string
+  phone: string
+  instagram: string
+  email: string
+  bio: string
+  username: string
+  gym: string
+  clients: number
+  routines: number
+  sessionsMonth: number
+}
+
+export async function cloudPublicProfile(username: string): Promise<PublicTrainer | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.rpc('public_profile', { p_username: username })
+  if (error || !data) return null
+  return data as PublicTrainer
 }

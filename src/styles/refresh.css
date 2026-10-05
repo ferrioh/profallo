@@ -407,8 +407,9 @@ dialog.app-sheet{max-width:none}
 @keyframes payPulse{50%{opacity:.55}}
 .pay-badge-review{font-size:11px;font-weight:800;letter-spacing:.12em;color:#182a0c;background:#d2ff62;border-radius:99px;padding:4px 12px}
 /* Editor de foto */
-.image-editor-backdrop{position:fixed;inset:0;z-index:70;background:#00000088;display:grid;place-items:center;padding:20px}
-.image-editor{width:min(100%,360px);background:#14161a;border:1px solid #2c3036;border-radius:20px;padding:20px;text-align:center;display:grid;gap:12px;justify-items:center}
+.image-editor-dialog{border:0;background:transparent;padding:0;max-width:none;max-height:none;margin:auto;overflow:visible}
+.image-editor-dialog::backdrop{background:#00000088}
+.image-editor{width:min(100vw - 32px,340px);background:#14161a;border:1px solid #2c3036;border-radius:20px;padding:20px;text-align:center;display:grid;gap:12px;justify-items:center}
 .image-editor h3{font-size:20px}
 .image-editor-canvas{width:280px;height:280px;max-width:100%;border-radius:14px;background:#0d0f11;touch-action:none;cursor:grab;border:1px solid #33363c}
 .image-editor-canvas:active{cursor:grabbing}
@@ -438,6 +439,37 @@ dialog.app-sheet{max-width:none}
 .pw-toggle{position:absolute;top:0;right:0;height:100%;width:42px;display:grid;place-items:center;background:transparent;color:#9aa0a6;border:0}
 .pw-toggle:hover{color:#d2ff62}
 .pw-toggle svg{width:19px;height:19px}
+/* Foto del cliente en el formulario */
+.client-photo-field{display:grid;gap:8px}
+.client-photo-field>label{font-size:12px;font-weight:600}
+.client-photo-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.client-photo-preview{width:64px;height:64px;border-radius:50%;overflow:hidden;background:#3a3e44;display:grid;place-items:center;color:#c3c7cb;flex:none}
+.client-photo-preview img{width:100%;height:100%;object-fit:cover}
+.client-photo-preview svg{width:26px;height:26px}
+/* La foto ocupa todo el circulo (sin sobre-zoom) */
+.avatar#headerAvatar img,.avatar#coachAvatar img{object-position:center;transform:none}
+/* Ficha pública del entrenador */
+.public-trainer{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 520px at 50% -10%,#26340f,#0a0c08 62%),#0a0c08}
+.pt-card{width:min(100%,440px);background:#11140f;border:1px solid #3a4a1e;border-radius:26px;padding:28px;text-align:center;display:grid;gap:10px;justify-items:center;color:#f3f6ef}
+.pt-photo{width:120px;height:120px;border-radius:50%;overflow:hidden;border:4px solid #d2ff62;background:#1b1e18;display:grid;place-items:center;color:#d2ff62}
+.pt-photo img{width:100%;height:100%;object-fit:cover}
+.pt-photo svg{width:52px;height:52px}
+.pt-role{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#bcd0a8}
+.pt-card h1{font-size:30px;color:#eaffb0}
+.pt-bio{color:#c9d3bd;font-size:14px;line-height:1.6;max-width:340px}
+.pt-gym{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#d2ff62}
+.pt-gym svg{width:16px;height:16px}
+.pt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin:8px 0}
+.pt-stats>div{background:#1b2018;border:1px solid #33421f;border-radius:16px;padding:14px 8px;display:grid;gap:4px}
+.pt-stats b{font-size:26px;color:#d2ff62;line-height:1}
+.pt-stats span{font-size:11px;color:#b9c4ac}
+.pt-join{width:100%;justify-content:center;margin-top:4px}
+.pt-join:disabled{opacity:.5}
+.pt-contact{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:6px}
+.pt-contact a{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#d2ff62;text-decoration:none}
+.pt-contact a:hover{text-decoration:underline}
+.pt-contact svg{width:16px;height:16px}
+.pt-foot{color:#8a9078;font-size:11px;margin-top:10px}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

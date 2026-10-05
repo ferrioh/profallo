@@ -49,6 +49,7 @@ export interface Client {
   email: string
   phone: string
   idNumber?: string
+  photo?: string
   birth: string
   goal: string
   plan: string
@@ -110,6 +111,8 @@ export interface Profile {
   idNumber?: string
   instagram?: string
   tiktok?: string
+  username?: string
+  bio?: string
   role?: 'trainer' | 'admin'
   membership?: 'free' | 'premium'
   trialStart?: string

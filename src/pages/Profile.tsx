@@ -46,6 +46,8 @@ export function ProfilePage() {
         currency: x.currency,
         phone: (x.phone ?? '').trim(),
         idNumber: (x.idNumber ?? '').trim(),
+        username: (x.username ?? '').trim().replace(/^@/, '').replace(/\s+/g, '').toLowerCase(),
+        bio: (x.bio ?? '').trim(),
       }
     })
     toast('Perfil actualizado.')
@@ -122,6 +124,15 @@ export function ProfilePage() {
               <div>
                 <label htmlFor="pId">Cédula / Documento</label>
                 <input id="pId" name="idNumber" defaultValue={data.profile.idNumber} maxLength={40} />
+              </div>
+              <div className="full">
+                <label htmlFor="pUsername">Usuario público (tu ficha para compartir)</label>
+                <input id="pUsername" name="username" defaultValue={data.profile.username} maxLength={30} placeholder="tunombre" />
+                <small className="form-hint">Tu ficha: profallo.vercel.app/{data.profile.username || 'tunombre'}</small>
+              </div>
+              <div className="full">
+                <label htmlFor="pBio">Descripción de tu ficha</label>
+                <textarea id="pBio" name="bio" defaultValue={data.profile.bio} rows={3} maxLength={300} placeholder="Cuéntale a tus clientes quién eres" />
               </div>
             </div>
             <div className="form-foot">

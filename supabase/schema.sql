@@ -21,6 +21,8 @@ create table if not exists public.profiles (
   id_number     text,
   instagram     text,
   gym           text,
+  username      text unique,
+  bio           text,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
   photo_url     text,
@@ -40,6 +42,9 @@ alter table public.profiles add column if not exists phone text;
 alter table public.profiles add column if not exists id_number text;
 alter table public.profiles add column if not exists instagram text;
 alter table public.profiles add column if not exists gym text;
+alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists bio text;
+create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
 -- ------------------------------------------------------------
 -- DATOS DE CADA ENTRENADOR
@@ -76,6 +81,7 @@ create table if not exists public.clients (
   routine_id  text,
   notes       text,
   gender      text default 'mujer' check (gender in ('mujer', 'hombre')),
+  photo       text,
   tone        int default 0,
   archived    boolean not null default false,
   joined      date default current_date,
@@ -84,6 +90,7 @@ create table if not exists public.clients (
 alter table public.clients add column if not exists id_number text;
 alter table public.clients add column if not exists gym text;
 alter table public.clients add column if not exists gender text default 'mujer';
+alter table public.clients add column if not exists photo text;
 
 create table if not exists public.sessions (
   id          text primary key,
@@ -322,5 +329,33 @@ create policy premium_requests_admin on public.premium_requests
 -- Listo. Después: Authentication > Users para crear tu cuenta y,
 -- luego, en Table editor > profiles, pon tu fila con role = 'admin'.
 -- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+-- Ficha pública por usuario (para compartir: profallo.vercel.app/mi_usuario)
+-- ------------------------------------------------------------
+create or replace function public.public_profile(p_username text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v public.profiles;
+  v_clients int;
+  v_routines int;
+  v_sessions int;
+begin
+  select * into v from public.profiles where lower(username) = lower(p_username) limit 1;
+  if not found then return null; end if;
+  select count(*) into v_clients from public.clients where trainer_id = v.id and archived = false;
+  select count(*) into v_routines from public.routines where trainer_id = v.id;
+  select count(*) into v_sessions from public.sessions
+    where trainer_id = v.id and date >= date_trunc('month', current_date);
+  return jsonb_build_object(
+    'name', v.name, 'specialty', v.specialty, 'photo', v.photo_url,
+    'phone', v.phone, 'instagram', v.instagram, 'email', v.email,
+    'bio', v.bio, 'username', v.username, 'gym', v.gym,
+    'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions
+  );
+end; $$;
+
+grant execute on function public.public_profile(text) to anon, authenticated;
 
 commit;

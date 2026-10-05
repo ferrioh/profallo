@@ -60,7 +60,7 @@ export function ClientsPage() {
       </div>
       <div className="client-grid" id="clientGrid">
         {clients.map((c) => {
-          const photo = clientPhotos[c.id]
+          const photo = c.photo || clientPhotos[c.id]
           const attendance = progressFor(data, c.id)
           const routine = findRoutine(data, c.routine)
           return (

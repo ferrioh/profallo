@@ -18,7 +18,13 @@ export function ImageEditor({
   const [zoom, setZoom] = useState(1)
   const [off, setOff] = useState({ x: 0, y: 0 })
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const dragRef = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    const d = dialogRef.current
+    if (d && !d.open) d.showModal()
+  }, [])
 
   useEffect(() => {
     loadImage(src).then(setImg).catch(() => setImg(null))
@@ -69,7 +75,7 @@ export function ImageEditor({
   }
 
   return (
-    <div className="image-editor-backdrop" onClick={onCancel}>
+    <dialog ref={dialogRef} className="image-editor-dialog" onClose={onCancel} onClick={(e) => { if (e.target === dialogRef.current) onCancel() }}>
       <div className="image-editor" onClick={(e) => e.stopPropagation()}>
         <h3>Ajustar foto</h3>
         <p className="form-hint">Arrastra para centrar y usa el zoom. Se guardará liviana (WebP).</p>
@@ -105,6 +111,6 @@ export function ImageEditor({
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }

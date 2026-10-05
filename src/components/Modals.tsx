@@ -21,6 +21,7 @@ import { exportData } from '../lib/backup'
 import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
 import { cloudCreatePremiumRequest, cloudGetAppSettings, cloudMyPremiumRequests, type AppSettings, type PremiumMethod, type PremiumRequestRow } from '../lib/cloud'
 import { fileToDataUrl, fitImage, loadImage } from '../lib/image'
+import { ImageEditor } from './ImageEditor'
 import { Icon } from './Icon'
 import { Field, SelectField, TextField } from './form'
 import { TimeWheelPicker } from './TimeWheelPicker'
@@ -101,6 +102,15 @@ export function ClientFormModal({ id }: { id?: string }) {
   const { data, commit, closeModal, toast, ui, patchUi, error, fail } = useForm()
   const c = data.clients.find((x) => x.id === id)
   const newId = id || uid()
+  const [photo, setPhoto] = useState(c?.photo ?? '')
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  async function onPhotoFile(file?: File) {
+    if (!file) return
+    if (!file.type.startsWith('image/')) { toast('Sube una imagen.'); return }
+    try { setPhotoSrc(await fileToDataUrl(file)) } catch { toast('No se pudo abrir la imagen.') }
+  }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -117,6 +127,7 @@ export function ClientFormModal({ id }: { id?: string }) {
           email: x.email ?? '',
           phone: x.phone ?? '',
           idNumber: x.idNumber ?? '',
+          photo,
           birth: x.birth ?? '',
           goal: x.goal,
           plan: x.plan ?? 'Personal',
@@ -157,6 +168,16 @@ export function ClientFormModal({ id }: { id?: string }) {
 
   return (
     <FormWrap kind="client" id={id} error={error} onSubmit={onSubmit}>
+      <div className="full client-photo-field">
+        <label>Foto del cliente</label>
+        <div className="client-photo-row">
+          <span className="client-photo-preview">{photo ? <img src={photo} alt="Cliente" /> : <Icon name="users" />}</span>
+          <button type="button" className="button light" onClick={() => photoInputRef.current?.click()}><Icon name="edit" /> Subir foto</button>
+          {photo ? <button type="button" className="button light" onClick={() => setPhotoSrc(photo)}><Icon name="crop" /> Ajustar</button> : null}
+          {photo ? <button type="button" className="button light" onClick={() => setPhoto('')}>Quitar</button> : null}
+        </div>
+        <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={(e) => onPhotoFile(e.target.files?.[0])} />
+      </div>
       <Field name="name" label="Nombre completo" value={c?.name} required maxLength={80} />
       <Field name="idNumber" label="Cédula / Documento" value={c?.idNumber} maxLength={40} />
       <Field name="email" label="Correo electrónico" type="email" value={c?.email} maxLength={120} />
@@ -213,6 +234,13 @@ export function ClientFormModal({ id }: { id?: string }) {
         label="Observaciones, limitaciones y preferencias"
         value={c?.notes}
       />
+      {photoSrc ? (
+        <ImageEditor
+          src={photoSrc}
+          onCancel={() => setPhotoSrc(null)}
+          onSave={(d) => { setPhoto(d); setPhotoSrc(null) }}
+        />
+      ) : null}
     </FormWrap>
   )
 }

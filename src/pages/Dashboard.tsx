@@ -181,18 +181,19 @@ export function Dashboard() {
           </div>
           <div className="team-mosaic">
             {active
-              .filter((c) => clientPhotos[c.id])
-              .concat(active.filter((c) => !clientPhotos[c.id]))
+              .map((c) => ({ c, photo: c.photo || clientPhotos[c.id] }))
+              .filter((x) => x.photo)
+              .concat(active.map((c) => ({ c, photo: c.photo || clientPhotos[c.id] })).filter((x) => !x.photo))
               .slice(0, 3)
-              .map((c) => (
+              .map(({ c, photo }) => (
                 <button
                   key={c.id}
-                  className={`team-tile ${clientPhotos[c.id] ? 'photo-tile' : ''}`}
+                  className={`team-tile ${photo ? 'photo-tile' : ''}`}
                   onClick={() => actions.clientDetail(c.id)}
                   aria-label={`Abrir perfil de ${c.name}`}
                 >
-                  {clientPhotos[c.id] ? (
-                    <img src={clientPhotos[c.id]} alt={c.name} />
+                  {photo ? (
+                    <img src={photo} alt={c.name} />
                   ) : (
                     <div className="tile-initials">{initials(c.name)}</div>
                   )}

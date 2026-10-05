@@ -17,6 +17,7 @@ import { NotificationsPage } from './pages/Notifications'
 import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
 import { AdminLogin } from './pages/AdminLogin'
+import { PublicTrainer } from './pages/PublicTrainer'
 import { currentAccount, useAuthVersion } from './lib/auth'
 
 export default function App() {
@@ -24,6 +25,12 @@ export default function App() {
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
+
+  // Ficha pública del entrenador: profallo.vercel.app/<usuario>
+  const slug = location.pathname.replace(/^\/+|\/+$/g, '')
+  if (slug && slug !== 'admin' && !slug.includes('/') && !slug.includes('.')) {
+    return <PublicTrainer username={slug} />
+  }
 
   const isIn = cloudEnabled ? !!cloudUser : entered
 

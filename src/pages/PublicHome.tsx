@@ -20,6 +20,15 @@ export function PublicHome() {
   const [captcha, setCaptcha] = useState(() => ({ a: 2 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) }))
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [robot, setRobot] = useState(false)
+  const [remember, setRemember] = useState(true)
+  const savedEmail = (() => { try { return localStorage.getItem('profallo.email') || '' } catch { return '' } })()
+
+  function persistEmail(email: string) {
+    try {
+      if (remember) localStorage.setItem('profallo.email', email.trim())
+      else localStorage.removeItem('profallo.email')
+    } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     const timer = window.setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 6000)
@@ -45,6 +54,7 @@ export function PublicHome() {
     if (cloudEnabled) {
       const res = await cloudSignIn(x.email ?? '', x.password ?? '')
       if (!res.ok) { setError(res.error ?? 'No se pudo iniciar sesión.'); return }
+      persistEmail(x.email ?? '')
       toast('Bienvenido.')
       enter()
       go('inicio')
@@ -52,6 +62,7 @@ export function PublicHome() {
     }
     const res = doLogin(x.email ?? '', x.password ?? '')
     if (!res.ok) { setError(res.error ?? 'No se pudo iniciar sesión.'); return }
+    persistEmail(x.email ?? '')
     toast(`Hola, ${res.account?.name}.`)
     enter()
     go('inicio')
@@ -135,8 +146,9 @@ export function PublicHome() {
             <span className="simple-access-kicker">INICIAR SESIÓN</span>
             <h1 id="login-title">Bienvenido de vuelta<span>.</span></h1>
             <form className="entry-form" onSubmit={onLogin}>
-              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
+              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
               <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
+              <label className="entry-remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> <span>Recordar usuario</span></label>
               {error ? <p className="entry-error">{error}</p> : null}
               <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
             </form>

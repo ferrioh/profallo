@@ -546,6 +546,8 @@ dialog.app-sheet{max-width:none}
 .entry-form input::placeholder{color:#6d7176}
 .entry-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .entry-error{color:#ff9a8a;font-size:12.5px;font-weight:600;margin-top:2px}
+.entry-remember{display:flex !important;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#c3c7cb;text-align:left}
+.entry-remember input{width:18px;height:18px;min-height:0;flex:none}
 .entry-back{background:transparent;color:#9aa0a6;font-size:12px;margin-top:10px;text-decoration:underline}
 .entry-captcha{display:grid;gap:10px;background:#1b1e22;border:1px solid #33363c;border-radius:12px;padding:12px}
 .entry-robot{display:flex;align-items:center;gap:10px;font-size:13px}

@@ -154,7 +154,7 @@ export function Sidebar() {
 }
 
 export function Topbar() {
-  const { data, view, go, storageAvailable } = useApp()
+  const { data, view, go, storageAvailable, cloudEnabled, cloudUser } = useApp()
   const label = PAGE_LABELS[view] ?? 'Inicio'
   return (
     <header className="topbar">
@@ -164,7 +164,13 @@ export function Topbar() {
       <div className="top-actions">
         <span className="local-status">
           <i />
-          {storageAvailable ? 'Guardado local' : 'Sin guardado persistente'}
+          {cloudEnabled
+            ? cloudUser
+              ? 'Guardado en la nube'
+              : 'Sin sesión'
+            : storageAvailable
+              ? 'Guardado local'
+              : 'Sin guardado persistente'}
         </span>
         <button
           className="icon-button"

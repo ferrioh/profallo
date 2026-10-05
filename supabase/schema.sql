@@ -75,7 +75,6 @@ create table if not exists public.clients (
   height      numeric(6,2),
   routine_id  text,
   notes       text,
-  gym         text,
   gender      text default 'mujer' check (gender in ('mujer', 'hombre')),
   tone        int default 0,
   archived    boolean not null default false,

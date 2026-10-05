@@ -117,7 +117,7 @@ export function Sidebar() {
           Ajustes y respaldos
         </button>
         {admin ? (
-          <button className="nav-button" onClick={() => go('admin')}>
+          <button className="nav-button" onClick={() => window.open(`${location.origin}${location.pathname}#admin`, '_blank', 'noopener')}>
             <Icon name="grid" />
             Panel de administración
           </button>
@@ -194,9 +194,9 @@ export function Topbar() {
           <button
             className="icon-button"
             id="adminPanel"
-            onClick={() => go('admin')}
+            onClick={() => window.open(`${location.origin}${location.pathname}#admin`, '_blank', 'noopener')}
             aria-label="Panel de administración"
-            title="Panel de administración"
+            title="Abrir panel de administración (nueva pestaña)"
           >
             <Icon name="grid" />
           </button>

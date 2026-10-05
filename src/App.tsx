@@ -16,16 +16,37 @@ import { PublicFicha } from './pages/PublicFicha'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
-import { useAuthVersion } from './lib/auth'
+import { AdminLogin } from './pages/AdminLogin'
+import { currentAccount, useAuthVersion } from './lib/auth'
 
 export default function App() {
-  const { view, entered, data, cloudEnabled, cloudUser, cloudReady } = useApp()
+  const { view, entered, data, cloudEnabled, cloudUser, cloudProfile, cloudReady } = useApp()
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
 
-  // Con Supabase activo, se exige sesión en la nube (ignora la sesión local vieja).
   const isIn = cloudEnabled ? !!cloudUser : entered
+
+  // Ruta de administración: login de admin dedicado + panel.
+  if (view === 'admin') {
+    if (cloudEnabled && cloudUser && !cloudReady) {
+      return (
+        <div className="verify-wrap">
+          <div className="verify-overlay">
+            <div className="verify-card">
+              <span className="verify-spinner" aria-hidden="true" />
+              <h1>Cargando…</h1>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    const adminSession = cloudEnabled
+      ? cloudProfile?.role === 'admin'
+      : (currentAccount()?.role ?? data.profile.role) === 'admin'
+    return adminSession ? <AdminPage /> : <AdminLogin />
+  }
+
   if (!isIn) return <PublicHome />
 
   if (cloudEnabled && cloudUser && !cloudReady) {
@@ -68,8 +89,6 @@ export default function App() {
       <ClientProfilePage />
     ) : view === 'notificaciones' ? (
       <NotificationsPage />
-    ) : view === 'admin' ? (
-      <AdminPage />
     ) : (
       <Dashboard />
     )

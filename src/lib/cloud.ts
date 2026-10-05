@@ -9,7 +9,7 @@ import type {
   Session,
 } from '../types'
 import type { BodyZone } from '../types'
-import { TODAY } from './utils'
+import { TODAY, uid } from './utils'
 
 type Row = Record<string, unknown>
 
@@ -331,3 +331,126 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
 }
 
 export const cloudToday = TODAY
+
+/* ------------------- Pagos Premium (Pago Móvil / Binance / Zelle) ------------------- */
+
+export interface AppSettings {
+  pay_pagomovil: string
+  pay_binance: string
+  pay_zelle: string
+}
+
+export type PremiumMethod = 'pagomovil' | 'binance' | 'zelle'
+
+export interface PremiumRequestRow {
+  id: string
+  trainer_id: string
+  name: string | null
+  email: string | null
+  phone: string | null
+  id_number: string | null
+  method: PremiumMethod
+  reference: string | null
+  amount: number
+  capture: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  created_at?: string
+}
+
+export async function cloudGetAppSettings(): Promise<AppSettings | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.from('app_settings').select('*').eq('id', 'global').maybeSingle()
+  if (error || !data) return null
+  const row = data as Row
+  return {
+    pay_pagomovil: or(row.pay_pagomovil),
+    pay_binance: or(row.pay_binance),
+    pay_zelle: or(row.pay_zelle),
+  }
+}
+
+export async function cloudSaveAppSettings(s: AppSettings): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('app_settings')
+    .upsert({ id: 'global', ...s, updated_at: new Date().toISOString() })
+  return !error
+}
+
+export async function cloudCreatePremiumRequest(req: {
+  trainerId: string
+  name: string
+  email: string
+  phone: string
+  idNumber: string
+  method: PremiumMethod
+  reference: string
+  amount: number
+  capture: string
+}): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase.from('premium_requests').insert({
+    id: uid(),
+    trainer_id: req.trainerId,
+    name: req.name,
+    email: req.email,
+    phone: req.phone,
+    id_number: req.idNumber,
+    method: req.method,
+    reference: req.reference,
+    amount: req.amount,
+    capture: req.capture,
+    status: 'pending',
+  })
+  return !error
+}
+
+export async function cloudListPremiumRequests(): Promise<PremiumRequestRow[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('premium_requests')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error || !data) return null
+  return data as PremiumRequestRow[]
+}
+
+export async function cloudMyPremiumRequests(userId: string): Promise<PremiumRequestRow[]> {
+  if (!supabase) return []
+  const { data } = await supabase
+    .from('premium_requests')
+    .select('*')
+    .eq('trainer_id', userId)
+    .order('created_at', { ascending: false })
+  return (data as PremiumRequestRow[]) ?? []
+}
+
+export async function cloudApprovePremium(req: PremiumRequestRow): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('premium_requests')
+    .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+    .eq('id', req.id)
+  if (error) return false
+  await supabase.from('profiles').update({ membership: 'premium' }).eq('id', req.trainer_id)
+  await supabase.from('membership_payments').insert({
+    id: uid(),
+    trainer_id: req.trainer_id,
+    amount: req.amount,
+    period: TODAY.slice(0, 7),
+    paid: true,
+    paid_date: TODAY,
+    method: req.method,
+    note: 'Premium aprobado',
+  })
+  return true
+}
+
+export async function cloudRejectPremium(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('premium_requests')
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+    .eq('id', id)
+  return !error
+}

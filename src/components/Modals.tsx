@@ -19,6 +19,7 @@ import {
 } from '../lib/utils'
 import { exportData } from '../lib/backup'
 import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
+import { cloudCreatePremiumRequest, cloudGetAppSettings, type AppSettings, type PremiumMethod } from '../lib/cloud'
 import { Icon } from './Icon'
 import { Field, SelectField, TextField } from './form'
 import { TimeWheelPicker } from './TimeWheelPicker'
@@ -713,27 +714,25 @@ export function AssignRoutineModal({ id }: { id: string }) {
 /* ------------------------- Membresía ------------------------- */
 
 export function MembershipModal() {
-  const { data, commit, closeModal, toast } = useApp()
+  const { data, commit, closeModal, toast, cloudEnabled, cloudUser } = useApp()
   const current = planOf(data.profile.membership)
   const activeCount = data.clients.filter((c) => !c.archived).length
-  const [paying, setPaying] = useState(false)
-  const [method, setMethod] = useState('Transferencia')
+  const [step, setStep] = useState<'plans' | 'method' | 'pay' | 'sent'>('plans')
+  const [method, setMethod] = useState<PremiumMethod>('pagomovil')
+  const [settings, setSettings] = useState<AppSettings | null>(null)
+  const [capture, setCapture] = useState('')
+  const [reference, setReference] = useState('')
+  const [sending, setSending] = useState(false)
   const price = MEMBERSHIP_PLANS.premium.price
 
-  function activate(id: 'free' | 'premium', paid = false, payMethod = 'Transferencia') {
+  useEffect(() => {
+    if (cloudEnabled) cloudGetAppSettings().then(setSettings)
+  }, [cloudEnabled])
+
+  function activateLocal(id: 'free' | 'premium') {
     commit((d) => {
       d.profile.membership = id
       d.profile.verified = id === 'premium'
-      if (id === 'premium' && paid) {
-        if (!d.membershipPayments) d.membershipPayments = []
-        d.membershipPayments.unshift({
-          id: uid(),
-          amount: price,
-          date: TODAY,
-          period: TODAY.slice(0, 7),
-          method: payMethod,
-        })
-      }
       if (d.trainers && d.profile.email) {
         const me = d.trainers.find((t) => t.email === d.profile.email)
         if (me) {
@@ -743,48 +742,108 @@ export function MembershipModal() {
       }
     })
     closeModal()
-    toast(
-      id === 'premium'
-        ? paid
-          ? `Pago de $${price} registrado. ¡Premium activado!`
-          : '¡Premium activado! Clientes ilimitados y perfil verificado.'
-        : 'Plan Normal activado (hasta 3 clientes).',
+    toast(id === 'premium' ? '¡Premium activado! Clientes ilimitados y perfil verificado.' : 'Plan Normal activado (hasta 3 clientes).')
+  }
+
+  function onCapture(file?: File) {
+    if (!file) return
+    if (!file.type.startsWith('image/')) { toast('Sube una imagen (captura).'); return }
+    if (file.size > 2 * 1024 * 1024) { toast('La imagen debe pesar menos de 2 MB.'); return }
+    const reader = new FileReader()
+    reader.onload = () => setCapture(String(reader.result))
+    reader.readAsDataURL(file)
+  }
+
+  async function submitPremium() {
+    if (!capture) { toast('Sube el comprobante de pago.'); return }
+    if (!cloudUser) { toast('Vuelve a iniciar sesión.'); return }
+    setSending(true)
+    const ok = await cloudCreatePremiumRequest({
+      trainerId: cloudUser,
+      name: data.profile.name,
+      email: data.profile.email ?? '',
+      phone: data.profile.phone ?? '',
+      idNumber: data.profile.idNumber ?? '',
+      method,
+      reference,
+      amount: price,
+      capture,
+    })
+    setSending(false)
+    if (!ok) { toast('No se pudo enviar. Intenta de nuevo.'); return }
+    setStep('sent')
+  }
+
+  const methodLabel = method === 'pagomovil' ? 'Pago Móvil' : method === 'binance' ? 'Binance' : 'Zelle'
+  const methodInfo = settings
+    ? method === 'pagomovil' ? settings.pay_pagomovil : method === 'binance' ? settings.pay_binance : settings.pay_zelle
+    : ''
+
+  const isPremium = current.id === 'premium'
+  const premiumPlan = MEMBERSHIP_PLANS.premium
+  const order: Array<'free' | 'premium'> = isPremium ? ['premium', 'free'] : ['free', 'premium']
+
+  if (cloudEnabled && step === 'method') {
+    return (
+      <>
+        <p className="notes" style={{ marginBottom: 16 }}>
+          Elige cómo pagar <b>${price}</b> para activar Premium.
+        </p>
+        <div className="pay-methods">
+          {(['pagomovil', 'binance', 'zelle'] as const).map((m) => (
+            <button key={m} className="pay-method" type="button" onClick={() => { setMethod(m); setStep('pay') }}>
+              <b>{m === 'pagomovil' ? 'Pago Móvil' : m === 'binance' ? 'Binance' : 'Zelle'}</b>
+              <Icon name="chevron" />
+            </button>
+          ))}
+        </div>
+        <button className="entry-back" type="button" onClick={() => setStep('plans')}>‹ Volver</button>
+      </>
     )
   }
 
-  if (paying) {
+  if (cloudEnabled && step === 'pay') {
     return (
       <>
-        <button className="plan-pill featured" type="button" onClick={() => undefined}>
-          <div className="plan-pill-main">
-            <b>${price}/mes</b>
-            <small>Premium · clientes ilimitados y verificado</small>
-          </div>
-        </button>
-        <div className="plan-pay">
-          <label>
-            Método de pago
-            <select value={method} onChange={(e) => setMethod(e.target.value)}>
-              {['Transferencia', 'Tarjeta', 'Efectivo', 'Otro'].map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </label>
-          <p className="form-hint">Se registrará un pago de ${price} y se activará Premium.</p>
-          <div className="form-foot">
-            <button className="button light" type="button" onClick={() => setPaying(false)}>Volver</button>
-            <button className="button primary" type="button" onClick={() => activate('premium', true, method)}>
-              <Icon name="check" /> Pagar ${price}
-            </button>
-          </div>
+        <span className="eyebrow">PAGO · {methodLabel.toUpperCase()}</span>
+        <div className="pay-box">
+          <p className="pay-amount">Monto a pagar: <b>${price}</b></p>
+          <span className="pay-info-label">Datos de pago</span>
+          <pre className="pay-info">{methodInfo || 'El administrador aún no cargó los datos de pago.'}</pre>
+        </div>
+        <div className="pay-user">
+          <span className="eyebrow">TUS DATOS (AUTOMÁTICO)</span>
+          <p>{data.profile.name}<br />{data.profile.email || 'sin correo'} · {data.profile.phone || 'sin teléfono'}<br />Cédula: {data.profile.idNumber || '—'}</p>
+        </div>
+        <label className="pay-ref">
+          Número de referencia / operación
+          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Ej. 12345678" />
+        </label>
+        <label className="pay-upload">
+          Subir captura del pago
+          <input type="file" accept="image/*" onChange={(e) => onCapture(e.target.files?.[0])} />
+        </label>
+        {capture ? <img className="pay-capture" src={capture} alt="Comprobante" /> : null}
+        <div className="form-foot">
+          <button className="button light" type="button" onClick={() => setStep('method')}>Volver</button>
+          <button className="button primary" type="button" disabled={sending || !capture} onClick={submitPremium}>
+            {sending ? 'Enviando…' : 'Enviar comprobante'}
+          </button>
         </div>
       </>
     )
   }
 
-  const isPremium = current.id === 'premium'
-  const premiumPlan = MEMBERSHIP_PLANS.premium
-  const order: Array<'free' | 'premium'> = isPremium ? ['premium', 'free'] : ['free', 'premium']
+  if (cloudEnabled && step === 'sent') {
+    return (
+      <div className="pay-sent">
+        <span className="entry-confirm-icon"><Icon name="check" /></span>
+        <h3>Esperando verificación</h3>
+        <p>Recibimos tu comprobante. El administrador lo revisará y activará tu <b>Premium</b>. Te avisaremos cuando el pago sea procesado.</p>
+        <button className="button primary" type="button" onClick={closeModal}>Entendido</button>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -812,8 +871,12 @@ export function MembershipModal() {
             type="button"
             onClick={() => {
               if (isCurrent) return
-              if (pid === 'premium') setPaying(true)
-              else activate('free')
+              if (pid === 'premium') {
+                if (cloudEnabled) setStep('method')
+                else activateLocal('premium')
+              } else {
+                activateLocal('free')
+              }
             }}
           >
             <div className="plan-pill-main">
@@ -839,7 +902,7 @@ export function MembershipModal() {
         </ul>
       </div>
       <p className="form-hint" style={{ marginTop: 14 }}>
-        La oferta Premium cuesta ${price} USD/mes. Puedes cargar el pago ahora mismo.
+        La oferta Premium cuesta ${price} USD/mes.
       </p>
     </>
   )

@@ -129,12 +129,39 @@ create table if not exists public.membership_payments (
   id          text primary key,
   trainer_id  text not null references public.profiles(id) on delete cascade,
   amount      numeric(10,2) not null default 3,
-  period      text,                                   -- "YYYY-MM"
+  period      text,
   paid        boolean not null default true,
   paid_date   date default current_date,
   method      text default 'Manual',
   note        text,
   created_at  timestamptz default now()
+);
+
+-- Datos de pago que muestra el admin (una sola fila)
+create table if not exists public.app_settings (
+  id            text primary key default 'global',
+  pay_pagomovil text,
+  pay_binance   text,
+  pay_zelle     text,
+  updated_at    timestamptz default now()
+);
+insert into public.app_settings (id) values ('global') on conflict (id) do nothing;
+
+-- Solicitudes de pago Premium (el usuario sube su comprobante; el admin aprueba)
+create table if not exists public.premium_requests (
+  id          text primary key,
+  trainer_id  text not null references public.profiles(id) on delete cascade,
+  name        text,
+  email       text,
+  phone       text,
+  id_number   text,
+  method      text not null check (method in ('pagomovil', 'binance', 'zelle')),
+  reference   text,
+  amount      numeric(10,2) not null default 3,
+  capture     text,
+  status      text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  created_at  timestamptz default now(),
+  reviewed_at timestamptz
 );
 
 -- ------------------------------------------------------------
@@ -268,6 +295,27 @@ end $$;
 -- cobros de membresía: solo admin
 drop policy if exists membership_admin on public.membership_payments;
 create policy membership_admin on public.membership_payments
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- configuración de pagos: visible para usuarios logueados, editable solo por admin
+alter table public.app_settings enable row level security;
+drop policy if exists app_settings_select on public.app_settings;
+create policy app_settings_select on public.app_settings
+  for select using (auth.uid() is not null);
+drop policy if exists app_settings_admin on public.app_settings;
+create policy app_settings_admin on public.app_settings
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- solicitudes premium: el usuario crea y ve las suyas; el admin ve y resuelve todas
+alter table public.premium_requests enable row level security;
+drop policy if exists premium_requests_select on public.premium_requests;
+create policy premium_requests_select on public.premium_requests
+  for select using (trainer_id = auth.uid()::text or public.is_admin());
+drop policy if exists premium_requests_insert on public.premium_requests;
+create policy premium_requests_insert on public.premium_requests
+  for insert with check (trainer_id = auth.uid()::text);
+drop policy if exists premium_requests_admin on public.premium_requests;
+create policy premium_requests_admin on public.premium_requests
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- ------------------------------------------------------------

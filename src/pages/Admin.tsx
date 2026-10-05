@@ -15,10 +15,17 @@ import {
 import { month, TODAY } from '../lib/utils'
 import { currentAccount, setAccountRole, setAccountStatus, useAccounts, useAuthVersion } from '../lib/auth'
 import {
+  cloudApprovePremium,
+  cloudGetAppSettings,
+  cloudListPremiumRequests,
   cloudListProfiles,
+  cloudRejectPremium,
+  cloudSaveAppSettings,
   cloudSetProfileRole,
   cloudSetProfileStatus,
+  type AppSettings,
   type CloudProfileRow,
+  type PremiumRequestRow,
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
@@ -31,6 +38,8 @@ export function AdminPage() {
     : (account?.role ?? data.profile.role) === 'admin'
   const accounts = useAccounts()
   const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
+  const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
+  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '' })
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const nowMonth = month(TODAY)
 
@@ -38,6 +47,8 @@ export function AdminPage() {
     if (!cloudEnabled) return
     let alive = true
     cloudListProfiles().then((rows) => { if (alive) setCloudAccounts(rows) })
+    cloudListPremiumRequests().then((rows) => { if (alive) setPremiumReqs(rows) })
+    cloudGetAppSettings().then((s) => { if (alive && s) setPaySettings(s) })
     return () => { alive = false }
   }, [cloudEnabled])
 
@@ -163,6 +174,31 @@ export function AdminPage() {
     })
   }
 
+  function approvePremium(req: PremiumRequestRow) {
+    cloudApprovePremium(req).then((ok) => {
+      if (!ok) { toast('No se pudo aprobar.'); return }
+      setPremiumReqs((prev) => prev?.map((r) => (r.id === req.id ? { ...r, status: 'approved' } : r)) ?? null)
+      toast('Pago aprobado. Premium activado.')
+    })
+  }
+
+  function rejectPremium(id: string) {
+    cloudRejectPremium(id).then((ok) => {
+      if (ok) setPremiumReqs((prev) => prev?.map((r) => (r.id === id ? { ...r, status: 'rejected' } : r)) ?? null)
+      toast('Solicitud rechazada.')
+    })
+  }
+
+  function savePaySettings(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '' }
+    cloudSaveAppSettings(s).then((ok) => {
+      if (ok) { setPaySettings(s); toast('Datos de pago guardados.') }
+      else toast('No se pudieron guardar los datos de pago.')
+    })
+  }
+
   return (
     <div className="admin-page">
       <PageHead
@@ -211,6 +247,61 @@ export function AdminPage() {
           )
         })}
       </div>
+
+      {cloudEnabled ? (
+        <>
+          <section className="admin-social">
+            <div className="section-line">
+              <div><span className="eyebrow">PAGOS</span><h2>Datos para recibir el pago</h2></div>
+            </div>
+            <form onSubmit={savePaySettings}>
+              <div className="form-grid">
+                <div className="full"><label>Pago Móvil</label><textarea name="pay_pagomovil" defaultValue={paySettings.pay_pagomovil} rows={2} placeholder="Banco, teléfono y cédula del titular" /></div>
+                <div className="full"><label>Binance</label><textarea name="pay_binance" defaultValue={paySettings.pay_binance} rows={2} placeholder="Email / Wallet y red (BEP20, etc.)" /></div>
+                <div className="full"><label>Zelle</label><textarea name="pay_zelle" defaultValue={paySettings.pay_zelle} rows={2} placeholder="Email y nombre del titular" /></div>
+              </div>
+              <div className="form-foot">
+                <button className="button primary" type="submit">Guardar datos de pago <Icon name="check" /></button>
+              </div>
+            </form>
+          </section>
+
+          <section className="admin-trainers">
+            <div className="section-line">
+              <div><span className="eyebrow">SOLICITUDES PREMIUM</span><h2>Pagos por verificar</h2></div>
+              <span>{(premiumReqs ?? []).filter((r) => r.status === 'pending').length} pendientes</span>
+            </div>
+            <div className="admin-list">
+              {(premiumReqs ?? []).map((r) => (
+                <article className="admin-trainer" key={r.id}>
+                  <div className="admin-trainer-main">
+                    {r.capture ? (
+                      <a className="capture-thumb" href={r.capture} target="_blank" rel="noopener noreferrer"><img src={r.capture} alt="Comprobante" /></a>
+                    ) : (
+                      <span className="admin-avatar">{r.method.slice(0, 2).toUpperCase()}</span>
+                    )}
+                    <div>
+                      <b>{r.name || 'Entrenador'}</b>
+                      <small>{r.method === 'pagomovil' ? 'Pago Móvil' : r.method === 'binance' ? 'Binance' : 'Zelle'} · ${r.amount} · Ref: {r.reference || '—'}</small>
+                      <small>{r.email || ''} · {r.phone || ''} · Cédula {r.id_number || '—'}</small>
+                    </div>
+                  </div>
+                  <div className="admin-trainer-meta">
+                    <span className={`admin-status ${r.status === 'approved' ? 'premium' : r.status === 'pending' ? 'trial' : 'expired'}`}>
+                      {r.status === 'approved' ? 'Aprobado' : r.status === 'pending' ? 'Pendiente' : 'Rechazado'}
+                    </span>
+                  </div>
+                  <div className="admin-trainer-actions">
+                    {r.status === 'pending' ? <button className="button primary" onClick={() => approvePremium(r)}>Aprobar Premium</button> : null}
+                    {r.status === 'pending' ? <button className="button light" onClick={() => rejectPremium(r.id)}>Rechazar</button> : null}
+                  </div>
+                </article>
+              ))}
+              {!(premiumReqs ?? []).length ? <div className="admin-empty card white">Sin solicitudes todavía.</div> : null}
+            </div>
+          </section>
+        </>
+      ) : null}
 
       <section className="admin-social">
         <div className="section-line">

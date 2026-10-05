@@ -1,9 +1,10 @@
-import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { buildNotifications, timeAgo, type AppNotification } from '../lib/notifications'
+import { cloudMyPremiumRequests, type PremiumRequestRow } from '../lib/cloud'
 import { month } from '../lib/utils'
 import type { AppData } from '../types'
 
@@ -74,11 +75,16 @@ function SwipeRow({
 }
 
 export function NotificationsPage() {
-  const { data, commit, toast, goBack, patchUi, go } = useApp()
+  const { data, commit, toast, goBack, patchUi, go, cloudEnabled, cloudUser } = useApp()
   const actions = useActions()
   const [menuId, setMenuId] = useState<string | null>(null)
+  const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[]>([])
   const items = buildNotifications(data)
   const current = items.find((n) => n.id === menuId) ?? null
+
+  useEffect(() => {
+    if (cloudEnabled && cloudUser) cloudMyPremiumRequests(cloudUser).then(setPremiumReqs)
+  }, [cloudEnabled, cloudUser])
 
   function remove(id: string) {
     commit((d) => {
@@ -128,6 +134,16 @@ export function NotificationsPage() {
         sub="Toca para abrir. Desliza a la izquierda para borrar."
       />
       <div className="notif-list">
+        {premiumReqs.map((r) => (
+          <div className={`notif-item tone-${r.status === 'approved' ? 'accent' : r.status === 'pending' ? 'white' : 'red'}`} key={r.id}>
+            <span className="notif-mark"><Icon name="star" /></span>
+            <div className="notif-copy">
+              <b>{r.status === 'approved' ? 'Pago procesado · Premium activo' : r.status === 'pending' ? 'Pago en verificación' : 'Pago rechazado'}</b>
+              <p>Premium · ${r.amount} · {r.method === 'pagomovil' ? 'Pago Móvil' : r.method === 'binance' ? 'Binance' : 'Zelle'}</p>
+            </div>
+            <span className="notif-time">{r.status === 'pending' ? 'en revisión' : r.status === 'approved' ? 'aprobado' : 'rechazado'}</span>
+          </div>
+        ))}
         {items.map((n) => (
           <SwipeRow
             key={n.id}

@@ -381,6 +381,26 @@ dialog.app-sheet{max-width:none}
 .social-icon svg{width:22px;height:22px}
 .social-icon:hover{color:#d2ff62;border-color:#d2ff6255}
 .profile-copyright{font-size:12px;color:#8a9096;letter-spacing:.02em}
+/* Pasarela de pago Premium (Pago Móvil / Binance / Zelle) */
+.pay-methods{display:grid;gap:10px;margin-bottom:12px}
+.pay-method{display:flex;align-items:center;justify-content:space-between;background:#1e2024;border:1px solid #3a3d43;border-radius:16px;padding:16px 18px;color:#eef0f2;font-size:16px;font-weight:700}
+.pay-method:hover{background:#26292e;border-color:#d2ff6255}
+.pay-box{background:#1b1e22;border:1px solid #33363c;border-radius:16px;padding:14px;margin:10px 0}
+.pay-amount{margin-bottom:8px}
+.pay-info-label{font-size:10px;letter-spacing:.1em;color:#a9aeb2;text-transform:uppercase}
+.pay-info{white-space:pre-wrap;font-family:inherit;font-size:14px;color:#eef0f2;margin-top:6px}
+.pay-user{background:#1b1e22;border:1px solid #33363c;border-radius:16px;padding:14px;margin:10px 0}
+.pay-user .eyebrow{display:block;margin-bottom:6px;color:#a9aeb2}
+.pay-user p{font-size:13px;color:#dfe1e3;line-height:1.5}
+.pay-ref,.pay-upload{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb;margin:10px 0}
+.pay-ref input{min-height:46px;border-radius:10px;border:1px solid #33363c;background:#1b1e22;color:#fff;padding:11px 13px}
+.pay-upload input{color:#c3c7cb}
+.pay-capture{display:block;max-width:100%;max-height:220px;border-radius:12px;border:1px solid #3a3d43;margin:8px 0}
+.pay-sent{display:grid;justify-items:center;gap:12px;text-align:center;padding:8px 4px}
+.pay-sent h3{font-size:22px}
+.pay-sent p{color:#c3c7cb;font-size:14px;line-height:1.6;max-width:360px}
+.capture-thumb{width:52px;height:52px;border-radius:12px;overflow:hidden;flex:none;border:1px solid #444;display:block}
+.capture-thumb img{width:100%;height:100%;object-fit:cover}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

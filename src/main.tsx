@@ -8,6 +8,7 @@ import './styles/body-guide.css'
 import './index.css'
 import App from './App'
 import { AppProvider } from './context/AppContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Soporta /admin (ruta) redirigiendo a #admin (hash del SPA).
 if (/\/admin\/?$/i.test(window.location.pathname)) {
@@ -16,7 +17,9 @@ if (/\/admin\/?$/i.test(window.location.pathname)) {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <AppProvider>
-    <App />
-  </AppProvider>,
+  <ErrorBoundary>
+    <AppProvider>
+      <App />
+    </AppProvider>
+  </ErrorBoundary>,
 )

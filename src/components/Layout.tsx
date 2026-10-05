@@ -5,6 +5,7 @@ import { Icon, type IconName } from './Icon'
 import { initials } from '../lib/utils'
 import { currentAccount, useAuthVersion } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
+import { buildNotifications } from '../lib/notifications'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
@@ -152,9 +153,22 @@ export function Sidebar() {
 }
 
 export function Topbar() {
-  const { data, view, go, storageAvailable, cloudEnabled, cloudUser, cloudProfile } = useApp()
+  const { data, view, go, storageAvailable, cloudEnabled, cloudUser, cloudProfile, commit } = useApp()
   const admin = cloudEnabled ? cloudProfile?.role === 'admin' : data.profile.role === 'admin'
   const label = PAGE_LABELS[view] ?? 'Inicio'
+  const notifications = buildNotifications(data)
+  const readIds = new Set(data.notificationState?.read ?? [])
+  const unread = notifications.filter((n) => !readIds.has(n.id)).length
+
+  function openNotifications() {
+    commit((d) => {
+      if (!d.notificationState) d.notificationState = { deleted: [], muted: [], read: [] }
+      const set = new Set(d.notificationState.read)
+      notifications.forEach((n) => set.add(n.id))
+      d.notificationState.read = [...set]
+    })
+    go('notificaciones')
+  }
   return (
     <header className="topbar">
       <div className="breadcrumb">
@@ -182,11 +196,11 @@ export function Topbar() {
         <button
           className="icon-button"
           id="notifications"
-          onClick={() => go('notificaciones')}
-          aria-label="Ver notificaciones"
+          onClick={openNotifications}
+          aria-label={unread ? `${unread} notificaciones` : 'Ver notificaciones'}
         >
           <Icon name="bell" />
-          <i className="notification-dot" />
+          {unread > 0 ? <span className="notif-badge">{unread > 9 ? '9+' : unread}</span> : null}
         </button>
         {admin ? (
           <button

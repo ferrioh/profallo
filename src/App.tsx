@@ -21,13 +21,27 @@ import { cloudSignOut } from './lib/cloud'
 import { Icon } from './components/Icon'
 
 export default function App() {
-  const { view, entered, data, leave, cloudEnabled, cloudUser, cloudProfile } = useApp()
+  const { view, entered, data, leave, cloudEnabled, cloudUser, cloudProfile, cloudReady } = useApp()
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
 
   const isIn = entered || (cloudEnabled && !!cloudUser)
   if (!isIn) return <PublicHome />
+
+  if (cloudEnabled && cloudUser && !cloudReady) {
+    return (
+      <div className="verify-wrap">
+        <div className="verify-overlay">
+          <div className="verify-card">
+            <span className="verify-spinner" aria-hidden="true" />
+            <h1>Cargando tu espacio…</h1>
+            <p>Sincronizando con la nube.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const account = currentAccount()
   const pending = cloudEnabled

@@ -74,6 +74,7 @@ interface AppContextValue {
   cloudEnabled: boolean
   cloudUser: string | null
   cloudProfile: CloudProfileRow | null
+  cloudReady: boolean
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -103,6 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [cloudUser, setCloudUser] = useState<string | null>(null)
   const [cloudProfile, setCloudProfile] = useState<CloudProfileRow | null>(null)
+  const [cloudReady, setCloudReady] = useState(!isSupabaseEnabled)
   const cloudUserRef = useRef<string | null>(null)
   cloudUserRef.current = cloudUser
   const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -200,23 +202,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setCloudUser(uid)
       if (!uid) {
         setCloudProfile(null)
+        setCloudReady(true)
         return
       }
       const prof = await cloudGetProfile(uid)
       if (!alive) return
       setCloudProfile(prof)
       const fresh = await loadCloudData(uid, dataRef.current.profile)
-      if (!alive || !fresh) return
-      const empty =
-        !fresh.clients.length && !fresh.routines.length && !fresh.sessions.length &&
-        !fresh.payments.length && !fresh.measurements.length
-      const localHas = dataRef.current.clients.length > 0 || dataRef.current.routines.length > 0
-      if (empty && localHas) {
-        await saveCloudData(uid, dataRef.current)
-        replaceData({ ...dataRef.current, profile: fresh.profile, demo: false })
-      } else {
-        replaceData(fresh)
-      }
+      if (!alive) return
+      // La nube es la fuente de verdad: nunca subimos datos locales automáticamente.
+      if (fresh) replaceData(fresh)
+      setCloudReady(true)
     }
     cloudGetSessionUserId().then(handle)
     const unsub = cloudOnAuth(handle)
@@ -257,6 +253,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     cloudEnabled: isSupabaseEnabled,
     cloudUser,
     cloudProfile,
+    cloudReady,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

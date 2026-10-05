@@ -3,5 +3,6 @@
   "framework": "vite",
   "buildCommand": "npm run ci",
   "outputDirectory": "dist",
+  "redirects": [{ "source": "/admin", "destination": "/#admin" }],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

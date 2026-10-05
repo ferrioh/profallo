@@ -9,6 +9,12 @@ import './index.css'
 import App from './App'
 import { AppProvider } from './context/AppContext'
 
+// Soporta /admin (ruta) redirigiendo a #admin (hash del SPA).
+if (/\/admin\/?$/i.test(window.location.pathname)) {
+  const base = window.location.pathname.replace(/\/admin\/?$/i, '')
+  window.location.replace(`${window.location.origin}${base}/#admin`)
+}
+
 createRoot(document.getElementById('root')!).render(
   <AppProvider>
     <App />

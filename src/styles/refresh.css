@@ -420,17 +420,18 @@ dialog.app-sheet{max-width:none}
 .exercise-editor-values input,.exercise-editor-name .ex-name{color:#27391d}
 .exercise-editor-values input::placeholder{color:#9aa78e}
 .profile-photo-action .trial-note{margin-left:auto}
-/* Acceso de administrador (página dedicada) */
-.admin-login{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(900px 500px at 50% -10%,#1b2410,#0b0d0b 60%),#0b0d0b}
-.admin-login-card{width:min(100%,400px);background:#14161a;border:1px solid #2c3036;border-radius:22px;padding:28px;display:grid;gap:12px;text-align:left}
+/* Acceso de administrador (página dedicada, tema verde, sin imagen) */
+.admin-login{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(800px 520px at 50% -10%,#26340f,#0a0c08 62%),#0a0c08}
+.admin-login-card{width:min(100%,400px);background:#11140f;border:1px solid #3a4a1e;border-top:4px solid #d2ff62;border-radius:22px;padding:28px;display:grid;gap:12px;text-align:left}
 .admin-login-card .brand-mark{margin:0 auto}
-.admin-login-card .eyebrow{text-align:center;color:#bfc4c5;display:block}
-.admin-login-card h1{font-size:26px;text-align:center}
-.admin-login-card .muted{text-align:center;color:#a9aeb2;font-size:13px}
-.admin-login-card label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}
-.admin-login-card input{min-height:48px;border-radius:10px;border:1px solid #33363c;background:#1b1e22;color:#fff;padding:12px 13px;font-size:15px}
+.admin-login-card .eyebrow{text-align:center;color:#d2ff62;letter-spacing:.14em;display:block;font-weight:700}
+.admin-login-card h1{font-size:26px;text-align:center;color:#eaffb0}
+.admin-login-card .muted{text-align:center;color:#a9b59a;font-size:13px}
+.admin-login-card label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#bcd0a8}
+.admin-login-card input{min-height:48px;border-radius:10px;border:1px solid #3a4a2a;background:#171a12;color:#fff;padding:12px 13px;font-size:15px}
+.admin-login-card input:focus{outline:2px solid #d2ff62;outline-offset:2px}
 .admin-login-card .button{margin-top:6px;justify-content:center}
-.admin-login-card .entry-back{background:transparent;color:#9aa0a6;text-align:center;font-size:12px;text-decoration:underline}
+.admin-login-card .entry-back{background:transparent;color:#9aa78e;text-align:center;font-size:12px;text-decoration:underline}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

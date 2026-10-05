@@ -11,6 +11,25 @@ Debe decir al final: **Success. No rows returned**.
 > `supabase link --project-ref nnywqyvykmpvtfclsvec` y `supabase db push`
 > (el esquema ya está en `supabase/migrations/`).
 
+## 1.b) Dejar TU cuenta como admin (ejecuta después del esquema)
+En el mismo SQL Editor, pega y ejecuta esto (confirma tu correo y crea tu
+perfil como admin aprobado con Premium). Cambia el correo si hace falta:
+
+```sql
+-- 1) Confirmar el correo (para poder iniciar sesión sin el enlace)
+update auth.users
+set email_confirmed_at = now()
+where email = 'ferofficial@gmail.com';
+
+-- 2) Crear/asegurar tu perfil como ADMIN aprobado con Premium
+insert into public.profiles (id, email, name, role, status, membership, trial_start)
+select id::text, email, coalesce(split_part(email,'@',1),'Admin'), 'admin', 'approved', 'premium', current_date
+from auth.users
+where email = 'ferofficial@gmail.com'
+on conflict (id) do update
+  set role = 'admin', status = 'approved', membership = 'premium';
+```
+
 ## 2) Ajuste de Auth (recomendado)
 En **Authentication → Providers → Email**, desactiva **"Confirm email"** para que el registro entre directo.
 

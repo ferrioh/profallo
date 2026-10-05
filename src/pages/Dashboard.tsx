@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
@@ -11,6 +12,7 @@ import {
   findClient,
   initials,
   longDate,
+  month,
   TODAY,
 } from '../lib/utils'
 
@@ -76,13 +78,38 @@ export function CoachStage({ full = false }: { full?: boolean }) {
 }
 
 export function Dashboard() {
-  const { data, stats, money, go, ui } = useApp()
+  const { data, stats, money, go, ui, commit, toast } = useApp()
   const actions = useActions()
   const active = data.clients.filter((c) => !c.archived)
+  const [editingLink, setEditingLink] = useState(false)
+  const monthlySessions = data.sessions.filter((s) => month(s.date) === month(TODAY) && s.status !== 'Cancelada').length
+  const publicUrl = `${location.origin}/${data.profile.username || ''}`
   const next = data.sessions
     .filter((x) => x.date >= TODAY && x.status === 'Programada')
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]
   const nextClient = next ? findClient(data, next.client) : null
+
+  async function shareProfile() {
+    if (!data.profile.username) {
+      toast('Primero pon tu usuario en "Editar link".')
+      setEditingLink(true)
+      return
+    }
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
+    if (nav.share) {
+      try { await nav.share({ title: data.profile.name, text: 'Mira mi perfil de entrenador', url: publicUrl }); return } catch { /* cancelado */ }
+    }
+    try { await navigator.clipboard.writeText(publicUrl); toast('Link copiado: ' + publicUrl) } catch { toast(publicUrl) }
+  }
+
+  function saveUsername(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const raw = String(new FormData(e.currentTarget).get('username') ?? '')
+    const username = raw.trim().replace(/^@/, '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase()
+    commit((d) => { d.profile.username = username })
+    setEditingLink(false)
+    toast(username ? 'Link actualizado.' : 'Link quitado.')
+  }
 
   return (
     <div className="dashboard-home">
@@ -101,6 +128,51 @@ export function Dashboard() {
           </>
         }
       />
+
+      <section className="share-profile">
+        <div className="share-head">
+          <div>
+            <span className="eyebrow">TU FICHA PÚBLICA</span>
+            <h2>Comparte tu perfil</h2>
+            <p>Esto es lo que ve la gente desde afuera.</p>
+          </div>
+          <button className="button primary share-cta" onClick={shareProfile}>
+            <Icon name="share" /> Compartir perfil
+          </button>
+        </div>
+        <div className="share-link">
+          <span className="share-url">profallo.vercel.app/<b>{data.profile.username || 'tunombre'}</b></span>
+          <button className="button light" onClick={() => setEditingLink((v) => !v)}>
+            <Icon name="edit" /> Editar link
+          </button>
+        </div>
+        {editingLink ? (
+          <form className="share-edit" onSubmit={saveUsername}>
+            <span className="share-edit-prefix">profallo.vercel.app/</span>
+            <input name="username" defaultValue={data.profile.username} placeholder="tu-usuario" maxLength={30} />
+            <button className="button primary" type="submit"><Icon name="check" /> Guardar</button>
+          </form>
+        ) : null}
+        <div className="share-preview">
+          <span className="share-preview-photo">{data.profile.photo ? <img src={data.profile.photo} alt={data.profile.name} /> : <Icon name="user" />}</span>
+          <div className="share-preview-id">
+            <span className="share-preview-role">{data.profile.specialty || 'Entrenador personal'}</span>
+            <b>{data.profile.name}{data.profile.verified ? <Verified /> : null}</b>
+          </div>
+          <div className="share-preview-stats">
+            <span><b>{data.routines.length}</b> rutinas</span>
+            <span><b>{stats.active}</b> clientes</span>
+            <span><b>{monthlySessions}</b> sesiones/mes</span>
+          </div>
+          <button
+            className="button share-preview-join"
+            disabled={!data.profile.phone}
+            onClick={() => data.profile.phone && window.open(`https://wa.me/${data.profile.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${data.profile.name}, quiero unirme a tu equipo 💪`)}`, '_blank', 'noopener')}
+          >
+            <Icon name="whatsapp" /> Únete a mi equipo
+          </button>
+        </div>
+      </section>
 
       <div className="overview-stage">
         <CoachStage />

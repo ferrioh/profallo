@@ -470,6 +470,31 @@ dialog.app-sheet{max-width:none}
 .pt-contact a:hover{text-decoration:underline}
 .pt-contact svg{width:16px;height:16px}
 .pt-foot{color:#8a9078;font-size:11px;margin-top:10px}
+/* Compartir perfil (Inicio) */
+.share-profile{background:#2d2f36;border:1px solid #42444d;border-radius:26px;padding:22px;margin:16px 0 20px;display:grid;gap:14px}
+.share-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.share-head h2{font-size:24px}
+.share-head p{color:#b9bdc3;font-size:13px;margin-top:4px}
+.share-cta{min-height:48px}
+.share-link{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#24262b;border:1px solid #3a3d43;border-radius:14px;padding:12px 14px}
+.share-url{font-size:14px;color:#c3c7cb}
+.share-url b{color:#d2ff62}
+.share-edit{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.share-edit-prefix{font-size:13px;color:#9aa0a6}
+.share-edit input{min-width:180px;flex:1;min-height:44px;border-radius:10px;border:1px solid #3a3d43;background:#1b1d20;color:#fff;padding:10px 12px}
+.share-preview{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#24262b;border:1px solid #3a3d43;border-radius:16px;padding:14px}
+.share-preview-photo{width:56px;height:56px;border-radius:50%;overflow:hidden;background:#3a3e44;display:grid;place-items:center;color:#c3c7cb;flex:none}
+.share-preview-photo img{width:100%;height:100%;object-fit:cover}
+.share-preview-photo svg{width:24px;height:24px}
+.share-preview-id{display:grid;gap:2px;min-width:120px}
+.share-preview-role{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#b9c4ac}
+.share-preview-id b{font-size:17px;display:flex;align-items:center;gap:6px}
+.share-preview-stats{display:flex;gap:16px;margin-left:auto;flex-wrap:wrap}
+.share-preview-stats span{font-size:12px;color:#b9bdc3}
+.share-preview-stats b{color:#fff;font-size:16px;margin-right:3px}
+.share-preview-join{background:transparent;border:1px solid #25d36688;color:#8ff0b0}
+.share-preview-join:hover{background:#16241b}
+.share-preview-join:disabled{opacity:.5}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

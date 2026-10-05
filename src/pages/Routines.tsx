@@ -7,10 +7,21 @@ import { PageHead } from '../components/ui'
 import { MuscleGuide, getRoutineZones } from '../components/MuscleGuide'
 
 export function RoutinesPage() {
-  const { data } = useApp()
+  const { data, commit, toast } = useApp()
   const actions = useActions()
   const [openId, setOpenId] = useState<string | null>(null)
   const active = data.clients.filter((c) => !c.archived)
+
+  function deleteRoutine(id: string, name: string) {
+    if (!window.confirm(`¿Eliminar la rutina "${name}"? Se quitará de los clientes y sesiones que la tengan.`)) return
+    commit((d) => {
+      d.routines = d.routines.filter((x) => x.id !== id)
+      d.clients.forEach((c) => { if (c.routine === id) c.routine = '' })
+      d.sessions.forEach((s) => { if (s.routine === id) s.routine = '' })
+    })
+    setOpenId((prev) => (prev === id ? null : prev))
+    toast('Rutina eliminada.')
+  }
 
   return (
     <>
@@ -82,6 +93,7 @@ export function RoutinesPage() {
                     <div className="routine-quick-actions">
                       <button onClick={() => actions.editRoutine(r.id)}><Icon name="edit" /> Editar rutina</button>
                       <button onClick={() => actions.assignRoutine(r.id)}><Icon name="users" /> Asignar</button>
+                      <button className="danger-quiet" onClick={() => deleteRoutine(r.id, r.name)}><Icon name="trash" /> Eliminar</button>
                     </div>
                     <div className="routine-drawer" id={`routine-body-${r.id}`}>
                       <div className="routine-detail-layout">

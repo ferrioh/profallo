@@ -446,8 +446,8 @@ dialog.app-sheet{max-width:none}
 .client-photo-preview{width:64px;height:64px;border-radius:50%;overflow:hidden;background:#3a3e44;display:grid;place-items:center;color:#c3c7cb;flex:none}
 .client-photo-preview img{width:100%;height:100%;object-fit:cover}
 .client-photo-preview svg{width:26px;height:26px}
-/* La foto ocupa todo el circulo (sin sobre-zoom) */
-.avatar#headerAvatar img,.avatar#coachAvatar img{object-position:center;transform:none}
+/* La foto del avatar hace un ligero zoom para llenar el circulo como al ajustarla */
+.avatar#headerAvatar img,.avatar#coachAvatar img{object-position:center;transform:scale(1.35);transform-origin:center}
 /* Ficha pública del entrenador */
 .public-trainer{min-height:100dvh;display:grid;place-items:center;padding:24px;background:#0a0c08;position:relative;overflow:hidden}
 .pt-bg{position:fixed;inset:0;z-index:0;background:#0a0c08;overflow:hidden}

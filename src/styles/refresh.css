@@ -479,6 +479,9 @@ dialog.app-sheet{max-width:none}
 /* Contador de notificaciones (numero rojo) */
 .icon-button{position:relative}
 .notif-badge{position:absolute;top:-5px;left:-5px;min-width:18px;height:18px;border-radius:99px;background:#ff4d4d;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px;line-height:1;box-shadow:0 0 0 2px #181a19}
+/* Bloque de próxima sesión + cobros, abajo del calendario */
+.focus-stack.focus-bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+@media(max-width:800px){.focus-stack.focus-bottom{grid-template-columns:1fr}}
 /* Compartir perfil (Inicio) */
 .share-profile{background:#2d2f36;border:1px solid #42444d;border-radius:26px;padding:18px;margin:16px 0 20px}
 .share-toggle{display:flex;align-items:center;gap:12px;width:100%;background:transparent;color:#fff;text-align:left;padding:0}

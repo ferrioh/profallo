@@ -138,67 +138,6 @@ export function Dashboard() {
 
       <div className="overview-stage">
         <CoachStage />
-        <div className="focus-stack">
-          <section className="focus-card white">
-            <div className="card-head">
-              <span className="eyebrow">TU PRÓXIMA SESIÓN</span>
-              <span className="pill green">
-                {next ? 'EN AGENDA' : 'ESPACIO LIBRE'}
-              </span>
-            </div>
-            <div className="focus-time">
-              {next ? next.time : '—'}
-              <span>{next ? 'h' : 'Tu momento'}</span>
-            </div>
-            {next && nextClient ? (
-              <>
-                <div className="session-person">
-                  <Avatar client={nextClient} />
-                  <div>
-                    <b>{nextClient.name}</b>
-                    <p>{next.title}</p>
-                  </div>
-                </div>
-                <button
-                  className="button dark focus-cta"
-                  onClick={() => actions.editSession(next.id)}
-                >
-                  Ver sesión <Icon name="up" />
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="subtle">Elige cuándo empieza el próximo reto.</p>
-                <button
-                  className="button dark focus-cta"
-                  onClick={() => actions.newSession()}
-                >
-                  Programar <Icon name="plus" />
-                </button>
-              </>
-            )}
-          </section>
-          <section className="focus-card lime">
-            <div className="card-head">
-              <span className="eyebrow">TUS COBROS</span>
-              <button
-                className="icon-button"
-                onClick={() => go('pagos')}
-                aria-label="Ver pagos"
-              >
-                <Icon name="up" />
-              </button>
-            </div>
-            <div className="focus-money">{money(stats.monthIncome)}</div>
-            <div className="money-meta">
-              <span>recibidos este mes</span>
-              <b>{stats.late} vencidos</b>
-            </div>
-            <button className="focus-link" onClick={() => actions.newPayment()}>
-              Registrar un cobro <Icon name="plus" />
-            </button>
-          </section>
-        </div>
       </div>
 
       <section className={`share-profile ${shareOpen ? 'open' : ''}`}>
@@ -328,6 +267,59 @@ export function Dashboard() {
           </div>
         </section>
       </div>
+
+      <div className="focus-stack focus-bottom">
+        <section className="focus-card white">
+          <div className="card-head">
+            <span className="eyebrow">TU PRÓXIMA SESIÓN</span>
+            <span className="pill green">
+              {next ? 'EN AGENDA' : 'ESPACIO LIBRE'}
+            </span>
+          </div>
+          <div className="focus-time">
+            {next ? next.time : '—'}
+            <span>{next ? 'h' : 'Tu momento'}</span>
+          </div>
+          {next && nextClient ? (
+            <>
+              <div className="session-person">
+                <Avatar client={nextClient} />
+                <div>
+                  <b>{nextClient.name}</b>
+                  <p>{next.title}</p>
+                </div>
+              </div>
+              <button className="button dark focus-cta" onClick={() => actions.editSession(next.id)}>
+                Ver sesión <Icon name="up" />
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="subtle">Elige cuándo empieza el próximo reto.</p>
+              <button className="button dark focus-cta" onClick={() => actions.newSession()}>
+                Programar <Icon name="plus" />
+              </button>
+            </>
+          )}
+        </section>
+        <section className="focus-card lime">
+          <div className="card-head">
+            <span className="eyebrow">TUS COBROS</span>
+            <button className="icon-button" onClick={() => go('pagos')} aria-label="Ver pagos">
+              <Icon name="up" />
+            </button>
+          </div>
+          <div className="focus-money">{money(stats.monthIncome)}</div>
+          <div className="money-meta">
+            <span>recibidos este mes</span>
+            <b>{stats.late} vencidos</b>
+          </div>
+          <button className="focus-link" onClick={() => actions.newPayment()}>
+            Registrar un cobro <Icon name="plus" />
+          </button>
+        </section>
+      </div>
+
       <footer className="profile-social">
         <div className="profile-social-icons">
           <a className="social-icon" href={data.profile.instagram || '#'} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={(e) => { if (!data.profile.instagram) e.preventDefault() }}>

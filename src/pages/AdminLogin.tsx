@@ -31,7 +31,7 @@ export function AdminLogin({ signedIn = false }: { signedIn?: boolean }) {
   return (
     <div className="admin-login">
       <form className="admin-login-card" onSubmit={onSubmit}>
-        <span className="brand-mark">p<span>↗</span></span>
+        <span className="brand-mark">p</span>
         <span className="eyebrow">PANEL DE ADMINISTRACIÓN</span>
         <h1>Acceso de administrador</h1>
         <p className="muted">Entra con tu cuenta admin para gestionar entrenadores, cuentas y pagos.</p>

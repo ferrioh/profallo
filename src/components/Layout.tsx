@@ -70,9 +70,7 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <a className="brand" href="#inicio">
-        <span className="brand-mark">
-          p<span>↗</span>
-        </span>
+        <span className="brand-mark">p</span>
         profallo
         <span className="brand-dot">.</span>
       </a>

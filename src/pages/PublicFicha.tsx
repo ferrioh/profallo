@@ -25,7 +25,7 @@ export function PublicFicha() {
   return (
     <div className="public-ficha">
       <div className="ficha-card">
-        <div className="ficha-brand"><span className="brand-mark">p<span>↗</span></span>profallo</div>
+        <div className="ficha-brand"><span className="brand-mark">p</span>profallo</div>
         <span className="eyebrow">FICHA DEL CLIENTE</span>
         <h1>{ficha.n}</h1>
         <p className="muted">{ficha.g}{ficha.gym ? ` · ${ficha.gym}` : ''}</p>

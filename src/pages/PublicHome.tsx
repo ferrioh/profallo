@@ -106,7 +106,7 @@ export function PublicHome() {
         {SLIDES.map((src, i) => <span key={src} className={i === slide ? 'active' : ''} />)}
       </div>
       <header className="simple-entry-header">
-        <div className="public-brand"><span className="brand-mark">p<span>↗</span></span>profallo<span className="brand-dot">.</span></div>
+        <div className="public-brand"><span className="brand-mark">p</span>profallo<span className="brand-dot">.</span></div>
       </header>
       <main className="simple-entry-main">
         {mode === 'menu' ? (

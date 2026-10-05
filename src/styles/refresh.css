@@ -415,6 +415,11 @@ dialog.app-sheet{max-width:none}
 .image-editor-zoom{display:grid;gap:6px;width:100%;font-size:12px;color:#c3c7cb;text-align:left}
 .image-editor-zoom input[type=range]{width:100%;accent-color:#d2ff62}
 .image-editor .form-foot{display:flex;gap:10px;justify-content:flex-end;width:100%}
+/* Editor de rutina: numeros y valores legibles sobre tarjetas claras */
+.editor-step{color:#182a0c;font-weight:700}
+.exercise-editor-values input,.exercise-editor-name .ex-name{color:#27391d}
+.exercise-editor-values input::placeholder{color:#9aa78e}
+.profile-photo-action .trial-note{margin-left:auto}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

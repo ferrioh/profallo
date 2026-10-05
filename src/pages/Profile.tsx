@@ -90,7 +90,12 @@ export function ProfilePage() {
         }
       />
       <CoachStage full />
-      <div className="profile-photo-action"><input ref={photoInput} type="file" accept="image/*" hidden onChange={e => changePhoto(e.target.files?.[0])} /><button className="button" onClick={() => photoInput.current?.click()}><Icon name="edit" /> Cambiar foto de perfil</button><span>JPG, PNG o WebP · máximo 1 MB</span></div>
+      <div className="profile-photo-action">
+        <input ref={photoInput} type="file" accept="image/*" hidden onChange={e => changePhoto(e.target.files?.[0])} />
+        <button className="button" onClick={() => photoInput.current?.click()}><Icon name="edit" /> Cambiar foto</button>
+        {data.profile.photo ? <button className="button" onClick={() => setEditSrc(data.profile.photo ?? null)}><Icon name="crop" /> Editar foto</button> : null}
+        <span className="trial-note">{plan.id === 'premium' ? 'Premium activo' : `Prueba gratis: ${trialDaysLeft(data.profile.trialStart)} días`}</span>
+      </div>
 
       <div className="profile-options">
         <Option id="nombre" icon="edit" label="Cambiar nombre y datos" meta={data.profile.name}>

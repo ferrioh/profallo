@@ -2,7 +2,7 @@ import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
-import { clientPhotos, initials, progressFor } from '../lib/utils'
+import { clientPhotos, findRoutine, initials, progressFor } from '../lib/utils'
 import type { ClientFilter } from '../types'
 
 const FILTERS: Array<[ClientFilter, string]> = [
@@ -34,24 +34,18 @@ export function ClientsPage() {
           </>
         }
         sub="Fichas, objetivos, rutinas y evolución de cada cliente."
-        actions={
-          <button className="button primary" onClick={actions.newClient}>
-            <Icon name="plus" />
-            Añadir cliente
-          </button>
-        }
       />
-      <div className="toolbar">
-        <div className="search-field">
-          <Icon name="search" />
-          <input
-            id="clientSearch"
-            aria-label="Buscar clientes"
-            placeholder="Buscar por nombre u objetivo…"
-            value={ui.query}
-            onChange={(e) => patchUi({ query: e.target.value })}
-          />
-        </div>
+      <div className="routine-create">
+        <button className="routine-create-btn" onClick={actions.newClient} aria-label="Añadir cliente">
+          <Icon name="plus" />
+        </button>
+        <span>Añadir cliente</span>
+      </div>
+      <div className="client-overview" aria-label="Resumen de clientes">
+        <div><span>Clientes activos</span><strong>{data.clients.filter(c => !c.archived).length}</strong><small>En tu equipo</small></div>
+        <div><span>Con rutina</span><strong>{data.clients.filter(c => !c.archived && c.routine).length}</strong><small>Plan asignado</small></div>
+      </div>
+      <div className="toolbar client-toolbar">
         <div className="filter-tabs">
           {FILTERS.map(([v, t]) => (
             <button
@@ -67,6 +61,8 @@ export function ClientsPage() {
       <div className="client-grid" id="clientGrid">
         {clients.map((c) => {
           const photo = clientPhotos[c.id]
+          const attendance = progressFor(data, c.id)
+          const routine = findRoutine(data, c.routine)
           return (
             <article className="client-card modern-client" key={c.id}>
               <div className={`client-cover ${photo ? 'with-photo' : ''}`}>
@@ -82,7 +78,7 @@ export function ClientsPage() {
                 <button
                   className="client-cover-open glass-button"
                   onClick={() => actions.clientDetail(c.id)}
-                  aria-label={`Ver ficha de ${c.name}`}
+                  aria-label={`Abrir perfil de ${c.name}`}
                 >
                   <Icon name="up" />
                 </button>
@@ -94,19 +90,16 @@ export function ClientsPage() {
               <div className="client-snapshot">
                 <span>
                   <small>ASISTENCIA</small>
-                  <b>{progressFor(data, c.id)}%</b>
+                  <b>{attendance}%</b>
                 </span>
                 <span>
                   <small>PLAN MENSUAL</small>
                   <b>{money(c.fee)}</b>
                 </span>
-                <button
-                  className="button dark small"
-                  onClick={() => actions.clientDetail(c.id)}
-                >
-                  Ver ficha
-                </button>
               </div>
+              <div className="client-card-progress"><div className="wide-track" role="progressbar" aria-label={`Asistencia de ${c.name}`} aria-valuenow={attendance} aria-valuemin={0} aria-valuemax={100}><i style={{width: `${attendance}%`}} /></div></div>
+              <div className="client-card-plan"><span>Rutina actual</span><strong>{routine?.name || 'Sin rutina asignada'}</strong></div>
+              <div className="client-card-actions"><button onClick={() => actions.clientDetail(c.id)}>Ver perfil <Icon name="arrow" /></button><button onClick={() => actions.editClient(c.id)}>Editar <Icon name="edit" /></button></div>
             </article>
           )
         })}

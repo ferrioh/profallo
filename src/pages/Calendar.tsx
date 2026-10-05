@@ -3,7 +3,7 @@ import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { Agenda } from '../components/Agenda'
-import { findClient, iso, longDate, month, parseDate, TODAY } from '../lib/utils'
+import { iso, longDate, month, parseDate, TODAY } from '../lib/utils'
 
 const WEEKDAYS = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']
 
@@ -15,6 +15,11 @@ export function CalendarPage() {
   const offset = (first.getDay() + 6) % 7
   const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate()
   const cells = Math.ceil((offset + days) / 7) * 7
+  const monthSessions = data.sessions.filter(s => month(s.date) === ui.calendarMonth && s.status !== 'Cancelada').length
+  const daySessions = data.sessions.filter(s => s.date === ui.calendarDate && s.status !== 'Cancelada')
+  const dayClients = new Set(daySessions.map(s => s.client)).size
+  const monthTitle = longDate(`${ui.calendarMonth}-01`, { month: 'long', year: 'numeric' })
+  const dayTitle = longDate(ui.calendarDate, {weekday: 'long', day: 'numeric', month: 'long'})
 
   const changeMonth = (n: number) => {
     const d = parseDate(`${ui.calendarMonth}-01`)
@@ -33,27 +38,18 @@ export function CalendarPage() {
         }
         sub="Entrenamientos y vencimientos, sin perder nada de vista."
         actions={
-          <>
-            <button className="button" onClick={actions.newPayment}>
-              <Icon name="plus" />
-              Registrar pago
-            </button>
-            <button className="button primary" onClick={() => actions.newSession()}>
-              <Icon name="plus" />
-              Nueva sesión
-            </button>
-          </>
+          <button className="button primary" onClick={() => actions.newSession()}>
+            <Icon name="plus" />
+            Nueva sesión
+          </button>
         }
       />
-      <div className="calendar-layout">
-        <div className="card white">
+      <div className="calendar-layout calm-calendar">
+        <div className="card calendar-dark calendar-main">
           <div className="card-head">
-            <h2 className="calendar-title">
-              {longDate(`${ui.calendarMonth}-01`, {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </h2>
+            <div><span className="eyebrow">VISTA MENSUAL</span><h2 className="calendar-title">
+              {monthTitle.charAt(0).toUpperCase() + monthTitle.slice(1)}
+            </h2></div>
             <div className="calendar-controls">
               <button
                 className="icon-button"
@@ -79,9 +75,10 @@ export function CalendarPage() {
               </button>
             </div>
           </div>
+          <div className="calendar-month-summary"><span><i className="session-dot" /> {monthSessions} sesiones</span></div>
           <div className="calendar-month">
             {WEEKDAYS.map((x) => (
-              <div className="weekday" key={x}>
+              <div className={`weekday ${x === 'SÁB' ? 'saturday' : ''}`} key={x}>
                 {x}
               </div>
             ))}
@@ -99,61 +96,40 @@ export function CalendarPage() {
               const ses = data.sessions.filter(
                 (s) => s.date === day && s.status !== 'Cancelada',
               )
-              const pay = data.payments.filter(
-                (p) => p.due === day && !p.paid,
-              )
               return (
                 <button
                   key={day}
                   className={`month-cell ${
                     day === TODAY ? 'today' : ''
-                  } ${day === ui.calendarDate ? 'selected' : ''}`}
+                  } ${day === ui.calendarDate ? 'selected' : ''} ${((i % 7) === 5) ? 'saturday' : ''}`}
                   onClick={() => actions.selectDay(day)}
-                  aria-label={`${longDate(day)}: ${ses.length} sesiones y ${pay.length} pagos`}
+                  aria-label={`${longDate(day)}: ${ses.length} sesiones`}
+                  aria-pressed={day === ui.calendarDate}
                 >
                   <strong>{n}</strong>
-                  {ses.slice(0, 2).map((s) => (
-                    <span className="cal-event" key={s.id}>
-                      {s.time}{' '}
-                      <span className="event-name">
-                        {findClient(data, s.client).name.split(' ')[0]}
-                      </span>
-                    </span>
-                  ))}
-                  {pay.length ? (
-                    <span className="cal-event payment">
-                      {money(
-                        pay.reduce((acc, p) => acc + Number(p.amount), 0),
-                      )}
-                    </span>
-                  ) : null}
-                  {ses.length > 2 ? (
-                    <span className="month-mobile">+{ses.length - 2}</span>
-                  ) : null}
+                  {ses.length ? <span className="calendar-day-dots" aria-hidden="true"><i className="session-dot" /></span> : null}
                 </button>
               )
             })}
           </div>
-          <p className="form-hint" style={{ marginTop: 15 }}>
-            Verde claro: sesiones · Oscuro: pagos por vencer. Selecciona un día
-            para ver el detalle.
-          </p>
+          <p className="calendar-help">Selecciona un día para ver sus actividades.</p>
         </div>
-        <div className="card white">
-          <span className="eyebrow" style={{ color: '#687d58' }}>
-            {longDate(ui.calendarDate, { weekday: 'long' }).toUpperCase()}
-          </span>
-          <h2>{longDate(ui.calendarDate)}</h2>
+        <div className="card calendar-dark calendar-agenda">
+          <span className="eyebrow">AGENDA DEL DÍA</span>
+          <h2>{dayTitle.charAt(0).toUpperCase() + dayTitle.slice(1)}</h2>
+          <div className="calendar-day-stats" aria-label="Resumen del día">
+            <div><Icon name="calendar" /><strong>{daySessions.length}</strong><span>Sesiones</span></div>
+            <div><Icon name="users" /><strong>{dayClients}</strong><span>Clientes</span></div>
+          </div>
           <div style={{ marginTop: 18 }}>
             <Agenda
               day={ui.calendarDate}
               data={data}
               money={money}
-              onOpen={(kind, id) =>
-                kind === 'payment'
-                  ? actions.editPayment(id)
-                  : actions.editSession(id)
-              }
+              onOpen={(kind, id) => {
+                if (kind === 'payment') actions.editPayment(id)
+                else actions.focusSession(id)
+              }}
             />
           </div>
           <button

@@ -8,7 +8,7 @@ import { validData } from '../lib/storage'
 const CURRENCIES = ['USD', 'EUR', 'VES']
 
 export function SettingsPage() {
-  const { data, commit, toast, openModal } = useApp()
+  const { data, commit, toast, openModal, leave } = useApp()
   const fileRef = useRef<HTMLInputElement>(null)
 
   function onProfileSubmit(e: FormEvent<HTMLFormElement>) {
@@ -37,7 +37,7 @@ export function SettingsPage() {
         throw new Error('El respaldo supera el tamaño permitido (8 MB).')
       const candidate = JSON.parse(await file.text())
       if (!validData(candidate))
-        throw new Error('El archivo no es un respaldo válido de ProTrainer.')
+        throw new Error('El archivo no es un respaldo válido de Profallo.')
       openModal({ kind: 'import-confirm', candidate })
     } catch (err) {
       toast((err as Error).message)
@@ -145,6 +145,7 @@ export function SettingsPage() {
           </button>
         </section>
       </div>
+      <button className="button settings-leave" onClick={leave}>Salir al inicio público</button>
       <input
         ref={fileRef}
         type="file"

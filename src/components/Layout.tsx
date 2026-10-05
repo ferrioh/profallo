@@ -1,20 +1,21 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useApp } from '../context/AppContext'
 import type { View } from '../types'
 import { Icon, type IconName } from './Icon'
 import { initials } from '../lib/utils'
+import { currentAccount, useAuthVersion } from '../lib/auth'
 
 export const NAV: Array<[View, string, IconName]> = [
-  ['inicio', 'Visión general', 'grid'],
+  ['inicio', 'Inicio', 'grid'],
   ['clientes', 'Clientes', 'users'],
   ['calendario', 'Calendario', 'calendar'],
   ['rutinas', 'Rutinas', 'dumbbell'],
   ['pagos', 'Pagos', 'wallet'],
-  ['progreso', 'Progreso', 'chart'],
+  ['perfil', 'Perfil', 'user'],
 ]
 
 export const PAGE_LABELS: Record<string, string> = {
-  inicio: 'Visión general',
+  inicio: 'Inicio',
   clientes: 'Clientes',
   calendario: 'Calendario',
   rutinas: 'Rutinas',
@@ -22,6 +23,9 @@ export const PAGE_LABELS: Record<string, string> = {
   progreso: 'Progreso',
   ajustes: 'Ajustes y respaldos',
   perfil: 'Perfil del entrenador',
+  'cliente-perfil': 'Perfil del cliente',
+  notificaciones: 'Notificaciones',
+  admin: 'Panel de administración',
 }
 
 export function Verified() {
@@ -37,14 +41,36 @@ export function Verified() {
 }
 
 export function Sidebar() {
-  const { data, view, go, stats } = useApp()
+  const { data, view, go, stats, leave } = useApp()
+  useAuthVersion()
+  const admin = (currentAccount()?.role ?? data.profile.role) === 'admin'
+  const activeView = view === 'cliente-perfil' ? 'clientes' : view
+  const navRef = useRef<HTMLElement>(null)
+  const [pill, setPill] = useState({ left: 0, width: 0, ready: false })
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const update = () => {
+      const el = nav.querySelector<HTMLElement>('.nav-button.active')
+      if (!el) {
+        setPill((p) => ({ ...p, ready: false }))
+        return
+      }
+      setPill({ left: el.offsetLeft + 3, width: Math.max(0, el.offsetWidth - 6), ready: true })
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [activeView])
+
   return (
     <aside className="sidebar">
       <a className="brand" href="#inicio">
         <span className="brand-mark">
           p<span>↗</span>
         </span>
-        protrainer
+        profallo
         <span className="brand-dot">.</span>
       </a>
       <div className="workspace">
@@ -53,14 +79,20 @@ export function Sidebar() {
           {data.demo ? 'DEMO LOCAL' : 'ESPACIO LOCAL'}
         </span>
       </div>
-      <nav aria-label="Navegación principal" id="nav">
+      <nav aria-label="Navegación principal" id="nav" ref={navRef}>
+        <span
+          className="nav-pill"
+          aria-hidden="true"
+          style={{ left: pill.left, width: pill.width, opacity: pill.ready ? 1 : 0 }}
+        />
         {NAV.map(([v, t, ic]) => (
           <button
             key={v}
-            className={`nav-button ${view === v ? 'active' : ''}`}
+            className={`nav-button ${activeView === v ? 'active' : ''}`}
             onClick={() => go(v)}
             title={t}
-            aria-current={view === v ? 'page' : undefined}
+            aria-label={t}
+            aria-current={activeView === v ? 'page' : undefined}
           >
             <Icon name={ic} />
             <span>{t}</span>
@@ -81,6 +113,13 @@ export function Sidebar() {
           <Icon name="settings" />
           Ajustes y respaldos
         </button>
+        {admin ? (
+          <button className="nav-button" onClick={() => go('admin')}>
+            <Icon name="grid" />
+            Panel de administración
+          </button>
+        ) : null}
+        <button className="nav-button leave-button" onClick={leave}>Salir al inicio público</button>
         <div
           className="coach"
           role="button"
@@ -95,12 +134,12 @@ export function Sidebar() {
           }}
         >
           <span className="avatar lime" id="coachAvatar">
-            <img src="assets/coach.png" alt="Foto del entrenador" />
+            <img src={data.profile.photo || 'assets/coach.png'} alt="Foto del entrenador" />
           </span>
           <div>
             <b id="coachName">
               {data.profile.name}
-              <Verified />
+              {data.profile.verified ? <Verified /> : null}
             </b>
             <small>Personal trainer</small>
           </div>
@@ -112,8 +151,8 @@ export function Sidebar() {
 }
 
 export function Topbar() {
-  const { view, go, storageAvailable, patchUi } = useApp()
-  const label = PAGE_LABELS[view] ?? 'Visión general'
+  const { data, view, go, storageAvailable } = useApp()
+  const label = PAGE_LABELS[view] ?? 'Inicio'
   return (
     <header className="topbar">
       <div className="breadcrumb">
@@ -135,11 +174,8 @@ export function Topbar() {
         <button
           className="icon-button"
           id="notifications"
-          onClick={() => {
-            patchUi({ paymentFilter: 'vencido' })
-            go('pagos')
-          }}
-          aria-label="Ver pagos pendientes"
+          onClick={() => go('notificaciones')}
+          aria-label="Ver notificaciones"
         >
           <Icon name="bell" />
           <i className="notification-dot" />
@@ -150,7 +186,7 @@ export function Topbar() {
           onClick={() => go('perfil')}
           aria-label="Abrir perfil del entrenador"
         >
-          <img src="assets/coach.png" alt="Foto del entrenador" />
+          <img src={data.profile.photo || 'assets/coach.png'} alt="Foto del entrenador" />
         </button>
       </div>
     </header>
@@ -165,7 +201,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <footer className="footer">
-        <span>PROTRAINER / TRAIN SMART. COACH BETTER.</span>
+        <span>PROFALLO / TRAIN SMART. COACH BETTER.</span>
         <span>Hecho para tu siguiente nivel ↗</span>
       </footer>
     </div>

@@ -4,6 +4,7 @@ import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { PageHead } from '../components/ui'
+import { MuscleGuide, getRoutineZones } from '../components/MuscleGuide'
 
 export function RoutinesPage() {
   const { data } = useApp()
@@ -22,13 +23,18 @@ export function RoutinesPage() {
           </>
         }
         sub="Abre un plan, ajusta sus ejercicios y asígnalo. Sin perderte entre listas."
-        actions={
-          <button className="button primary" onClick={actions.newRoutine}>
-            <Icon name="plus" />
-            Crear rutina
-          </button>
-        }
       />
+      <div className="routine-create">
+        <button className="routine-create-btn" onClick={actions.newRoutine} aria-label="Crear rutina">
+          <Icon name="plus" />
+        </button>
+        <span>Crear rutina</span>
+      </div>
+      <div className="routine-overview" aria-label="Resumen de rutinas">
+        <div className="routine-overview-card"><span>Planes creados</span><strong>{data.routines.length}</strong><small>Listos para editar</small></div>
+        <div className="routine-overview-card"><span>Clientes con rutina</span><strong>{active.filter(c => !!c.routine).length}<small> / {active.length}</small></strong><small>Con un plan asignado</small></div>
+        <div className="routine-overview-card"><span>Ejercicios disponibles</span><strong>{data.routines.reduce((n,r) => n + r.exercises.length, 0)}</strong><small>En todos los planes</small></div>
+      </div>
       <div className="routine-workspace">
         <section className="routine-deck">
           {data.routines.map((r, i) => {
@@ -37,9 +43,9 @@ export function RoutinesPage() {
             const open = openId === r.id
             return (
               <article
-                className={`routine-panel ${
+                className={`routine-panel refreshed ${
                   i % 3 === 0 ? 'accent' : i % 3 === 1 ? 'white' : 'smoke'
-                }`}
+                } ${open ? 'expanded' : ''}`}
                 data-routine={r.id}
                 key={r.id}
               >
@@ -47,11 +53,9 @@ export function RoutinesPage() {
                   className="routine-toggle"
                   onClick={() => setOpenId(open ? null : r.id)}
                   aria-expanded={open}
-                  aria-controls={`routine-body-${r.id}`}
+                  aria-controls={open ? `routine-body-${r.id}` : undefined}
                 >
-                  <span className="routine-number">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
+                  <span className="routine-number">{String(i + 1).padStart(2, '0')}</span>
                   <div className="routine-summary">
                     <span className="routine-category">
                       {r.category} / {r.level}
@@ -67,55 +71,45 @@ export function RoutinesPage() {
                     {assigned.slice(0, 3).map((c) => (
                       <Avatar key={c.id} client={c} />
                     ))}
-                    <small>
-                      {assigned.length}{' '}
-                      {assigned.length === 1 ? 'cliente' : 'clientes'}
-                    </small>
+                    <small>{assigned.length} {assigned.length === 1 ? 'cliente' : 'clientes'}</small>
                   </div>
                   <span className="routine-expand">
-                    <Icon name="plus" />
+                    <Icon name={open ? 'chevronUp' : 'chevronDown'} />
                   </span>
                 </button>
-                <div
-                  className="routine-drawer"
-                  id={`routine-body-${r.id}`}
-                  hidden={!open}
-                >
-                  <div className="exercise-cells">
-                    {r.exercises.map((e, j) => (
-                      <div className="exercise-cell" key={j}>
-                        <span className="exercise-step">
-                          {String(j + 1).padStart(2, '0')}
-                        </span>
-                        <div>
-                          <b>{e.name}</b>
-                          <span>
-                            {e.sets} series × {e.reps}
-                            {/\b(s|min)\b/.test(e.reps) ? '' : ' reps'}
-                          </span>
-                        </div>
-                        <span className="exercise-rest">
-                          {e.rest}s<small>descanso</small>
-                        </span>
+                {open ? (
+                  <>
+                    <div className="routine-quick-actions">
+                      <button onClick={() => actions.editRoutine(r.id)}><Icon name="edit" /> Editar rutina</button>
+                      <button onClick={() => actions.assignRoutine(r.id)}><Icon name="users" /> Asignar</button>
+                    </div>
+                    <div className="routine-drawer" id={`routine-body-${r.id}`}>
+                      <div className="routine-detail-layout">
+                      <div className="exercise-cells">
+                        {r.exercises.map((e, j) => (
+                          <div className="exercise-cell" key={j}>
+                            <span className="exercise-step">
+                              {String(j + 1).padStart(2, '0')}
+                            </span>
+                            <div>
+                              <b>{e.name}</b>
+                              <span>
+                                {e.sets} series × {e.reps}
+                                {/\b(s|min)\b/.test(e.reps) ? '' : ' reps'}
+                              </span>
+                            </div>
+                            <span className="exercise-rest">
+                              {e.rest}s<small>descanso</small>
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  {r.notes ? <p className="routine-note">{r.notes}</p> : null}
-                  <div className="routine-panel-actions">
-                    <button
-                      className="button dark"
-                      onClick={() => actions.editRoutine(r.id)}
-                    >
-                      Editar plan <Icon name="edit" />
-                    </button>
-                    <button
-                      className={`button ${i % 3 === 0 ? 'light' : 'primary'}`}
-                      onClick={() => actions.assignRoutine(r.id)}
-                    >
-                      Asignar a cliente <Icon name="up" />
-                    </button>
-                  </div>
-                </div>
+                      <MuscleGuide zones={getRoutineZones(r)} />
+                      </div>
+                      {r.notes ? <p className="routine-note">{r.notes}</p> : null}
+                    </div>
+                  </>
+                ) : null}
               </article>
             )
           })}

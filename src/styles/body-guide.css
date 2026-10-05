@@ -1,0 +1,40 @@
+:root{--bg:#17181a;--card:#242528;--line:#35373b;--soft:#a8adb0}
+body{background:var(--bg)}
+.sidebar{background:#0e0f11;border-right-color:#26282b}
+.topbar,.footer{border-color:#2b2e31}
+.nav-button:not(.active){color:#b9bcbf}
+.routine-panel.refreshed.smoke{background:#263b2b}
+.routine-panel.refreshed.expanded{grid-column:1/-1}
+.routine-detail-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start;padding:0 20px 20px}
+.routine-panel.refreshed .routine-detail-layout .exercise-cells{padding:0;min-width:0}
+.muscle-guide{min-width:0;background:#1e2023;color:#eef2ec;border:1px solid #3a3d41;border-radius:12px;padding:16px;overflow:hidden}
+.muscle-guide-head{display:flex;align-items:start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.muscle-guide-head span{display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:700;color:#a9aeb2}
+.muscle-guide-head svg{width:17px;height:17px;color:var(--lime)}
+.muscle-guide-head strong{font-size:12px;font-weight:600;color:var(--lime)}
+.muscle-guide-figures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.body-figure{text-align:center;min-width:0}
+.body-figure svg{display:block;width:100%;height:235px;overflow:visible}
+.body-figure span{font-size:11px;color:#b6babd}
+.body-head,.body-neck,.body-foot,.body-segment{fill:#3a3e42;stroke:#9aa0a4;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.body-hair{fill:#2c2f33;stroke:#9aa0a4;stroke-width:1.4}
+.body-segment.selected{fill:#d2ff62;stroke:#efffba;filter:drop-shadow(0 0 5px #d2ff6255)}
+.muscle-guide-legend{border-top:1px solid #3a3d41;margin-top:10px;padding-top:10px;color:#b6babd;font-size:11px;display:flex;align-items:center;gap:7px}
+.muscle-guide-legend i{width:8px;height:8px;border-radius:2px;background:var(--lime)}
+.routine-focus-editor{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:18px;background:#eaf0e8;border-radius:8px;padding:16px}
+.routine-focus-heading{display:flex;gap:10px;align-items:start;color:#243629}
+.routine-focus-heading>svg{width:22px;height:22px;color:#678747;flex:none}
+.routine-focus-heading h3{font-size:16px}
+.routine-focus-heading p{font-size:12px;line-height:1.4;color:#5c705d;margin-top:5px}
+.routine-focus-editor .routine-focus-heading h3{color:#243629}
+.routine-focus-editor .focus-auto-label{color:#2a3b2d}
+.focus-auto-label{display:flex;align-items:center;gap:9px;margin:17px 0;color:#2a3b2d;font-size:13px}
+.focus-auto-label input{width:17px;height:17px;min-height:0;accent-color:#6b922f}
+.focus-zone-options{display:flex;flex-wrap:wrap;gap:7px}
+.focus-zone-options button{min-height:34px;background:#fff;color:#344638;border:1px solid #b9cbb9;border-radius:6px;padding:7px 9px;font-size:12px}
+.focus-zone-options button.active{background:#d2ff62;color:#1b2e17;border-color:#83aa37}
+.muscle-guide.compact{padding:12px}
+.muscle-guide.compact .body-figure svg{height:175px}
+.muscle-guide.compact .muscle-guide-head strong{font-size:11px}
+@media(max-width:800px){.routine-detail-layout{grid-template-columns:1fr}.muscle-guide{max-width:420px;width:100%;justify-self:center}.routine-focus-editor{grid-template-columns:1fr}.muscle-guide.compact{max-width:320px}}
+@media(max-width:560px){.sidebar{background:#101113e8}.routine-detail-layout{padding:0 14px 16px}.body-figure svg{height:220px}}

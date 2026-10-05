@@ -1,4 +1,4 @@
-import type { AppData, Client, Routine } from '../types'
+import type { AppData, Client, Routine, Trainer } from '../types'
 import { addDays, TODAY } from './utils'
 
 export function demoData(): AppData {
@@ -141,18 +141,74 @@ export function demoData(): AppData {
     })),
   )
 
+  const trainers: Trainer[] = [
+    {
+      id: 't1',
+      name: 'Alex Torres',
+      email: 'admin@profallo.app',
+      specialty: 'Entrenamiento personal',
+      membership: 'premium',
+      verified: true,
+      role: 'admin',
+      activeClients: clients.length,
+      joined: addDays(TODAY, -120),
+    },
+    {
+      id: 't2',
+      name: 'María Gómez',
+      email: 'maria@ejemplo.com',
+      specialty: 'Fuerza e hipertrofia',
+      membership: 'free',
+      verified: false,
+      role: 'trainer',
+      activeClients: 3,
+      joined: addDays(TODAY, -40),
+      trialStart: addDays(TODAY, -4),
+    },
+    {
+      id: 't3',
+      name: 'Julián Rojas',
+      email: 'julian@ejemplo.com',
+      specialty: 'Movilidad y bienestar',
+      membership: 'free',
+      verified: false,
+      role: 'trainer',
+      activeClients: 1,
+      joined: addDays(TODAY, -12),
+      trialStart: addDays(TODAY, -25),
+    },
+    {
+      id: 't4',
+      name: 'Carolina Díaz',
+      email: 'caro@ejemplo.com',
+      specialty: 'Recomposición corporal',
+      membership: 'premium',
+      verified: true,
+      role: 'trainer',
+      activeClients: 9,
+      joined: addDays(TODAY, -200),
+      trialStart: addDays(TODAY, -15),
+    },
+  ]
+
   return {
     version: 1,
     profile: {
       name: 'Alex Torres',
       currency: 'USD',
       specialty: 'Entrenamiento personal',
+      email: 'admin@profallo.app',
+      role: 'admin',
+      membership: 'premium',
+      verified: true,
+      trialStart: addDays(TODAY, -3),
     },
     clients,
     routines,
     payments,
     sessions,
     measurements,
+    trainers,
     demo: true,
   }
 }

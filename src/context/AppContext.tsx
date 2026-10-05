@@ -20,12 +20,12 @@ import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../li
 
 export type ModalState =
   | { kind: 'client-form'; id?: string }
-  | { kind: 'client-detail'; id: string }
   | { kind: 'session-form'; id?: string; date?: string }
   | { kind: 'payment-form'; id?: string; receive?: boolean }
   | { kind: 'routine-form'; id?: string }
-  | { kind: 'measurement-form' }
+  | { kind: 'measurement-form'; id?: string }
   | { kind: 'assign-routine'; id: string }
+  | { kind: 'membership' }
   | { kind: 'start-empty' }
   | { kind: 'import-confirm'; candidate: AppData }
 
@@ -36,16 +36,22 @@ export interface UiState {
   calendarDate: string
   calendarMonth: string
   progressClient: string
+  selectedClient: string
+  focusSession: string
   expenseMonth: string
 }
 
 interface AppContextValue {
+  entered: boolean
+  enter: () => void
+  leave: () => void
   data: AppData
   storageAvailable: boolean
   ui: UiState
   patchUi: (patch: Partial<UiState>) => void
   view: View
   go: (view: View) => void
+  goBack: () => void
   money: (n: number | string) => string
   stats: Stats
   commit: (mutator: (draft: AppData) => void) => void
@@ -66,6 +72,9 @@ function initialView(): View {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [entered, setEntered] = useState(() => {
+    try { return sessionStorage.getItem('protrainer.entered') === 'yes' } catch { return false }
+  })
   const loaded = useRef(loadData())
   const [data, setData] = useState<AppData>(loaded.current.data)
   const dataRef = useRef(data)
@@ -74,6 +83,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loaded.current.storageAvailable,
   )
   const [view, setView] = useState<View>(initialView)
+  const viewRef = useRef(view)
+  viewRef.current = view
+  const prevView = useRef<View>('inicio')
   const [modal, setModal] = useState<ModalState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -86,6 +98,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     calendarMonth: month(TODAY),
     progressClient:
       loaded.current.data.clients.find((c) => !c.archived)?.id ?? '',
+    selectedClient: '',
+    focusSession: '',
     expenseMonth: month(TODAY),
   }))
 
@@ -93,12 +107,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUi((prev) => ({ ...prev, ...patch }))
   }, [])
 
+  const enter = useCallback(() => {
+    try { sessionStorage.setItem('protrainer.entered', 'yes') } catch { /* Temporary browser session */ }
+    setEntered(true)
+  }, [])
+  const leave = useCallback(() => {
+    try { sessionStorage.removeItem('protrainer.entered') } catch { /* Temporary browser session */ }
+    setEntered(false)
+    location.hash = 'bienvenida'
+    window.scrollTo(0, 0)
+  }, [])
+
   const go = useCallback((next: View) => {
     const v = VIEWS.includes(next) ? next : 'inicio'
+    const from = viewRef.current
+    if (from !== v && from !== 'notificaciones') {
+      prevView.current = from
+    }
     setView(v)
     if (location.hash.slice(1) !== v) location.hash = v
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
   }, [])
+
+  const goBack = useCallback(() => {
+    go(prevView.current)
+  }, [go])
 
   useEffect(() => {
     const onHash = () => {
@@ -144,12 +177,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const stats = useMemo(() => computeStats(data), [data])
 
   const value: AppContextValue = {
+    entered,
+    enter,
+    leave,
     data,
     storageAvailable,
     ui,
     patchUi,
     view,
     go,
+    goBack,
     money,
     stats,
     commit,

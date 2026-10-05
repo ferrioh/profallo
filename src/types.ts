@@ -4,9 +4,11 @@ export type View =
   | 'calendario'
   | 'pagos'
   | 'rutinas'
-  | 'progreso'
   | 'ajustes'
   | 'perfil'
+  | 'cliente-perfil'
+  | 'notificaciones'
+  | 'admin'
 
 export const VIEWS: View[] = [
   'inicio',
@@ -14,9 +16,11 @@ export const VIEWS: View[] = [
   'calendario',
   'pagos',
   'rutinas',
-  'progreso',
   'ajustes',
   'perfil',
+  'cliente-perfil',
+  'notificaciones',
+  'admin',
 ]
 
 export interface Exercise {
@@ -34,13 +38,17 @@ export interface Routine {
   duration: number
   notes: string
   exercises: Exercise[]
+  focusZones?: BodyZone[]
 }
+
+export type BodyZone = 'shoulders' | 'chest' | 'arms' | 'core' | 'hips' | 'legs'
 
 export interface Client {
   id: string
   name: string
   email: string
   phone: string
+  idNumber?: string
   birth: string
   goal: string
   plan: string
@@ -49,9 +57,12 @@ export interface Client {
   height: number | null
   routine: string
   notes: string
+  gym?: string
   tone: number
   archived: boolean
   joined: string
+  frequency?: 'mensual' | 'quincenal'
+  gender?: 'mujer' | 'hombre'
 }
 
 export interface Payment {
@@ -93,6 +104,30 @@ export interface Profile {
   name: string
   currency: string
   specialty: string
+  photo?: string
+  email?: string
+  phone?: string
+  idNumber?: string
+  instagram?: string
+  tiktok?: string
+  role?: 'trainer' | 'admin'
+  membership?: 'free' | 'premium'
+  trialStart?: string
+  verified?: boolean
+  reviews?: Array<{ id: string; client: string; rating: number; text: string; date: string }>
+}
+
+export interface Trainer {
+  id: string
+  name: string
+  email: string
+  specialty: string
+  membership: 'free' | 'premium'
+  verified: boolean
+  role: 'trainer' | 'admin'
+  activeClients: number
+  joined: string
+  trialStart?: string
 }
 
 export interface AppData {
@@ -103,6 +138,19 @@ export interface AppData {
   payments: Payment[]
   sessions: Session[]
   measurements: Measurement[]
+  trainers?: Trainer[]
+  notificationState?: {
+    deleted: string[]
+    muted: string[]
+    read: string[]
+  }
+  membershipPayments?: Array<{
+    id: string
+    amount: number
+    date: string
+    period: string
+    method: string
+  }>
   demo: boolean
 }
 

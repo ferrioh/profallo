@@ -20,18 +20,12 @@ export function CoachStage({ full = false }: { full?: boolean }) {
     <section className={`coach-stage ${full ? 'full-profile' : ''}`}>
       <img
         className="coach-photo"
-        src="assets/coach.png"
-        alt="Entrenador levantando una barra, foto de perfil proporcionada"
+        src={full ? (data.profile.photo || 'assets/coach.png') : 'assets/trainer-hero-v2.png'}
+        alt={full ? 'Foto del entrenador' : 'Entrenador en un gimnasio'}
       />
       <div className="coach-scrim" />
       <div className="stage-top">
         <span className="micro-label">PERSONAL TRAINER / TU ESPACIO</span>
-        <button
-          className="button glass-button"
-          onClick={() => go(full ? 'ajustes' : 'perfil')}
-        >
-          {full ? 'Editar perfil' : 'Mi perfil'} <Icon name="up" />
-        </button>
       </div>
       <div className="stage-title">
         <span className="eyebrow">UN EQUIPO. MUCHAS HISTORIAS.</span>
@@ -44,27 +38,19 @@ export function CoachStage({ full = false }: { full?: boolean }) {
             </>
           ) : (
             <>
-              Tu equipo empieza
+              El progreso empieza
               <br />
               contigo.
             </>
           )}
         </h2>
         <p>
-          Todo lo esencial, cerca.
+          Cada sesión suma.
           <br />
-          El resto, a tu ritmo.
+          Cada persona importa.
         </p>
       </div>
-      <div className="stage-identity">
-        <div className="coach-name">
-          {data.profile.name} <Verified />
-        </div>
-        <p>
-          {data.profile.specialty || 'Entrenamiento personal'}{' '}
-          <span>PROTRAINER CLUB</span>
-        </p>
-      </div>
+      <div className="stage-identity" />
       <button className="stage-orbit orbit-a glass-button" onClick={() => go('clientes')}>
         <span className="orbit-icon">
           <Icon name="users" />
@@ -89,77 +75,6 @@ export function CoachStage({ full = false }: { full?: boolean }) {
   )
 }
 
-export function QuickActions() {
-  const { openModal, toast, data } = useApp()
-  const active = data.clients.filter((c) => !c.archived)
-  const guard = (msg: string, run: () => void) => {
-    if (!active.length) {
-      toast(msg)
-      return
-    }
-    run()
-  }
-  return (
-    <div className="quick-actions">
-      <button
-        className="quick-action"
-        onClick={() =>
-          guard('Añade un cliente antes de programar sesiones.', () =>
-            openModal({ kind: 'session-form' }),
-          )
-        }
-      >
-        <span>
-          <Icon name="calendar" />
-        </span>
-        <div>
-          <b>Agendar sesión</b>
-          <small>Lo próximo, en segundos</small>
-        </div>
-        <Icon name="plus" />
-      </button>
-      <button
-        className="quick-action"
-        onClick={() => openModal({ kind: 'client-form' })}
-      >
-        <span>
-          <Icon name="users" />
-        </span>
-        <div>
-          <b>Añadir cliente</b>
-          <small>Una nueva historia</small>
-        </div>
-        <Icon name="plus" />
-      </button>
-      <button
-        className="quick-action"
-        onClick={() => openModal({ kind: 'routine-form' })}
-      >
-        <span>
-          <Icon name="dumbbell" />
-        </span>
-        <div>
-          <b>Crear rutina</b>
-          <small>Diseña su siguiente reto</small>
-        </div>
-        <Icon name="plus" />
-      </button>
-    </div>
-  )
-}
-
-export function TeamFaces() {
-  const { data } = useApp()
-  const active = data.clients.filter((c) => !c.archived)
-  return (
-    <div className="face-stack">
-      {active.slice(0, 5).map((c) => (
-        <Avatar key={c.id} client={c} />
-      ))}
-    </div>
-  )
-}
-
 export function Dashboard() {
   const { data, stats, money, go, ui } = useApp()
   const actions = useActions()
@@ -170,12 +85,13 @@ export function Dashboard() {
   const nextClient = next ? findClient(data, next.client) : null
 
   return (
-    <>
+    <div className="dashboard-home">
       <PageHead
         k="BUEN DÍA / VAMOS POR MÁS."
         title={
           <>
-            Tu próximo nivel<span style={{ color: 'var(--lime)' }}>.</span>
+            {data.profile.name}
+            {data.profile.verified ? <Verified /> : null}
           </>
         }
         sub={
@@ -183,12 +99,6 @@ export function Dashboard() {
             {longDate(TODAY, { weekday: 'long', day: 'numeric', month: 'long' })}{' '}
             · Lo importante, primero.
           </>
-        }
-        actions={
-          <button className="button glass-button" onClick={() => actions.newSession()}>
-            <Icon name="arrow" />
-            Nueva sesión
-          </button>
         }
       />
 
@@ -257,13 +167,17 @@ export function Dashboard() {
         </div>
       </div>
 
-      <QuickActions />
+      <div className="home-overview" aria-label="Resumen del día">
+        <div><span>Clientes activos</span><strong>{stats.active}</strong><small>Personas en tu equipo</small></div>
+        <div><span>Sesiones hoy</span><strong>{stats.todaySessions.length}</strong><small>En el calendario</small></div>
+        <div><span>Rutinas</span><strong>{data.routines.length}</strong><small>Planes disponibles</small></div>
+      </div>
 
       <div className="modern-grid">
         <section className="team-block">
           <div className="section-heading">
-            <h2>Personas. No números.</h2>
-            <button onClick={() => go('clientes')}>Tu equipo ↗</button>
+            <h2>Clientes</h2>
+            <button onClick={() => go('clientes')}>Ver todos ↗</button>
           </div>
           <div className="team-mosaic">
             {active
@@ -275,7 +189,7 @@ export function Dashboard() {
                   key={c.id}
                   className={`team-tile ${clientPhotos[c.id] ? 'photo-tile' : ''}`}
                   onClick={() => actions.clientDetail(c.id)}
-                  aria-label={`Abrir ficha de ${c.name}`}
+                  aria-label={`Abrir perfil de ${c.name}`}
                 >
                   {clientPhotos[c.id] ? (
                     <img src={clientPhotos[c.id]} alt={c.name} />
@@ -299,8 +213,8 @@ export function Dashboard() {
         </section>
         <section className="agenda-modern">
           <div className="section-heading">
-            <h2>Tu semana, sin ruido.</h2>
-            <button onClick={() => go('calendario')}>Ver todo ↗</button>
+            <h2>Agenda de la semana</h2>
+            <button onClick={() => go('calendario')}>Abrir calendario ↗</button>
           </div>
           <div className="card white">
             <WeekStrip
@@ -321,46 +235,25 @@ export function Dashboard() {
               data={data}
               money={money}
               limit={3}
-              onOpen={(kind, id) =>
-                kind === 'payment'
-                  ? actions.editPayment(id)
-                  : actions.editSession(id)
-              }
+              onOpen={(kind, id) => {
+                if (kind === 'payment') actions.editPayment(id)
+                else actions.focusSession(id)
+              }}
             />
           </div>
         </section>
       </div>
-
-      <section className="routine-peek">
-        <div>
-          <span className="eyebrow">DISEÑA EL PRÓXIMO RETO</span>
-          <h2>
-            Rutinas que se adaptan.
-            <br />
-            Personas que avanzan.
-          </h2>
-          <div className="peek-people">
-            <TeamFaces />
-            <small>{stats.active} historias en movimiento</small>
-          </div>
+      <footer className="profile-social">
+        <div className="profile-social-icons">
+          <a className="social-icon" href={data.profile.instagram || '#'} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={(e) => { if (!data.profile.instagram) e.preventDefault() }}>
+            <Icon name="instagram" />
+          </a>
+          <a className="social-icon" href={data.profile.tiktok || '#'} target="_blank" rel="noopener noreferrer" aria-label="TikTok" onClick={(e) => { if (!data.profile.tiktok) e.preventDefault() }}>
+            <Icon name="tiktok" />
+          </a>
         </div>
-        <div className="peek-routines">
-          {data.routines.slice(0, 2).map((r, i) => (
-            <button
-              key={r.id}
-              className={`peek-routine ${i ? '' : 'lime'}`}
-              onClick={() => actions.editRoutine(r.id)}
-            >
-              <span>{r.category}</span>
-              <b>{r.name}</b>
-              <small>
-                {r.exercises.length} ejercicios · {r.duration} min
-              </small>
-              <Icon name="up" />
-            </button>
-          ))}
-        </div>
-      </section>
-    </>
+        <p className="profile-copyright">© Profallo by Ferrioh 2026</p>
+      </footer>
+    </div>
   )
 }

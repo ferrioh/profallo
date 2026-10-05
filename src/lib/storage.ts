@@ -1,7 +1,45 @@
-import type { AppData } from '../types'
+import type { AppData, Trainer } from '../types'
 import { demoData } from './demo'
+import { TODAY } from './utils'
 
 export const KEY = 'protrainer.local.v1'
+
+function normalize(d: AppData): AppData {
+  d.profile = {
+    ...d.profile,
+    role: d.profile.role ?? 'admin',
+    membership: d.profile.membership ?? 'free',
+    email: d.profile.email === 'admin@protrainer.app' ? 'admin@profallo.app' : d.profile.email ?? 'admin@profallo.app',
+    trialStart: d.profile.trialStart ?? TODAY,
+  }
+  d.profile.verified = d.profile.verified ?? d.profile.membership === 'premium'
+  if (!Array.isArray(d.trainers) || d.trainers.length === 0) {
+    d.trainers = demoData().trainers ?? []
+  }
+  d.trainers = d.trainers.map((t) => ({
+    ...t,
+    trialStart: t.trialStart ?? TODAY,
+    email: t.email === 'admin@protrainer.app' ? 'admin@profallo.app' : t.email,
+  }))
+  const email = d.profile.email
+  const hasMe = d.trainers.some((t) => t.email && t.email === email)
+  if (!hasMe) {
+    const me: Trainer = {
+      id: 'me',
+      name: d.profile.name,
+      email: email ?? '',
+      specialty: d.profile.specialty,
+      membership: d.profile.membership ?? 'free',
+      verified: !!d.profile.verified,
+      role: d.profile.role ?? 'admin',
+      activeClients: d.clients.filter((c) => !c.archived).length,
+      joined: TODAY,
+      trialStart: d.profile.trialStart ?? TODAY,
+    }
+    d.trainers = [me, ...d.trainers]
+  }
+  return d
+}
 
 export function validData(x: unknown): x is AppData {
   const d = x as AppData
@@ -38,7 +76,7 @@ export interface LoadResult {
 export function loadData(): LoadResult {
   try {
     const stored = localStorage.getItem(KEY)
-    const data: AppData = stored ? JSON.parse(stored) : demoData()
+    const data: AppData = stored ? normalize(JSON.parse(stored)) : demoData()
     if (!validData(data)) throw new Error('Respaldo inválido')
     return { data, storageAvailable: true }
   } catch {

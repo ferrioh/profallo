@@ -3,7 +3,7 @@ import { download, TODAY } from './utils'
 
 export function exportData(data: AppData) {
   download(
-    `ProTrainer-respaldo-${TODAY}.json`,
+    `Profallo-respaldo-${TODAY}.json`,
     JSON.stringify(data, null, 2),
     'application/json',
   )
@@ -27,7 +27,7 @@ export function exportClients(data: AppData) {
     return '"' + (/^[=+@-]/.test(s) ? "'" : '') + s.replaceAll('"', '""') + '"'
   }
   download(
-    `ProTrainer-clientes-${TODAY}.csv`,
+    `Profallo-clientes-${TODAY}.csv`,
     '\ufeff' + rows.map((r) => r.map(clean).join(',')).join('\r\n'),
     'text/csv; charset=utf-8',
   )

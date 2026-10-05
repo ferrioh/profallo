@@ -7,21 +7,22 @@ import type {
   Measurement,
   Payment,
   Routine,
+  BodyZone,
   Session,
   SessionStatus,
 } from '../types'
 import {
-  findClient,
+  addDays,
   findRoutine,
-  longDate,
-  progressFor,
   TODAY,
   uid,
 } from '../lib/utils'
 import { exportData } from '../lib/backup'
+import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
 import { Icon } from './Icon'
-import { Avatar } from './Avatar'
 import { Field, SelectField, TextField } from './form'
+import { TimeWheelPicker } from './TimeWheelPicker'
+import { BODY_ZONES, MuscleGuide, inferRoutineZones } from './MuscleGuide'
 
 const PLANS = ['Personal', 'Premium', 'Online']
 const ROUTINE_CATEGORIES = ['Fuerza', 'Hipertrofia', 'Movilidad', 'Cardio', 'Funcional', 'Mixto']
@@ -107,11 +108,13 @@ export function ClientFormModal({ id }: { id?: string }) {
         throw new Error('Nombre y objetivo son obligatorios.')
       commit((d) => {
         const existing = d.clients.find((cc) => cc.id === id)
+        const frequency: Client['frequency'] = x.frequency === 'quincenal' ? 'quincenal' : 'mensual'
         const client: Client = {
           id: newId,
           name: x.name.trim(),
           email: x.email ?? '',
           phone: x.phone ?? '',
+          idNumber: x.idNumber ?? '',
           birth: x.birth ?? '',
           goal: x.goal,
           plan: x.plan ?? 'Personal',
@@ -120,11 +123,27 @@ export function ClientFormModal({ id }: { id?: string }) {
           height: x.height ? Number(x.height) : null,
           routine: x.routine ?? '',
           notes: x.notes ?? '',
+          gym: x.gym ?? '',
           tone: id ? existing?.tone ?? 0 : d.clients.length,
           archived: id ? existing?.archived ?? false : false,
-          joined: id ? existing?.joined ?? TODAY : TODAY,
+          joined: x.joined || (id ? existing?.joined ?? TODAY : TODAY),
+          frequency,
+          gender: x.gender === 'hombre' ? 'hombre' : 'mujer',
         }
         upsert(d.clients, client)
+        if (!id) {
+          const interval = frequency === 'quincenal' ? 15 : 30
+          d.payments.push({
+            id: uid(),
+            client: newId,
+            amount: frequency === 'quincenal' ? Math.round((Number(x.fee) / 2) * 100) / 100 : Number(x.fee),
+            due: addDays(client.joined || TODAY, interval),
+            paid: false,
+            paidDate: '',
+            method: 'Transferencia',
+            note: frequency === 'quincenal' ? 'Quincena' : 'Mensualidad',
+          })
+        }
       })
       if (!ui.progressClient) patchUi({ progressClient: newId })
       closeModal()
@@ -137,9 +156,15 @@ export function ClientFormModal({ id }: { id?: string }) {
   return (
     <FormWrap kind="client" id={id} error={error} onSubmit={onSubmit}>
       <Field name="name" label="Nombre completo" value={c?.name} required maxLength={80} />
+      <Field name="idNumber" label="Cédula / Documento" value={c?.idNumber} maxLength={40} />
       <Field name="email" label="Correo electrónico" type="email" value={c?.email} maxLength={120} />
       <Field name="phone" label="Teléfono" type="tel" value={c?.phone} maxLength={40} />
       <Field name="birth" label="Fecha de nacimiento" type="date" value={c?.birth} max={TODAY} />
+      <Field name="joined" label="Fecha de registro" type="date" value={c?.joined ?? TODAY} required />
+      <SelectField name="gender" label="Registrar como" value={c?.gender ?? 'mujer'}>
+        <option value="mujer">Mujer</option>
+        <option value="hombre">Hombre</option>
+      </SelectField>
       <Field name="goal" label="Objetivo principal" value={c?.goal} required maxLength={150} />
       <SelectField name="plan" label="Plan" value={c?.plan}>
         {PLANS.map((p) => (
@@ -158,6 +183,10 @@ export function ClientFormModal({ id }: { id?: string }) {
         step={0.01}
         required
       />
+      <SelectField name="frequency" label="Frecuencia de pago" value={c?.frequency ?? 'mensual'}>
+        <option value="mensual">Mensual</option>
+        <option value="quincenal">Quincenal (cada 15 días)</option>
+      </SelectField>
       <SelectField name="routine" label="Rutina asignada" value={c?.routine}>
         <option value="">Sin asignar</option>
         {data.routines.map((r) => (
@@ -166,6 +195,7 @@ export function ClientFormModal({ id }: { id?: string }) {
           </option>
         ))}
       </SelectField>
+      <Field name="gym" label="Gimnasio donde entrena" value={c?.gym} maxLength={80} placeholder="Por ejemplo, Gym Fitness Center" />
       <Field
         name="weight"
         label="Peso inicial / actual (kg)"
@@ -185,116 +215,6 @@ export function ClientFormModal({ id }: { id?: string }) {
   )
 }
 
-export function ClientDetailModal({ id }: { id: string }) {
-  const { data, commit, closeModal, toast, patchUi, go, money: fmt, openModal } = useApp()
-  const c = findClient(data, id)
-  const r = findRoutine(data, c.routine)
-  const ms = data.measurements
-    .filter((m) => m.client === id)
-    .sort((a, b) => a.date.localeCompare(b.date))
-  const pending = data.payments
-    .filter((p) => p.client === id && !p.paid)
-    .reduce((v, p) => v + Number(p.amount), 0)
-  const last = ms.at(-1)
-
-  return (
-    <>
-      <div className="detail-title">
-        <Avatar client={c} />
-        <div>
-          <h2>{c.name}</h2>
-          <p className="form-hint">{c.goal}</p>
-        </div>
-      </div>
-      <div className="detail-grid">
-        <section>
-          <div className="info-list">
-            <div>
-              <span>Plan</span>
-              <b>
-                {c.plan} / {fmt(c.fee)}
-              </b>
-            </div>
-            <div>
-              <span>Email</span>
-              <b>{c.email || 'No registrado'}</b>
-            </div>
-            <div>
-              <span>Teléfono</span>
-              <b>{c.phone || 'No registrado'}</b>
-            </div>
-            <div>
-              <span>Nacimiento</span>
-              <b>
-                {c.birth
-                  ? longDate(c.birth, { day: 'numeric', month: 'short', year: 'numeric' })
-                  : 'No registrado'}
-              </b>
-            </div>
-            <div>
-              <span>Estatura</span>
-              <b>{c.height ? `${c.height} cm` : '—'}</b>
-            </div>
-            <div>
-              <span>Rutina</span>
-              <b>{r?.name || 'Sin asignar'}</b>
-            </div>
-          </div>
-        </section>
-        <section style={{ background: '#f2f6eb', padding: 17, borderRadius: 17 }}>
-          <div className="info-list">
-            <div>
-              <span>Último peso</span>
-              <b>{last?.weight || c.weight || '—'} kg</b>
-            </div>
-            <div>
-              <span>Asistencia</span>
-              <b>{progressFor(data, id)}%</b>
-            </div>
-            <div>
-              <span>Saldo pendiente</span>
-              <b>{fmt(pending)}</b>
-            </div>
-          </div>
-        </section>
-      </div>
-      <h3 style={{ margin: '25px 0 10px' }}>Observaciones</h3>
-      <p className="notes">{c.notes || 'Sin observaciones.'}</p>
-      <div className="form-foot">
-        <button
-          className="button light"
-          onClick={() => {
-            commit((d) => {
-              const target = d.clients.find((x) => x.id === id)
-              if (target) target.archived = !target.archived
-            })
-            closeModal()
-            toast(
-              c.archived
-                ? 'Cliente restaurado.'
-                : 'Cliente archivado. Puedes restaurarlo desde Archivo.',
-            )
-          }}
-        >
-          {c.archived ? 'Restaurar cliente' : 'Archivar cliente'}
-        </button>
-        <button
-          className="button light"
-          onClick={() => {
-            patchUi({ progressClient: id })
-            closeModal()
-            go('progreso')
-          }}
-        >
-          Ver progreso
-        </button>
-        <button className="button dark" onClick={() => openModal({ kind: 'client-form', id })}>
-          Editar ficha <Icon name="edit" />
-        </button>
-      </div>
-    </>
-  )
-}
 
 /* ------------------------- Sesión ------------------------- */
 
@@ -302,6 +222,9 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
   const { data, commit, closeModal, toast, ui, error, fail } = useForm()
   const s = data.sessions.find((x) => x.id === id)
   const activeClients = data.clients.filter((c) => !c.archived)
+  const [sessionTime, setSessionTime] = useState(s?.time ?? '09:00')
+  const [sessionDuration, setSessionDuration] = useState(s?.duration ?? 60)
+  const [timePicker, setTimePicker] = useState<'clock' | 'duration' | null>(null)
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -346,6 +269,7 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
   }
 
   return (
+    <>
     <FormWrap kind="session" id={id} error={error} onSubmit={onSubmit}>
       <SelectField name="client" label="Cliente" value={s?.client}>
         {activeClients.map((c) => (
@@ -368,16 +292,8 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
         value={s?.date ?? date ?? ui.calendarDate}
         required
       />
-      <Field name="time" label="Hora" type="time" value={s?.time ?? '09:00'} required />
-      <Field
-        name="duration"
-        label="Duración (minutos)"
-        type="number"
-        value={s?.duration ?? 60}
-        min={10}
-        max={300}
-        required
-      />
+      <div><label>Hora</label><input type="hidden" name="time" value={sessionTime} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker('clock')}><Icon name="clock" />{new Intl.DateTimeFormat('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(`2000-01-01T${sessionTime}:00`))}<Icon name="chevron" /></button></div>
+      <div><label>Duración</label><input type="hidden" name="duration" value={sessionDuration} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker('duration')}><Icon name="clock" />{sessionDuration} min<Icon name="chevron" /></button></div>
       <SelectField name="status" label="Estado" value={s?.status ?? 'Programada'}>
         {SESSION_STATUSES.map((x) => (
           <option key={x} value={x}>
@@ -399,6 +315,8 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
         value={s?.notes}
       />
     </FormWrap>
+    {timePicker && <TimeWheelPicker mode={timePicker} value={timePicker === 'clock' ? sessionTime : sessionDuration} onSave={value => { if (timePicker === 'clock') setSessionTime(String(value)); else setSessionDuration(Number(value)); setTimePicker(null) }} onClose={() => setTimePicker(null)} />}
+    </>
   )
 }
 
@@ -498,10 +416,12 @@ function ExerciseEditorRow({
   exercise,
   onChange,
   onRemove,
+  onRestClick,
 }: {
   exercise: Exercise
   onChange: (patch: Partial<Exercise>) => void
   onRemove: () => void
+  onRestClick: () => void
 }) {
   return (
     <div className="exercise-row exercise-editor-card">
@@ -547,19 +467,7 @@ function ExerciseEditorRow({
             onChange={(e) => onChange({ reps: e.target.value })}
           />
         </label>
-        <label>
-          Descanso (s)
-          <input
-            aria-label="Descanso en segundos"
-            className="ex-rest"
-            type="number"
-            value={exercise.rest}
-            min={0}
-            max={600}
-            required
-            onChange={(e) => onChange({ rest: Number(e.target.value) })}
-          />
-        </label>
+        <div className="exercise-rest-control"><label>Descanso</label><button type="button" className="time-picker-trigger" onClick={onRestClick} aria-label={`Descanso: ${exercise.rest} segundos. Cambiar tiempo`}><Icon name="clock" />{exercise.rest >= 60 ? `${Math.floor(exercise.rest / 60)} min ${String(exercise.rest % 60).padStart(2, '0')} s` : `${exercise.rest} s`}</button></div>
       </div>
     </div>
   )
@@ -573,6 +481,14 @@ export function RoutineFormModal({ id }: { id?: string }) {
       ? r.exercises.map((e) => ({ ...e }))
       : [{ name: '', sets: 3, reps: '10–12', rest: 60 }],
   )
+  const [duration, setDuration] = useState(r?.duration ?? 50)
+  const [name, setName] = useState(r?.name ?? '')
+  const [category, setCategory] = useState(r?.category ?? 'Fuerza')
+  const [manualFocus, setManualFocus] = useState(Boolean(r?.focusZones?.length))
+  const [manualZones, setManualZones] = useState<BodyZone[]>(r?.focusZones?.length ? [...r.focusZones] : [])
+  const inferredZones = inferRoutineZones({ name, category, exercises })
+  const focusZones = manualFocus ? manualZones : inferredZones
+  const [timePicker, setTimePicker] = useState<{ mode: 'duration' | 'rest'; index?: number } | null>(null)
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -596,6 +512,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
           duration: Number(x.duration),
           notes: x.notes ?? '',
           exercises: clean,
+          focusZones: manualFocus ? manualZones : undefined,
         }
         upsert(d.routines, routine)
       })
@@ -607,6 +524,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
   }
 
   return (
+    <>
     <FormWrap kind="routine" id={id} error={error} onSubmit={onSubmit}>
       <div className="full editor-intro">
         <span className="editor-step">01</span>
@@ -616,15 +534,10 @@ export function RoutineFormModal({ id }: { id?: string }) {
         </div>
       </div>
       <div className="full">
-        <Field name="name" label="Nombre del plan" value={r?.name} required maxLength={100} />
+        <label htmlFor="routine-name">Nombre del plan</label>
+        <input id="routine-name" name="name" value={name} onChange={e => setName(e.target.value)} required maxLength={100} />
       </div>
-      <SelectField name="category" label="Enfoque" value={r?.category ?? 'Fuerza'}>
-        {ROUTINE_CATEGORIES.map((x) => (
-          <option key={x} value={x}>
-            {x}
-          </option>
-        ))}
-      </SelectField>
+      <div><label htmlFor="routine-category">Enfoque</label><select id="routine-category" name="category" value={category} onChange={e => setCategory(e.target.value)}>{ROUTINE_CATEGORIES.map(x => <option key={x} value={x}>{x}</option>)}</select></div>
       <SelectField name="level" label="Nivel" value={r?.level ?? 'Inicial'}>
         {ROUTINE_LEVELS.map((x) => (
           <option key={x} value={x}>
@@ -632,15 +545,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
           </option>
         ))}
       </SelectField>
-      <Field
-        name="duration"
-        label="Duración (minutos)"
-        type="number"
-        value={r?.duration ?? 50}
-        min={10}
-        max={300}
-        required
-      />
+      <div><label>Duración del plan</label><input type="hidden" name="duration" value={duration} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker({ mode: 'duration' })}><Icon name="clock" />{duration} min<Icon name="chevron" /></button></div>
       <div className="full editor-intro">
         <span className="editor-step">02</span>
         <div>
@@ -664,6 +569,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
                   setExercises((prev) => prev.filter((_, j) => j !== i))
                 else toast('La rutina necesita al menos un ejercicio.')
               }}
+              onRestClick={() => setTimePicker({ mode: 'rest', index: i })}
             />
           ))}
         </div>
@@ -681,20 +587,31 @@ export function RoutineFormModal({ id }: { id?: string }) {
           Añadir otro movimiento
         </button>
       </div>
+      <div className="full routine-focus-editor">
+        <div className="routine-focus-controls">
+          <div className="routine-focus-heading"><Icon name="body" /><div><h3>Mapa corporal</h3><p>Las zonas se detectan según el plan y sus ejercicios.</p></div></div>
+          <label className="focus-auto-label"><input type="checkbox" checked={!manualFocus} onChange={e => { if (e.target.checked) setManualFocus(false); else { setManualZones(inferredZones); setManualFocus(true) } }} /> Selección automática</label>
+          {manualFocus && <div className="focus-zone-options" aria-label="Zonas de trabajo">{BODY_ZONES.map(zone => <button key={zone.id} type="button" className={manualZones.includes(zone.id) ? 'active' : ''} aria-pressed={manualZones.includes(zone.id)} onClick={() => setManualZones(current => current.includes(zone.id) ? current.length > 1 ? current.filter(z => z !== zone.id) : current : [...current, zone.id])}>{zone.label}</button>)}</div>}
+        </div>
+        <MuscleGuide zones={focusZones} compact />
+      </div>
       <TextField
         name="notes"
         label="La indicación que hace la diferencia"
         value={r?.notes}
       />
     </FormWrap>
+    {timePicker && <TimeWheelPicker mode={timePicker.mode} value={timePicker.mode === 'duration' ? duration : exercises[timePicker.index ?? 0].rest} onSave={value => { if (timePicker.mode === 'duration') setDuration(Number(value)); else setExercises(prev => prev.map((item, i) => i === timePicker.index ? { ...item, rest: Number(value) } : item)); setTimePicker(null) }} onClose={() => setTimePicker(null)} />}
+    </>
   )
 }
 
 /* ------------------------- Medición ------------------------- */
 
-export function MeasurementFormModal() {
+export function MeasurementFormModal({ id }: { id?: string }) {
   const { data, commit, closeModal, toast, ui, patchUi, error, fail } = useForm()
   const activeClients = data.clients.filter((c) => !c.archived)
+  const current = data.measurements.find((m) => m.id === id)
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -704,7 +621,7 @@ export function MeasurementFormModal() {
         throw new Error('Selecciona un cliente e indica su peso.')
       commit((d) => {
         const measurement: Measurement = {
-          id: uid(),
+          id: id || uid(),
           client: x.client,
           date: x.date,
           weight: Number(x.weight),
@@ -714,7 +631,8 @@ export function MeasurementFormModal() {
         }
         upsert(d.measurements, measurement)
         const client = d.clients.find((c) => c.id === x.client)
-        if (client) client.weight = Number(x.weight)
+        const latest = d.measurements.filter(m => m.client === x.client).sort((a,b) => b.date.localeCompare(a.date))[0]
+        if (client && latest) client.weight = latest.weight
       })
       patchUi({ progressClient: x.client })
       closeModal()
@@ -725,15 +643,15 @@ export function MeasurementFormModal() {
   }
 
   return (
-    <FormWrap kind="measurement" error={error} onSubmit={onSubmit}>
-      <SelectField name="client" label="Cliente" value={ui.progressClient}>
+    <FormWrap kind="measurement" id={id} error={error} onSubmit={onSubmit}>
+      <SelectField name="client" label="Cliente" value={current?.client ?? ui.progressClient}>
         {activeClients.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
           </option>
         ))}
       </SelectField>
-      <Field name="date" label="Fecha de medición" type="date" value={TODAY} required />
+      <Field name="date" label="Fecha de medición" type="date" value={current?.date ?? TODAY} required />
       <Field
         name="weight"
         label="Peso (kg)"
@@ -741,11 +659,12 @@ export function MeasurementFormModal() {
         min={20}
         max={400}
         step={0.1}
+        value={current?.weight}
         required
       />
-      <Field name="waist" label="Cintura (cm)" type="number" min={20} max={300} step={0.1} />
-      <Field name="fat" label="Grasa corporal (%)" type="number" min={1} max={70} step={0.1} />
-      <TextField name="note" label="Observaciones" />
+      <Field name="waist" label="Cintura (cm)" type="number" min={20} max={300} step={0.1} value={current?.waist ?? ''} />
+      <Field name="fat" label="Grasa corporal (%)" type="number" min={1} max={70} step={0.1} value={current?.fat ?? ''} />
+      <TextField name="note" label="Observaciones" value={current?.note} />
     </FormWrap>
   )
 }
@@ -788,6 +707,141 @@ export function AssignRoutineModal({ id }: { id: string }) {
         cliente; sus sesiones anteriores se conservan.
       </div>
     </FormWrap>
+  )
+}
+
+/* ------------------------- Membresía ------------------------- */
+
+export function MembershipModal() {
+  const { data, commit, closeModal, toast } = useApp()
+  const current = planOf(data.profile.membership)
+  const activeCount = data.clients.filter((c) => !c.archived).length
+  const [paying, setPaying] = useState(false)
+  const [method, setMethod] = useState('Transferencia')
+  const price = MEMBERSHIP_PLANS.premium.price
+
+  function activate(id: 'free' | 'premium', paid = false, payMethod = 'Transferencia') {
+    commit((d) => {
+      d.profile.membership = id
+      d.profile.verified = id === 'premium'
+      if (id === 'premium' && paid) {
+        if (!d.membershipPayments) d.membershipPayments = []
+        d.membershipPayments.unshift({
+          id: uid(),
+          amount: price,
+          date: TODAY,
+          period: TODAY.slice(0, 7),
+          method: payMethod,
+        })
+      }
+      if (d.trainers && d.profile.email) {
+        const me = d.trainers.find((t) => t.email === d.profile.email)
+        if (me) {
+          me.membership = id
+          me.verified = id === 'premium'
+        }
+      }
+    })
+    closeModal()
+    toast(
+      id === 'premium'
+        ? paid
+          ? `Pago de $${price} registrado. ¡Premium activado!`
+          : '¡Premium activado! Clientes ilimitados y perfil verificado.'
+        : 'Plan Normal activado (hasta 3 clientes).',
+    )
+  }
+
+  if (paying) {
+    return (
+      <>
+        <button className="plan-pill featured" type="button" onClick={() => undefined}>
+          <div className="plan-pill-main">
+            <b>${price}/mes</b>
+            <small>Premium · clientes ilimitados y verificado</small>
+          </div>
+        </button>
+        <div className="plan-pay">
+          <label>
+            Método de pago
+            <select value={method} onChange={(e) => setMethod(e.target.value)}>
+              {['Transferencia', 'Tarjeta', 'Efectivo', 'Otro'].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </label>
+          <p className="form-hint">Se registrará un pago de ${price} y se activará Premium.</p>
+          <div className="form-foot">
+            <button className="button light" type="button" onClick={() => setPaying(false)}>Volver</button>
+            <button className="button primary" type="button" onClick={() => activate('premium', true, method)}>
+              <Icon name="check" /> Pagar ${price}
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  const isPremium = current.id === 'premium'
+  const premiumPlan = MEMBERSHIP_PLANS.premium
+  const order: Array<'free' | 'premium'> = isPremium ? ['premium', 'free'] : ['free', 'premium']
+
+  return (
+    <>
+      {isPremium ? (
+        <div className="membership-active">
+          <span className="verified verified-xl"><Icon name="check" /></span>
+          <div>
+            <h3>Premium activo</h3>
+            <p>Clientes ilimitados y todas las ventajas.</p>
+          </div>
+        </div>
+      ) : null}
+      <p className="notes" style={{ marginBottom: 16 }}>
+        Llevas <b>{activeCount}</b> {activeCount === 1 ? 'cliente' : 'clientes'} activos. Tu plan actual es{' '}
+        <b>{current.name}</b>.
+      </p>
+      {order.map((pid) => {
+        const plan = MEMBERSHIP_PLANS[pid]
+        const isCurrent = current.id === pid
+        const featured = pid === 'premium'
+        return (
+          <button
+            key={pid}
+            className={`plan-pill ${featured ? 'featured' : ''} ${isCurrent ? 'current' : ''}`}
+            type="button"
+            onClick={() => {
+              if (isCurrent) return
+              if (pid === 'premium') setPaying(true)
+              else activate('free')
+            }}
+          >
+            <div className="plan-pill-main">
+              <b>{plan.price === 0 ? 'Gratis' : `$${plan.price}/mes`}</b>
+              <small>{featured ? 'Premium · clientes ilimitados y verificado' : 'Normal · hasta 3 clientes'}</small>
+            </div>
+            {isCurrent ? (
+              <span className="plan-pill-badge">Activo</span>
+            ) : featured ? (
+              <span className="plan-pill-badge">Recomendado</span>
+            ) : (
+              <Icon name="chevron" />
+            )}
+          </button>
+        )
+      })}
+      <div className="plan-benefits">
+        <span className="eyebrow">BENEFICIOS PREMIUM</span>
+        <ul className="plan-features big">
+          {premiumPlan.features.map((f) => (
+            <li key={f}><Icon name="check" /> {f}</li>
+          ))}
+        </ul>
+      </div>
+      <p className="form-hint" style={{ marginTop: 14 }}>
+        La oferta Premium cuesta ${price} USD/mes. Puedes cargar el pago ahora mismo.
+      </p>
+    </>
   )
 }
 
@@ -871,12 +925,12 @@ export function ImportConfirmModal({ candidate }: { candidate: AppData }) {
 
 const TITLES: Record<ModalState['kind'], string> = {
   'client-form': '',
-  'client-detail': 'Ficha del cliente',
   'session-form': '',
   'payment-form': '',
   'routine-form': '',
-  'measurement-form': 'Añadir medición',
+  'measurement-form': 'Medición',
   'assign-routine': 'Asignar rutina',
+  membership: 'Tu membresía',
   'start-empty': 'Empezar tu espacio',
   'import-confirm': 'Importar respaldo',
 }
@@ -897,6 +951,8 @@ function modalTitle(modal: ModalState, data: ReturnType<typeof useApp>['data']):
     }
     case 'routine-form':
       return modal.id ? 'Afinar el plan' : 'Diseñar una rutina'
+    case 'measurement-form':
+      return modal.id ? 'Editar medición' : 'Añadir medición'
     default:
       return TITLES[modal.kind]
   }
@@ -922,9 +978,6 @@ export function ModalHost() {
       case 'client-form':
         body = <ClientFormModal id={modal.id} />
         break
-      case 'client-detail':
-        body = <ClientDetailModal id={modal.id} />
-        break
       case 'session-form':
         body = <SessionFormModal id={modal.id} date={modal.date} />
         break
@@ -935,10 +988,13 @@ export function ModalHost() {
         body = <RoutineFormModal id={modal.id} />
         break
       case 'measurement-form':
-        body = <MeasurementFormModal />
+        body = <MeasurementFormModal id={modal.id} />
         break
       case 'assign-routine':
         body = <AssignRoutineModal id={modal.id} />
+        break
+      case 'membership':
+        body = <MembershipModal />
         break
       case 'start-empty':
         body = <StartEmptyModal />
@@ -952,6 +1008,8 @@ export function ModalHost() {
   return (
     <dialog
       id="modal"
+      className="app-sheet"
+      aria-labelledby="dialogTitle"
       ref={ref}
       onClose={closeModal}
       onClick={(e) => {
@@ -969,7 +1027,7 @@ export function ModalHost() {
     >
       <div className="dialog-head">
         <div>
-          <span className="eyebrow">PROTRAINER / TU ESPACIO</span>
+          <span className="eyebrow">PROFALLO / TU ESPACIO</span>
           <h2 id="dialogTitle">{modal ? modalTitle(modal, data) : ''}</h2>
         </div>
         <button className="icon-button" onClick={closeModal} aria-label="Cerrar ventana">

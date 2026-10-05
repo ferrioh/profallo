@@ -406,6 +406,15 @@ dialog.app-sheet{max-width:none}
 .pay-progress small{font-size:11px;color:#a9aeb2}
 @keyframes payPulse{50%{opacity:.55}}
 .pay-badge-review{font-size:11px;font-weight:800;letter-spacing:.12em;color:#182a0c;background:#d2ff62;border-radius:99px;padding:4px 12px}
+/* Editor de foto */
+.image-editor-backdrop{position:fixed;inset:0;z-index:70;background:#00000088;display:grid;place-items:center;padding:20px}
+.image-editor{width:min(100%,360px);background:#14161a;border:1px solid #2c3036;border-radius:20px;padding:20px;text-align:center;display:grid;gap:12px;justify-items:center}
+.image-editor h3{font-size:20px}
+.image-editor-canvas{width:280px;height:280px;max-width:100%;border-radius:14px;background:#0d0f11;touch-action:none;cursor:grab;border:1px solid #33363c}
+.image-editor-canvas:active{cursor:grabbing}
+.image-editor-zoom{display:grid;gap:6px;width:100%;font-size:12px;color:#c3c7cb;text-align:left}
+.image-editor-zoom input[type=range]{width:100%;accent-color:#d2ff62}
+.image-editor .form-foot{display:flex;gap:10px;justify-content:flex-end;width:100%}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

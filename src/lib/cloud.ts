@@ -182,7 +182,7 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     name: or(r.name) || base.name,
     specialty: or(r.specialty),
     currency: or(r.currency) || 'USD',
-    photo: base.photo,
+    photo: or(r.photo_url) || base.photo,
     email: or(r.email),
     role: r.role === 'admin' ? 'admin' : 'trainer',
     membership: r.membership === 'premium' ? 'premium' : 'free',
@@ -202,6 +202,7 @@ export function profileToRow(p: Profile, id: string): Row {
     verified: Boolean(p.verified),
     role: p.role ?? 'trainer',
     trial_start: nz(p.trialStart),
+    photo_url: p.photo ?? null,
   }
 }
 

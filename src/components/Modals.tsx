@@ -20,6 +20,7 @@ import {
 import { exportData } from '../lib/backup'
 import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
 import { cloudCreatePremiumRequest, cloudGetAppSettings, cloudMyPremiumRequests, type AppSettings, type PremiumMethod, type PremiumRequestRow } from '../lib/cloud'
+import { fileToDataUrl, fitImage, loadImage } from '../lib/image'
 import { Icon } from './Icon'
 import { Field, SelectField, TextField } from './form'
 import { TimeWheelPicker } from './TimeWheelPicker'
@@ -756,15 +757,18 @@ export function MembershipModal() {
     toast(id === 'premium' ? '¡Premium activado! Clientes ilimitados y perfil verificado.' : 'Plan Normal activado (hasta 3 clientes).')
   }
 
-  function onCapture(file?: File) {
+  async function onCapture(file?: File) {
     if (!file) return
     if (!file.type.startsWith('image/')) { toast('Sube una imagen (captura).'); return }
-    if (file.size > 2 * 1024 * 1024) { toast('La imagen debe pesar menos de 2 MB.'); return }
     setReading(true)
-    const reader = new FileReader()
-    reader.onload = () => { setCapture(String(reader.result)); setReading(false) }
-    reader.onerror = () => { setReading(false); toast('No se pudo leer la imagen.') }
-    reader.readAsDataURL(file)
+    try {
+      const url = await fileToDataUrl(file)
+      const img = await loadImage(url)
+      setCapture(fitImage(img, 1000, 0.7))
+    } catch {
+      toast('No se pudo procesar la imagen.')
+    }
+    setReading(false)
   }
 
   async function submitPremium() {

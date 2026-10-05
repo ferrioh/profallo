@@ -4,6 +4,8 @@ import { Icon, type IconName } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { Verified } from '../components/Layout'
 import { CoachStage } from './Dashboard'
+import { ImageEditor } from '../components/ImageEditor'
+import { fileToDataUrl } from '../lib/image'
 import { planOf, trialDaysLeft } from '../lib/plans'
 import { logout } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
@@ -14,6 +16,7 @@ export function ProfilePage() {
   const { data, stats, commit, toast, openModal, leave, cloudEnabled } = useApp()
   const photoInput = useRef<HTMLInputElement>(null)
   const [openOpt, setOpenOpt] = useState<string | null>(null)
+  const [editSrc, setEditSrc] = useState<string | null>(null)
   const count = data.sessions.filter((x) => x.status === 'Completada').length
   const plan = planOf(data.profile.membership)
   const totalExercises = data.routines.reduce((n, r) => n + r.exercises.length, 0)
@@ -27,10 +30,8 @@ export function ProfilePage() {
 
   async function changePhoto(file?: File) {
     if (!file) return
-    if (!file.type.startsWith('image/') || file.size > 1024 * 1024) { toast('Usa una imagen de hasta 1 MB.'); return }
-    const reader = new FileReader()
-    reader.onload = () => { commit(d => { d.profile.photo = String(reader.result) }); toast('Foto actualizada.') }
-    reader.readAsDataURL(file)
+    if (!file.type.startsWith('image/')) { toast('Sube una imagen.'); return }
+    try { setEditSrc(await fileToDataUrl(file)) } catch { toast('No se pudo abrir la imagen.') }
   }
 
   function saveProfile(e: FormEvent<HTMLFormElement>) {
@@ -193,6 +194,17 @@ export function ProfilePage() {
         </div>
         <p className="profile-copyright">© Profallo by Ferrioh 2026</p>
       </footer>
+      {editSrc ? (
+        <ImageEditor
+          src={editSrc}
+          onCancel={() => setEditSrc(null)}
+          onSave={(dataUrl) => {
+            commit((d) => { d.profile.photo = dataUrl })
+            setEditSrc(null)
+            toast('Foto actualizada.')
+          }}
+        />
+      ) : null}
     </>
   )
 }

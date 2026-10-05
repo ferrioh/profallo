@@ -16,6 +16,7 @@ export function PublicHome() {
   const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting'>('login')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
+  const [phase, setPhase] = useState<'load' | 'out' | 'done'>('load')
   const [captcha, setCaptcha] = useState(() => ({ a: 2 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) }))
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [robot, setRobot] = useState(false)
@@ -23,6 +24,12 @@ export function PublicHome() {
   useEffect(() => {
     const timer = window.setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 6000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const t1 = window.setTimeout(() => setPhase('out'), 1500)
+    const t2 = window.setTimeout(() => setPhase('done'), 1950)
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2) }
   }, [])
 
   function refreshCaptcha() {
@@ -96,6 +103,12 @@ export function PublicHome() {
 
   return (
     <div className="simple-entry">
+      {phase !== 'done' ? (
+        <div className={`entry-loader ${phase === 'out' ? 'out' : ''}`} aria-hidden="true">
+          <span className="entry-loader-logo">p</span>
+          <span className="entry-loader-line" />
+        </div>
+      ) : null}
       <div className="entry-bg" aria-hidden="true">
         {SLIDES.map((src, i) => (
           <div key={src} className={`entry-bg-slide ${i === slide ? 'active' : ''}`} style={{ backgroundImage: `url(${src})` }} />

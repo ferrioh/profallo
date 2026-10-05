@@ -4,6 +4,7 @@ import type { View } from '../types'
 import { Icon, type IconName } from './Icon'
 import { initials } from '../lib/utils'
 import { currentAccount, useAuthVersion } from '../lib/auth'
+import { cloudSignOut } from '../lib/cloud'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
@@ -41,9 +42,11 @@ export function Verified() {
 }
 
 export function Sidebar() {
-  const { data, view, go, stats, leave } = useApp()
+  const { data, view, go, stats, leave, cloudEnabled, cloudProfile } = useApp()
   useAuthVersion()
-  const admin = (currentAccount()?.role ?? data.profile.role) === 'admin'
+  const admin = cloudEnabled
+    ? cloudProfile?.role === 'admin'
+    : (currentAccount()?.role ?? data.profile.role) === 'admin'
   const activeView = view === 'cliente-perfil' ? 'clientes' : view
   const navRef = useRef<HTMLElement>(null)
   const [pill, setPill] = useState({ left: 0, width: 0, ready: false })
@@ -119,7 +122,7 @@ export function Sidebar() {
             Panel de administración
           </button>
         ) : null}
-        <button className="nav-button leave-button" onClick={leave}>Salir al inicio público</button>
+        <button className="nav-button leave-button" onClick={() => { if (cloudEnabled) void cloudSignOut(); leave() }}>Salir al inicio público</button>
         <div
           className="coach"
           role="button"

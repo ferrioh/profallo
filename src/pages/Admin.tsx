@@ -14,16 +14,32 @@ import {
 } from '../lib/backend'
 import { month, TODAY } from '../lib/utils'
 import { currentAccount, setAccountRole, setAccountStatus, useAccounts, useAuthVersion } from '../lib/auth'
+import {
+  cloudListProfiles,
+  cloudSetProfileRole,
+  cloudSetProfileStatus,
+  type CloudProfileRow,
+} from '../lib/cloud'
 import type { Trainer } from '../types'
 
 export function AdminPage() {
-  const { data, commit, money, toast } = useApp()
+  const { data, commit, money, toast, cloudEnabled, cloudProfile } = useApp()
   useAuthVersion()
   const account = currentAccount()
-  const isAdmin = (account?.role ?? data.profile.role) === 'admin'
+  const isAdmin = cloudEnabled
+    ? cloudProfile?.role === 'admin'
+    : (account?.role ?? data.profile.role) === 'admin'
   const accounts = useAccounts()
+  const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const nowMonth = month(TODAY)
+
+  useEffect(() => {
+    if (!cloudEnabled) return
+    let alive = true
+    cloudListProfiles().then((rows) => { if (alive) setCloudAccounts(rows) })
+    return () => { alive = false }
+  }, [cloudEnabled])
 
   useEffect(() => {
     if (!isSupabaseEnabled || !isAdmin) return
@@ -133,6 +149,20 @@ export function AdminPage() {
     toast('Enlaces de la empresa guardados.')
   }
 
+  function setCloudStatus(id: string, status: CloudProfileRow['status']) {
+    cloudSetProfileStatus(id, status).then((ok) => {
+      if (ok) setCloudAccounts((prev) => prev?.map((a) => (a.id === id ? { ...a, status } : a)) ?? null)
+      toast(status === 'approved' ? 'Acceso permitido.' : 'Acceso denegado.')
+    })
+  }
+
+  function setCloudRole(id: string, role: CloudProfileRow['role']) {
+    cloudSetProfileRole(id, role).then((ok) => {
+      if (ok) setCloudAccounts((prev) => prev?.map((a) => (a.id === id ? { ...a, role } : a)) ?? null)
+      toast('Rol actualizado.')
+    })
+  }
+
   return (
     <div className="admin-page">
       <PageHead
@@ -206,38 +236,65 @@ export function AdminPage() {
       <section className="admin-accounts">
         <div className="section-line">
           <div><span className="eyebrow">CUENTAS Y ACCESOS</span><h2>Solicitudes de registro</h2></div>
-          <span>{accounts.filter((a) => a.status === 'pending').length} pendientes</span>
+          <span>
+            {cloudEnabled
+              ? (cloudAccounts ?? []).filter((a) => a.status === 'pending').length
+              : accounts.filter((a) => a.status === 'pending').length} pendientes
+          </span>
         </div>
         <div className="admin-list">
-          {accounts.map((a) => (
-            <article className="admin-trainer" key={a.id}>
-              <div className="admin-trainer-main">
-                <span className={`admin-avatar ${a.status === 'approved' ? 'premium' : ''}`}>{a.name.slice(0, 2).toUpperCase()}</span>
-                <div>
-                  <b>{a.name} {a.role === 'admin' ? <span className="verified" title="Administrador"><Icon name="check" /></span> : null}</b>
-                  <small>{a.email} · {a.gym || 'Sin gimnasio'}{a.instagram ? ` · ${a.instagram}` : ''}</small>
-                  <small>Tel {a.phone || '—'} · Cédula {a.idNumber || '—'}</small>
-                </div>
-              </div>
-              <div className="admin-trainer-meta">
-                <span className={`admin-status ${a.status === 'approved' ? 'premium' : a.status === 'pending' ? 'trial' : 'expired'}`}>
-                  {a.status === 'approved' ? 'Acceso permitido' : a.status === 'pending' ? 'Pendiente' : 'Denegado'}
-                </span>
-              </div>
-              <div className="admin-trainer-actions">
-                {a.status !== 'approved' ? (
-                  <button className="button primary" onClick={() => { setAccountStatus(a.id, 'approved'); toast('Acceso permitido.') }}>Permitir acceso</button>
-                ) : null}
-                {a.status !== 'rejected' ? (
-                  <button className="button light" onClick={() => { setAccountStatus(a.id, 'rejected'); toast('Acceso denegado.') }}>Denegar</button>
-                ) : null}
-                <button className="button light" onClick={() => { setAccountRole(a.id, a.role === 'admin' ? 'trainer' : 'admin'); toast('Rol actualizado.') }}>
-                  {a.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
-                </button>
-              </div>
-            </article>
-          ))}
-          {!accounts.length ? <div className="admin-empty card white">Aún no hay cuentas registradas.</div> : null}
+          {cloudEnabled
+            ? (cloudAccounts ?? []).map((a) => (
+                <article className="admin-trainer" key={a.id}>
+                  <div className="admin-trainer-main">
+                    <span className={`admin-avatar ${a.status === 'approved' ? 'premium' : ''}`}>{(a.name || '?').slice(0, 2).toUpperCase()}</span>
+                    <div>
+                      <b>{a.name} {a.role === 'admin' ? <span className="verified" title="Administrador"><Icon name="check" /></span> : null}</b>
+                      <small>{a.email ?? 'Sin correo'}</small>
+                      <small>Estado: {a.status === 'approved' ? 'acceso permitido' : a.status === 'pending' ? 'pendiente' : 'denegado'}</small>
+                    </div>
+                  </div>
+                  <div className="admin-trainer-meta">
+                    <span className={`admin-status ${a.status === 'approved' ? 'premium' : a.status === 'pending' ? 'trial' : 'expired'}`}>
+                      {a.status === 'approved' ? 'Acceso permitido' : a.status === 'pending' ? 'Pendiente' : 'Denegado'}
+                    </span>
+                  </div>
+                  <div className="admin-trainer-actions">
+                    {a.status !== 'approved' ? <button className="button primary" onClick={() => setCloudStatus(a.id, 'approved')}>Permitir acceso</button> : null}
+                    {a.status !== 'rejected' ? <button className="button light" onClick={() => setCloudStatus(a.id, 'rejected')}>Denegar</button> : null}
+                    <button className="button light" onClick={() => setCloudRole(a.id, a.role === 'admin' ? 'trainer' : 'admin')}>
+                      {a.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
+                    </button>
+                  </div>
+                </article>
+              ))
+            : accounts.map((a) => (
+                <article className="admin-trainer" key={a.id}>
+                  <div className="admin-trainer-main">
+                    <span className={`admin-avatar ${a.status === 'approved' ? 'premium' : ''}`}>{a.name.slice(0, 2).toUpperCase()}</span>
+                    <div>
+                      <b>{a.name} {a.role === 'admin' ? <span className="verified" title="Administrador"><Icon name="check" /></span> : null}</b>
+                      <small>{a.email} · {a.gym || 'Sin gimnasio'}{a.instagram ? ` · ${a.instagram}` : ''}</small>
+                      <small>Tel {a.phone || '—'} · Cédula {a.idNumber || '—'}</small>
+                    </div>
+                  </div>
+                  <div className="admin-trainer-meta">
+                    <span className={`admin-status ${a.status === 'approved' ? 'premium' : a.status === 'pending' ? 'trial' : 'expired'}`}>
+                      {a.status === 'approved' ? 'Acceso permitido' : a.status === 'pending' ? 'Pendiente' : 'Denegado'}
+                    </span>
+                  </div>
+                  <div className="admin-trainer-actions">
+                    {a.status !== 'approved' ? <button className="button primary" onClick={() => { setAccountStatus(a.id, 'approved'); toast('Acceso permitido.') }}>Permitir acceso</button> : null}
+                    {a.status !== 'rejected' ? <button className="button light" onClick={() => { setAccountStatus(a.id, 'rejected'); toast('Acceso denegado.') }}>Denegar</button> : null}
+                    <button className="button light" onClick={() => { setAccountRole(a.id, a.role === 'admin' ? 'trainer' : 'admin'); toast('Rol actualizado.') }}>
+                      {a.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+          {cloudEnabled
+            ? ((cloudAccounts ?? []).length ? null : <div className="admin-empty card white">Aún no hay cuentas registradas.</div>)
+            : (accounts.length ? null : <div className="admin-empty card white">Aún no hay cuentas registradas.</div>)}
         </div>
       </section>
 

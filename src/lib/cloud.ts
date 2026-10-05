@@ -1,0 +1,333 @@
+import { supabase } from './supabase'
+import type {
+  AppData,
+  Client,
+  Measurement,
+  Payment,
+  Profile,
+  Routine,
+  Session,
+} from '../types'
+import type { BodyZone } from '../types'
+import { TODAY } from './utils'
+
+type Row = Record<string, unknown>
+
+const nz = (v: string | null | undefined): string | null => (v ? v : null)
+const or = (v: unknown): string => (v == null ? '' : String(v))
+const num = (v: unknown): number | null => (v == null || v === '' ? null : Number(v))
+
+/* ----------------------------- Mapeos ----------------------------- */
+
+export function rowToClient(r: Row): Client {
+  return {
+    id: or(r.id),
+    name: or(r.name),
+    email: or(r.email),
+    phone: or(r.phone),
+    idNumber: or(r.id_number),
+    birth: or(r.birth),
+    goal: or(r.goal),
+    plan: or(r.plan) || 'Personal',
+    fee: Number(r.fee ?? 0),
+    weight: num(r.weight),
+    height: num(r.height),
+    routine: or(r.routine_id),
+    notes: or(r.notes),
+    gym: or(r.gym),
+    gender: r.gender === 'hombre' ? 'hombre' : 'mujer',
+    tone: Number(r.tone ?? 0),
+    archived: Boolean(r.archived),
+    joined: or(r.joined),
+    frequency: r.frequency === 'quincenal' ? 'quincenal' : 'mensual',
+  }
+}
+
+export function clientToRow(c: Client, trainerId: string): Row {
+  return {
+    id: c.id,
+    trainer_id: trainerId,
+    name: c.name,
+    email: c.email,
+    phone: c.phone,
+    id_number: c.idNumber ?? '',
+    gym: c.gym ?? '',
+    birth: nz(c.birth),
+    goal: c.goal,
+    plan: c.plan,
+    fee: c.fee,
+    frequency: c.frequency ?? 'mensual',
+    weight: c.weight,
+    height: c.height,
+    routine_id: c.routine,
+    notes: c.notes,
+    gender: c.gender ?? 'mujer',
+    tone: c.tone,
+    archived: c.archived,
+    joined: nz(c.joined),
+  }
+}
+
+export function rowToRoutine(r: Row): Routine {
+  return {
+    id: or(r.id),
+    name: or(r.name),
+    category: or(r.category),
+    level: or(r.level),
+    duration: Number(r.duration ?? 50),
+    notes: or(r.notes),
+    exercises: Array.isArray(r.exercises) ? (r.exercises as Routine['exercises']) : [],
+    focusZones: Array.isArray(r.focus_zones) ? (r.focus_zones as BodyZone[]) : [],
+  }
+}
+
+export function routineToRow(rt: Routine, trainerId: string): Row {
+  return {
+    id: rt.id,
+    trainer_id: trainerId,
+    name: rt.name,
+    category: rt.category,
+    level: rt.level,
+    duration: rt.duration,
+    notes: rt.notes,
+    exercises: rt.exercises,
+    focus_zones: rt.focusZones ?? [],
+  }
+}
+
+export function rowToSession(r: Row): Session {
+  return {
+    id: or(r.id),
+    client: or(r.client_id),
+    title: or(r.title),
+    date: or(r.date),
+    time: or(r.time),
+    duration: Number(r.duration ?? 60),
+    status: (r.status as Session['status']) ?? 'Programada',
+    routine: or(r.routine_id),
+    notes: or(r.notes),
+  }
+}
+
+export function sessionToRow(s: Session, trainerId: string): Row {
+  return {
+    id: s.id,
+    trainer_id: trainerId,
+    client_id: s.client,
+    title: s.title,
+    date: nz(s.date),
+    time: s.time,
+    duration: s.duration,
+    status: s.status,
+    routine_id: s.routine,
+    notes: s.notes,
+  }
+}
+
+export function rowToMeasurement(r: Row): Measurement {
+  return {
+    id: or(r.id),
+    client: or(r.client_id),
+    date: or(r.date),
+    weight: Number(r.weight ?? 0),
+    waist: num(r.waist),
+    fat: num(r.fat),
+    note: or(r.note),
+  }
+}
+
+export function measurementToRow(m: Measurement, trainerId: string): Row {
+  return {
+    id: m.id,
+    trainer_id: trainerId,
+    client_id: m.client,
+    date: nz(m.date),
+    weight: m.weight,
+    waist: m.waist,
+    fat: m.fat,
+    note: m.note,
+  }
+}
+
+export function rowToPayment(r: Row): Payment {
+  return {
+    id: or(r.id),
+    client: or(r.client_id),
+    amount: Number(r.amount ?? 0),
+    due: or(r.due),
+    paid: Boolean(r.paid),
+    paidDate: or(r.paid_date),
+    method: or(r.method) || 'Transferencia',
+    note: or(r.note),
+  }
+}
+
+export function paymentToRow(p: Payment, trainerId: string): Row {
+  return {
+    id: p.id,
+    trainer_id: trainerId,
+    client_id: p.client,
+    amount: p.amount,
+    due: nz(p.due),
+    paid: p.paid,
+    paid_date: nz(p.paidDate),
+    method: p.method,
+    note: p.note,
+  }
+}
+
+export function rowToProfile(r: Row, base: Profile): Profile {
+  return {
+    ...base,
+    name: or(r.name) || base.name,
+    specialty: or(r.specialty),
+    currency: or(r.currency) || 'USD',
+    photo: base.photo,
+    email: or(r.email),
+    role: r.role === 'admin' ? 'admin' : 'trainer',
+    membership: r.membership === 'premium' ? 'premium' : 'free',
+    verified: Boolean(r.verified),
+    trialStart: or(r.trial_start) || base.trialStart,
+  }
+}
+
+export function profileToRow(p: Profile, id: string): Row {
+  return {
+    id,
+    email: p.email ?? null,
+    name: p.name,
+    specialty: p.specialty,
+    currency: p.currency,
+    membership: p.membership ?? 'free',
+    verified: Boolean(p.verified),
+    role: p.role ?? 'trainer',
+    trial_start: nz(p.trialStart),
+  }
+}
+
+/* ----------------------------- Auth ----------------------------- */
+
+export interface CloudProfileRow {
+  id: string
+  email: string | null
+  name: string
+  specialty: string | null
+  membership: 'free' | 'premium'
+  verified: boolean
+  role: 'admin' | 'trainer'
+  status: 'pending' | 'approved' | 'rejected'
+  trial_start: string | null
+  created_at?: string
+}
+
+export async function cloudSignUp(email: string, password: string, meta: Record<string, string>) {
+  if (!supabase) return { ok: false as const, error: 'Supabase no está configurado.' }
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: meta },
+  })
+  if (error) return { ok: false as const, error: error.message }
+  // needsConfirmation = no session returned (email confirmation enabled)
+  return { ok: true as const, session: data.session, needsConfirmation: !data.session }
+}
+
+export async function cloudSignIn(email: string, password: string) {
+  if (!supabase) return { ok: false as const, error: 'Supabase no está configurado.' }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { ok: false as const, error: error.message }
+  return { ok: true as const, session: data.session }
+}
+
+export async function cloudSignOut() {
+  if (!supabase) return
+  await supabase.auth.signOut()
+}
+
+export async function cloudGetSessionUserId(): Promise<string | null> {
+  if (!supabase) return null
+  const { data } = await supabase.auth.getSession()
+  return data.session?.user.id ?? null
+}
+
+export function cloudOnAuth(cb: (userId: string | null) => void) {
+  if (!supabase) return () => {}
+  const { data } = supabase.auth.onAuthStateChange((_evt, session) => cb(session?.user.id ?? null))
+  return () => data.subscription.unsubscribe()
+}
+
+export async function cloudGetProfile(userId: string): Promise<CloudProfileRow | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  if (error || !data) return null
+  return data as CloudProfileRow
+}
+
+export async function cloudListProfiles(): Promise<CloudProfileRow[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })
+  if (error || !data) return null
+  return data as CloudProfileRow[]
+}
+
+export async function cloudSetProfileStatus(id: string, status: CloudProfileRow['status']) {
+  if (!supabase) return false
+  const { error } = await supabase.from('profiles').update({ status }).eq('id', id)
+  return !error
+}
+
+export async function cloudSetProfileRole(id: string, role: CloudProfileRow['role']) {
+  if (!supabase) return false
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', id)
+  return !error
+}
+
+/* ----------------------------- Datos ----------------------------- */
+
+export async function loadCloudData(userId: string, base: Profile): Promise<AppData | null> {
+  if (!supabase) return null
+  const [prof, clients, routines, sessions, measurements, payments] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    supabase.from('clients').select('*').eq('trainer_id', userId),
+    supabase.from('routines').select('*').eq('trainer_id', userId),
+    supabase.from('sessions').select('*').eq('trainer_id', userId),
+    supabase.from('measurements').select('*').eq('trainer_id', userId),
+    supabase.from('payments').select('*').eq('trainer_id', userId),
+  ])
+  if (clients.error || routines.error || sessions.error || measurements.error || payments.error) return null
+  return {
+    version: 1,
+    profile: prof.data ? rowToProfile(prof.data as Row, base) : base,
+    clients: (clients.data ?? []).map(rowToClient),
+    routines: (routines.data ?? []).map(rowToRoutine),
+    sessions: (sessions.data ?? []).map(rowToSession),
+    measurements: (measurements.data ?? []).map(rowToMeasurement),
+    payments: (payments.data ?? []).map(rowToPayment),
+    demo: false,
+  }
+}
+
+async function syncTable(table: string, trainerId: string, rows: Row[]) {
+  if (!supabase) return
+  const { data: existing } = await supabase.from(table).select('id').eq('trainer_id', trainerId)
+  const existingIds = new Set((existing ?? []).map((r) => (r as Row).id as string))
+  const newIds = new Set(rows.map((r) => r.id as string))
+  const toDelete = [...existingIds].filter((id) => !newIds.has(id))
+  if (toDelete.length) await supabase.from(table).delete().in('id', toDelete)
+  if (rows.length) await supabase.from(table).upsert(rows)
+}
+
+export async function saveCloudData(userId: string, data: AppData): Promise<boolean> {
+  if (!supabase) return false
+  const prof = await supabase.from('profiles').upsert(profileToRow(data.profile, userId))
+  if (prof.error) return false
+  // Orden seguro por claves foráneas: padres antes que hijos (upsert)
+  await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId)))
+  await syncTable('clients', userId, data.clients.map((c) => clientToRow(c, userId)))
+  await syncTable('sessions', userId, data.sessions.map((s) => sessionToRow(s, userId)))
+  await syncTable('measurements', userId, data.measurements.map((m) => measurementToRow(m, userId)))
+  await syncTable('payments', userId, data.payments.map((p) => paymentToRow(p, userId)))
+  return true
+}
+
+export const cloudToday = TODAY

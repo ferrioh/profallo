@@ -17,6 +17,15 @@ import type {
 import { VIEWS } from '../types'
 import { clone, loadData, persist } from '../lib/storage'
 import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../lib/utils'
+import { isSupabaseEnabled } from '../lib/supabase'
+import {
+  cloudGetProfile,
+  cloudGetSessionUserId,
+  cloudOnAuth,
+  loadCloudData,
+  saveCloudData,
+  type CloudProfileRow,
+} from '../lib/cloud'
 
 export type ModalState =
   | { kind: 'client-form'; id?: string }
@@ -62,6 +71,9 @@ interface AppContextValue {
   modal: ModalState | null
   openModal: (modal: ModalState) => void
   closeModal: () => void
+  cloudEnabled: boolean
+  cloudUser: string | null
+  cloudProfile: CloudProfileRow | null
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -89,6 +101,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [modal, setModal] = useState<ModalState | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [cloudUser, setCloudUser] = useState<string | null>(null)
+  const [cloudProfile, setCloudProfile] = useState<CloudProfileRow | null>(null)
+  const cloudUserRef = useRef<string | null>(null)
+  cloudUserRef.current = cloudUser
+  const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [ui, setUi] = useState<UiState>(() => ({
     query: '',
@@ -159,6 +176,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!ok) {
         toast('No se pudo guardar: exporta un respaldo antes de cerrar.')
       }
+      if (isSupabaseEnabled && cloudUserRef.current) {
+        if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
+        cloudPushTimer.current = setTimeout(() => {
+          if (cloudUserRef.current) void saveCloudData(cloudUserRef.current, dataRef.current)
+        }, 900)
+      }
     },
     [toast],
   )
@@ -168,6 +191,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setData(next)
     setStorageAvailable(persist(next))
   }, [])
+
+  useEffect(() => {
+    if (!isSupabaseEnabled) return
+    let alive = true
+    const handle = async (uid: string | null) => {
+      if (!alive) return
+      setCloudUser(uid)
+      if (!uid) {
+        setCloudProfile(null)
+        return
+      }
+      const prof = await cloudGetProfile(uid)
+      if (!alive) return
+      setCloudProfile(prof)
+      const fresh = await loadCloudData(uid, dataRef.current.profile)
+      if (!alive || !fresh) return
+      const empty =
+        !fresh.clients.length && !fresh.routines.length && !fresh.sessions.length &&
+        !fresh.payments.length && !fresh.measurements.length
+      const localHas = dataRef.current.clients.length > 0 || dataRef.current.routines.length > 0
+      if (empty && localHas) {
+        await saveCloudData(uid, dataRef.current)
+        replaceData({ ...dataRef.current, profile: fresh.profile, demo: false })
+      } else {
+        replaceData(fresh)
+      }
+    }
+    cloudGetSessionUserId().then(handle)
+    const unsub = cloudOnAuth(handle)
+    return () => {
+      alive = false
+      unsub()
+    }
+  }, [replaceData])
 
   const money = useCallback(
     (n: number | string) => fmtMoney(data.profile.currency, n),
@@ -197,6 +254,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     modal,
     openModal: setModal,
     closeModal: () => setModal(null),
+    cloudEnabled: isSupabaseEnabled,
+    cloudUser,
+    cloudProfile,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

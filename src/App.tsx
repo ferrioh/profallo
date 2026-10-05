@@ -17,18 +17,22 @@ import { NotificationsPage } from './pages/Notifications'
 import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
 import { currentAccount, logout, useAuthVersion } from './lib/auth'
+import { cloudSignOut } from './lib/cloud'
 import { Icon } from './components/Icon'
 
 export default function App() {
-  const { view, entered, data, leave } = useApp()
+  const { view, entered, data, leave, cloudEnabled, cloudUser, cloudProfile } = useApp()
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
 
-  if (!entered) return <PublicHome />
+  const isIn = entered || (cloudEnabled && !!cloudUser)
+  if (!isIn) return <PublicHome />
 
   const account = currentAccount()
-  const pending = !!account && account.role !== 'admin' && account.status === 'pending'
+  const pending = cloudEnabled
+    ? !!cloudProfile && cloudProfile.role !== 'admin' && cloudProfile.status === 'pending'
+    : !!account && account.role !== 'admin' && account.status === 'pending'
 
   if (membershipLocked(data.profile)) {
     return (
@@ -83,7 +87,7 @@ export default function App() {
             <span className="entry-confirm-icon"><Icon name="check" /></span>
             <h1>Usuario registrado</h1>
             <p>Tu cuenta está <b>esperando verificación</b>. El administrador debe permitir tu acceso para poder usar la app.</p>
-            <button className="button primary" onClick={() => { logout(); leave() }}>Cerrar sesión</button>
+            <button className="button primary" onClick={() => { if (cloudEnabled) void cloudSignOut(); else logout(); leave() }}>Cerrar sesión</button>
           </div>
         </div>
       </div>

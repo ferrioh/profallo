@@ -17,15 +17,29 @@ create table if not exists public.profiles (
   id            text primary key,                     -- = auth.users.id
   email         text unique,
   name          text not null default 'Entrenador',
+  phone         text,
+  id_number     text,
+  instagram     text,
+  gym           text,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
   photo_url     text,
   membership    text not null default 'free' check (membership in ('free', 'premium')),
   verified      boolean not null default false,
   role          text not null default 'trainer' check (role in ('trainer', 'admin')),
+  status        text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   trial_start   date not null default current_date,
   created_at    timestamptz not null default now()
 );
+
+-- Compatibilidad si la tabla ya existía sin la columna status
+alter table public.profiles add column if not exists status text not null default 'pending';
+alter table public.profiles drop constraint if exists profiles_status_check;
+alter table public.profiles add constraint profiles_status_check check (status in ('pending', 'approved', 'rejected'));
+alter table public.profiles add column if not exists phone text;
+alter table public.profiles add column if not exists id_number text;
+alter table public.profiles add column if not exists instagram text;
+alter table public.profiles add column if not exists gym text;
 
 -- ------------------------------------------------------------
 -- DATOS DE CADA ENTRENADOR
@@ -39,8 +53,10 @@ create table if not exists public.routines (
   duration    int  default 50,
   notes       text,
   exercises   jsonb not null default '[]'::jsonb,
+  focus_zones jsonb not null default '[]'::jsonb,
   created_at  timestamptz default now()
 );
+alter table public.routines add column if not exists focus_zones jsonb not null default '[]'::jsonb;
 
 create table if not exists public.clients (
   id          text primary key,
@@ -48,6 +64,8 @@ create table if not exists public.clients (
   name        text not null,
   email       text,
   phone       text,
+  id_number   text,
+  gym         text,
   birth       date,
   goal        text,
   plan        text default 'Personal',
@@ -57,11 +75,16 @@ create table if not exists public.clients (
   height      numeric(6,2),
   routine_id  text,
   notes       text,
+  gym         text,
+  gender      text default 'mujer' check (gender in ('mujer', 'hombre')),
   tone        int default 0,
   archived    boolean not null default false,
   joined      date default current_date,
   created_at  timestamptz default now()
 );
+alter table public.clients add column if not exists id_number text;
+alter table public.clients add column if not exists gym text;
+alter table public.clients add column if not exists gender text default 'mujer';
 
 create table if not exists public.sessions (
   id          text primary key,
@@ -127,15 +150,34 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
--- Crea el perfil automáticamente al registrarse con Supabase Auth
+-- ¿El usuario autenticado tiene el acceso aprobado por el admin?
+create or replace function public.is_approved() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()::text and p.status = 'approved'
+  );
+$$;
+
+-- Crea el perfil automáticamente al registrarse con Supabase Auth.
+-- El primer usuario queda como admin aprobado; los demás, pendientes.
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
+declare
+  v_first boolean;
 begin
-  insert into public.profiles (id, email, name)
+  select count(*) = 0 into v_first from public.profiles;
+  insert into public.profiles (id, email, name, phone, id_number, instagram, gym, role, status)
   values (
     new.id::text,
     new.email,
-    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1))
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data->>'phone',
+    new.raw_user_meta_data->>'idNumber',
+    new.raw_user_meta_data->>'instagram',
+    new.raw_user_meta_data->>'gym',
+    case when v_first then 'admin' else 'trainer' end,
+    case when v_first then 'approved' else 'pending' end
   )
   on conflict (id) do nothing;
   return new;
@@ -218,7 +260,7 @@ begin
   foreach t in array array['routines', 'clients', 'sessions', 'measurements', 'payments'] loop
     execute format('drop policy if exists %I_owner on public.%I', t, t);
     execute format(
-      'create policy %I_owner on public.%I for all using (trainer_id = auth.uid()::text or public.is_admin()) with check (trainer_id = auth.uid()::text or public.is_admin())',
+      'create policy %I_owner on public.%I for all using (public.is_admin() or (trainer_id = auth.uid()::text and public.is_approved())) with check (public.is_admin() or (trainer_id = auth.uid()::text and public.is_approved()))',
       t, t
     );
   end loop;

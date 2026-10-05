@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { GYMS, PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
+import { cloudSignIn, cloudSignUp } from '../lib/cloud'
 
 const SLIDES = [
   'assets/trainer-hero-v2.png',
@@ -10,7 +11,7 @@ const SLIDES = [
 ]
 
 export function PublicHome() {
-  const { enter, go, toast } = useApp()
+  const { enter, go, toast, cloudEnabled } = useApp()
   const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting'>('login')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
@@ -29,10 +30,18 @@ export function PublicHome() {
     setRobot(false)
   }
 
-  function onLogin(e: FormEvent<HTMLFormElement>) {
+  async function onLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    if (cloudEnabled) {
+      const res = await cloudSignIn(x.email ?? '', x.password ?? '')
+      if (!res.ok) { setError(res.error ?? 'No se pudo iniciar sesión.'); return }
+      toast('Bienvenido.')
+      enter()
+      go('inicio')
+      return
+    }
     const res = doLogin(x.email ?? '', x.password ?? '')
     if (!res.ok) { setError(res.error ?? 'No se pudo iniciar sesión.'); return }
     toast(`Hola, ${res.account?.name}.`)
@@ -40,10 +49,27 @@ export function PublicHome() {
     go('inicio')
   }
 
-  function onSignup(e: FormEvent<HTMLFormElement>) {
+  async function onSignup(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    if (cloudEnabled) {
+      if (!robot || Number(captchaAnswer) !== captcha.a + captcha.b) { setError('Confirma el captcha.'); refreshCaptcha(); return }
+      if ((x.password ?? '').length < PASS_MIN) { setError(`La contraseña debe tener al menos ${PASS_MIN} caracteres.`); return }
+      if (x.password !== x.confirm) { setError('Las contraseñas no coinciden.'); return }
+      if (!x.gym) { setError('Selecciona tu gimnasio.'); return }
+      const res = await cloudSignUp((x.email ?? '').trim().toLowerCase(), x.password ?? '', {
+        name: x.name ?? '', phone: x.phone ?? '', idNumber: x.idNumber ?? '', gym: x.gym ?? '', instagram: x.instagram ?? '',
+      })
+      if (!res.ok) { setError(res.error ?? 'No se pudo crear la cuenta.'); refreshCaptcha(); return }
+      if (res.needsConfirmation) {
+        toast('Revisa tu correo para confirmar la cuenta y luego inicia sesión.')
+        setMode('login')
+        return
+      }
+      setMode('waiting')
+      return
+    }
     const res = doSignup({
       name: x.name ?? '',
       email: x.email ?? '',

@@ -16,6 +16,7 @@ drop trigger if exists profiles_verified on public.profiles;
 drop function if exists public.handle_new_user() cascade;
 drop function if exists public.enforce_client_limit() cascade;
 drop function if exists public.sync_verified() cascade;
+drop function if exists public.is_approved() cascade;
 drop function if exists public.is_admin() cascade;
 
 -- Tablas (cascade elimina políticas, índices y FKs asociados)

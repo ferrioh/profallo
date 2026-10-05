@@ -154,7 +154,8 @@ export function Sidebar() {
 }
 
 export function Topbar() {
-  const { data, view, go, storageAvailable, cloudEnabled, cloudUser } = useApp()
+  const { data, view, go, storageAvailable, cloudEnabled, cloudUser, cloudProfile } = useApp()
+  const admin = cloudEnabled ? cloudProfile?.role === 'admin' : data.profile.role === 'admin'
   const label = PAGE_LABELS[view] ?? 'Inicio'
   return (
     <header className="topbar">
@@ -189,6 +190,17 @@ export function Topbar() {
           <Icon name="bell" />
           <i className="notification-dot" />
         </button>
+        {admin ? (
+          <button
+            className="icon-button"
+            id="adminPanel"
+            onClick={() => go('admin')}
+            aria-label="Panel de administración"
+            title="Panel de administración"
+          >
+            <Icon name="grid" />
+          </button>
+        ) : null}
         <button
           className="avatar tiny"
           id="headerAvatar"

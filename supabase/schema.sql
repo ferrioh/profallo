@@ -186,7 +186,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- Crea el perfil automáticamente al registrarse con Supabase Auth.
--- El primer usuario queda como admin aprobado; los demás, pendientes.
+-- El primer usuario queda como admin; todos quedan APROBADOS (sin verificación).
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
@@ -203,7 +203,7 @@ begin
     new.raw_user_meta_data->>'instagram',
     new.raw_user_meta_data->>'gym',
     case when v_first then 'admin' else 'trainer' end,
-    case when v_first then 'approved' else 'pending' end
+    'approved'
   )
   on conflict (id) do nothing;
   return new;

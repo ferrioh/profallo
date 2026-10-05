@@ -16,12 +16,10 @@ import { PublicFicha } from './pages/PublicFicha'
 import { NotificationsPage } from './pages/Notifications'
 import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
-import { currentAccount, logout, useAuthVersion } from './lib/auth'
-import { cloudSignOut } from './lib/cloud'
-import { Icon } from './components/Icon'
+import { useAuthVersion } from './lib/auth'
 
 export default function App() {
-  const { view, entered, data, leave, cloudEnabled, cloudUser, cloudProfile, cloudReady } = useApp()
+  const { view, entered, data, cloudEnabled, cloudUser, cloudReady } = useApp()
   useAuthVersion()
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
@@ -38,34 +36,6 @@ export default function App() {
             <span className="verify-spinner" aria-hidden="true" />
             <h1>Cargando tu espacio…</h1>
             <p>Sincronizando con la nube.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const account = currentAccount()
-  const blocked = cloudEnabled
-    ? !!cloudProfile && cloudProfile.status !== 'approved'
-    : !!account && account.role !== 'admin' && account.status !== 'approved'
-  const rejected = cloudEnabled
-    ? cloudProfile?.status === 'rejected'
-    : account?.status === 'rejected'
-
-  if (blocked) {
-    return (
-      <div className="verify-wrap">
-        <div className="verify-overlay">
-          <div className="verify-card">
-            <span className="entry-confirm-icon">{rejected ? <Icon name="close" /> : <Icon name="check" />}</span>
-            <h1>{rejected ? 'Acceso denegado' : 'Usuario registrado'}</h1>
-            <p>
-              {rejected
-                ? 'El administrador denegó tu acceso.'
-                : <>Tu cuenta está <b>esperando verificación</b>. El administrador debe permitir tu acceso.</>}
-            </p>
-            {cloudEnabled ? <p className="form-hint">Sesión: {data.profile.email || '—'}</p> : null}
-            <button className="button primary" onClick={() => { if (cloudEnabled) void cloudSignOut(); else logout(); leave() }}>Cerrar sesión</button>
           </div>
         </div>
       </div>

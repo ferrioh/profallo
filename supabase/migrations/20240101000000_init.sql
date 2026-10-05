@@ -1,47 +1,20 @@
-# Configurar Supabase (Profallo) — pasos y SQL
-
-## 1) Ejecutar el SQL
-Abre el **SQL Editor** de tu proyecto y pega/ejecuta TODO el bloque de abajo:
-
-👉 https://supabase.com/dashboard/project/nnywqyvykmpvtfclsvec/sql/new
-
-Debe decir al final: **Success. No rows returned**.
-
-> También puedes aplicarlo con la CLI: `supabase login`, `supabase init`,
-> `supabase link --project-ref nnywqyvykmpvtfclsvec` y `supabase db push`
-> (el esquema ya está en `supabase/migrations/`).
-
-## 2) Ajuste de Auth (recomendado)
-En **Authentication → Providers → Email**, desactiva **"Confirm email"** para que el registro entre directo.
-
-## 3) Variables de entorno en Vercel
-En **Vercel → Project → Settings → Environment Variables**, agrega y luego **Redeploy**:
-
-```
-VITE_SUPABASE_URL = https://nnywqyvykmpvtfclsvec.supabase.co
-VITE_SUPABASE_ANON_KEY = sb_publishable_rEsYKiN-YR2GBBrVdijGNA_U7wzELwE
-```
-
----
-
-## SQL para pegar
-
-```sql
 -- ============================================================
--- Profallo · Esquema para Supabase (Postgres)
--- Ejecuta TODO este script en: Supabase > SQL Editor > New query
--- Es idempotente y transaccional (si algo falla, no cambia nada).
+-- ProTrainer · Esquema para Supabase (Postgres)
+-- Ejecuta este archivo completo en: Supabase > SQL Editor > New query
+-- Los IDs son TEXT para aceptar tanto UUID como los ids locales ("c1", "r1").
 -- ============================================================
 
 create extension if not exists "pgcrypto";
 
+-- Toda la migración corre en una transacción: si algo falla, se revierte
+-- por completo y la base queda intacta (rollback automático).
 begin;
 
 -- ------------------------------------------------------------
--- ENTRENADORES (perfil) + rol + membresía + aprobación
+-- ENTRENADORES (perfil) + rol + membresía
 -- ------------------------------------------------------------
 create table if not exists public.profiles (
-  id            text primary key,
+  id            text primary key,                     -- = auth.users.id
   email         text unique,
   name          text not null default 'Entrenador',
   phone         text,
@@ -58,6 +31,8 @@ create table if not exists public.profiles (
   trial_start   date not null default current_date,
   created_at    timestamptz not null default now()
 );
+
+-- Compatibilidad si la tabla ya existía sin la columna status
 alter table public.profiles add column if not exists status text not null default 'pending';
 alter table public.profiles drop constraint if exists profiles_status_check;
 alter table public.profiles add constraint profiles_status_check check (status in ('pending', 'approved', 'rejected'));
@@ -149,11 +124,12 @@ create table if not exists public.payments (
   created_at  timestamptz default now()
 );
 
+-- Cobros de la membresía premium (3 USD/mes) que registra el admin
 create table if not exists public.membership_payments (
   id          text primary key,
   trainer_id  text not null references public.profiles(id) on delete cascade,
   amount      numeric(10,2) not null default 3,
-  period      text,
+  period      text,                                   -- "YYYY-MM"
   paid        boolean not null default true,
   paid_date   date default current_date,
   method      text default 'Manual',
@@ -164,6 +140,7 @@ create table if not exists public.membership_payments (
 -- ------------------------------------------------------------
 -- HELPERS
 -- ------------------------------------------------------------
+-- ¿El usuario autenticado es admin?
 create or replace function public.is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
@@ -172,6 +149,7 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
+-- ¿El usuario autenticado tiene el acceso aprobado por el admin?
 create or replace function public.is_approved() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
@@ -180,6 +158,8 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
+-- Crea el perfil automáticamente al registrarse con Supabase Auth.
+-- El primer usuario queda como admin aprobado; los demás, pendientes.
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
@@ -208,6 +188,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Bloquea más de 3 clientes activos en el plan gratuito
 create or replace function public.enforce_client_limit() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
@@ -232,6 +213,7 @@ create trigger clients_limit
   before insert on public.clients
   for each row execute function public.enforce_client_limit();
 
+-- Marca automáticamente verified = true cuando la membresía es premium
 create or replace function public.sync_verified() returns trigger
 language plpgsql as $$
 begin
@@ -248,14 +230,15 @@ create trigger profiles_verified
 -- ------------------------------------------------------------
 -- RLS: cada entrenador ve solo lo suyo; el admin ve todo
 -- ------------------------------------------------------------
-alter table public.profiles            enable row level security;
-alter table public.routines            enable row level security;
-alter table public.clients             enable row level security;
-alter table public.sessions            enable row level security;
-alter table public.measurements        enable row level security;
-alter table public.payments            enable row level security;
+alter table public.profiles           enable row level security;
+alter table public.routines           enable row level security;
+alter table public.clients            enable row level security;
+alter table public.sessions           enable row level security;
+alter table public.measurements       enable row level security;
+alter table public.payments           enable row level security;
 alter table public.membership_payments enable row level security;
 
+-- profiles
 drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
   for select using (id = auth.uid()::text or public.is_admin());
@@ -269,6 +252,7 @@ create policy profiles_update on public.profiles
   for update using (id = auth.uid()::text or public.is_admin())
   with check (id = auth.uid()::text or public.is_admin());
 
+-- tablas de datos del entrenador (mismo patrón)
 do $$
 declare t text;
 begin
@@ -281,9 +265,14 @@ begin
   end loop;
 end $$;
 
+-- cobros de membresía: solo admin
 drop policy if exists membership_admin on public.membership_payments;
 create policy membership_admin on public.membership_payments
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- ------------------------------------------------------------
+-- Listo. Después: Authentication > Users para crear tu cuenta y,
+-- luego, en Table editor > profiles, pon tu fila con role = 'admin'.
+-- ------------------------------------------------------------
+
 commit;
-```

@@ -495,6 +495,27 @@ dialog.app-sheet{max-width:none}
 .share-preview-join{background:transparent;border:1px solid #25d36688;color:#8ff0b0}
 .share-preview-join:hover{background:#16241b}
 .share-preview-join:disabled{opacity:.5}
+/* Panel de admin por pestañas */
+.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px;background:#24262b;border:1px solid #3a3d43;border-radius:16px;padding:6px}
+.admin-tabs button{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#c3c7c9;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600}
+.admin-tabs button svg{width:17px;height:17px}
+.admin-tabs button.active{background:var(--lime);color:#182a0c}
+.admin-cal-title{font-size:20px;text-transform:capitalize;margin:6px 0 12px}
+.admin-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.admin-cal-wd{font-size:11px;color:#c3c7c9;text-align:center;padding:4px 0;font-weight:600}
+.admin-cal-cell{position:relative;min-height:44px;border:1px solid #33363c;border-radius:10px;display:grid;place-items:center;color:#e6e8ea;font-size:13px}
+.admin-cal-cell.empty{border:0;background:transparent}
+.admin-cal-cell.today{border-color:#d2ff62}
+.admin-cal-cell.has{background:#2a3320;border-color:#5a6b34}
+.admin-cal-dot{position:absolute;top:4px;right:6px;min-width:16px;height:16px;border-radius:99px;background:#d2ff62;color:#182a0c;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 3px}
+.admin-due-list{display:grid;gap:8px;margin-top:14px}
+.admin-due{display:flex;align-items:center;gap:10px;background:#24262b;border:1px solid #3a3d43;border-radius:12px;padding:11px 13px}
+.admin-due-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.admin-due-dot.premium{background:#d2ff62}
+.admin-due-dot.free{background:#ff9f2f}
+.admin-due b{font-size:14px}
+.admin-due small{color:#b9bdc3;font-size:12px}
+.admin-due-amt{margin-left:auto;color:#d2ff62;font-weight:700;font-size:13px}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}
 .entry-form label{display:grid;gap:6px;font-size:12px;font-weight:600;color:#c3c7cb}

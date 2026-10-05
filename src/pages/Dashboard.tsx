@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
@@ -7,6 +7,7 @@ import { PageHead } from '../components/ui'
 import { WeekStrip } from '../components/WeekStrip'
 import { Agenda } from '../components/Agenda'
 import { Verified } from '../components/Layout'
+import { MOTIVATIONAL_MAIN, MOTIVATIONAL_SUB, randomFrom } from '../lib/phrases'
 import {
   clientPhotos,
   findClient,
@@ -18,6 +19,12 @@ import {
 
 export function CoachStage({ full = false }: { full?: boolean }) {
   const { data, stats, go } = useApp()
+  const totalSessions = data.sessions.filter((s) => s.status !== 'Cancelada').length
+  // Nueva frase motivacional en cada entrada (montaje de la portada).
+  const phrase = useMemo(
+    () => ({ main: randomFrom(MOTIVATIONAL_MAIN), sub: randomFrom(MOTIVATIONAL_SUB) }),
+    [],
+  )
   return (
     <section className={`coach-stage ${full ? 'full-profile' : ''}`}>
       <img
@@ -39,18 +46,18 @@ export function CoachStage({ full = false }: { full?: boolean }) {
               Tu forma de inspirar.
             </>
           ) : (
-            <>
-              El progreso empieza
-              <br />
-              contigo.
-            </>
+            phrase.main
           )}
         </h2>
-        <p>
-          Cada sesión suma.
-          <br />
-          Cada persona importa.
-        </p>
+        <p>{full ? (
+          <>
+            Cada sesión suma.
+            <br />
+            Cada persona importa.
+          </>
+        ) : (
+          phrase.sub
+        )}</p>
       </div>
       <div className="stage-identity" />
       <button className="stage-orbit orbit-a glass-button" onClick={() => go('clientes')}>
@@ -67,8 +74,8 @@ export function CoachStage({ full = false }: { full?: boolean }) {
         <span className="orbit-icon">
           <Icon name="calendar" />
         </span>
-        <strong>{stats.todaySessions.length}</strong>
-        <span>Sesiones hoy</span>
+        <strong>{totalSessions}</strong>
+        <span>Sesiones</span>
       </button>
       <div className="stage-caption">
         <i /> COACH BETTER. EVERY DAY.

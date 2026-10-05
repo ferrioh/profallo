@@ -45,9 +45,32 @@ export default function App() {
   }
 
   const account = currentAccount()
-  const pending = cloudEnabled
-    ? !!cloudProfile && cloudProfile.role !== 'admin' && cloudProfile.status === 'pending'
-    : !!account && account.role !== 'admin' && account.status === 'pending'
+  const blocked = cloudEnabled
+    ? !!cloudProfile && cloudProfile.status !== 'approved'
+    : !!account && account.role !== 'admin' && account.status !== 'approved'
+  const rejected = cloudEnabled
+    ? cloudProfile?.status === 'rejected'
+    : account?.status === 'rejected'
+
+  if (blocked) {
+    return (
+      <div className="verify-wrap">
+        <div className="verify-overlay">
+          <div className="verify-card">
+            <span className="entry-confirm-icon">{rejected ? <Icon name="close" /> : <Icon name="check" />}</span>
+            <h1>{rejected ? 'Acceso denegado' : 'Usuario registrado'}</h1>
+            <p>
+              {rejected
+                ? 'El administrador denegó tu acceso.'
+                : <>Tu cuenta está <b>esperando verificación</b>. El administrador debe permitir tu acceso.</>}
+            </p>
+            {cloudEnabled ? <p className="form-hint">Sesión: {data.profile.email || '—'}</p> : null}
+            <button className="button primary" onClick={() => { if (cloudEnabled) void cloudSignOut(); else logout(); leave() }}>Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (membershipLocked(data.profile)) {
     return (
@@ -92,22 +115,6 @@ export default function App() {
       <Toast />
     </>
   )
-
-  if (pending) {
-    return (
-      <div className="verify-wrap">
-        <div className="verify-blur" aria-hidden="true">{app}</div>
-        <div className="verify-overlay">
-          <div className="verify-card">
-            <span className="entry-confirm-icon"><Icon name="check" /></span>
-            <h1>Usuario registrado</h1>
-            <p>Tu cuenta está <b>esperando verificación</b>. El administrador debe permitir tu acceso para poder usar la app.</p>
-            <button className="button primary" onClick={() => { if (cloudEnabled) void cloudSignOut(); else logout(); leave() }}>Cerrar sesión</button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return app
 }

@@ -9,6 +9,7 @@ import { fileToDataUrl } from '../lib/image'
 import { planOf, trialDaysLeft } from '../lib/plans'
 import { logout } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
+import { socialUrl } from '../lib/social'
 
 const CURRENCIES = ['USD', 'EUR', 'VES']
 
@@ -47,6 +48,8 @@ export function ProfilePage() {
         email: (x.email ?? '').trim(),
         phone: (x.phone ?? '').trim(),
         idNumber: (x.idNumber ?? '').trim(),
+        instagram: (x.instagram ?? '').trim(),
+        tiktok: (x.tiktok ?? '').trim(),
       }
     })
     toast('Perfil actualizado.')
@@ -128,6 +131,14 @@ export function ProfilePage() {
                 <label htmlFor="pEmail">Correo electrónico</label>
                 <input id="pEmail" name="email" type="email" defaultValue={data.profile.email} maxLength={120} placeholder="tucorreo@ejemplo.com" />
               </div>
+              <div>
+                <label htmlFor="pInstagram">Instagram</label>
+                <input id="pInstagram" name="instagram" defaultValue={data.profile.instagram} maxLength={80} placeholder="@usuario" />
+              </div>
+              <div>
+                <label htmlFor="pTiktok">TikTok</label>
+                <input id="pTiktok" name="tiktok" defaultValue={data.profile.tiktok} maxLength={80} placeholder="@usuario" />
+              </div>
             </div>
             <div className="form-foot">
               <button className="button primary" type="submit">Guardar <Icon name="check" /></button>
@@ -195,10 +206,10 @@ export function ProfilePage() {
 
       <footer className="profile-social">
         <div className="profile-social-icons">
-          <a className="social-icon" href={data.profile.instagram || '#'} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={(e) => { if (!data.profile.instagram) e.preventDefault() }}>
+          <a className="social-icon" href={socialUrl('instagram', data.profile.instagram) || '#'} target="_blank" rel="noopener noreferrer" aria-label="Instagram" onClick={(e) => { if (!data.profile.instagram) e.preventDefault() }}>
             <Icon name="instagram" />
           </a>
-          <a className="social-icon" href={data.profile.tiktok || '#'} target="_blank" rel="noopener noreferrer" aria-label="TikTok" onClick={(e) => { if (!data.profile.tiktok) e.preventDefault() }}>
+          <a className="social-icon" href={socialUrl('tiktok', data.profile.tiktok) || '#'} target="_blank" rel="noopener noreferrer" aria-label="TikTok" onClick={(e) => { if (!data.profile.tiktok) e.preventDefault() }}>
             <Icon name="tiktok" />
           </a>
         </div>

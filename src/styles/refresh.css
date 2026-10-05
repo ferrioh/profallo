@@ -453,12 +453,12 @@ dialog.app-sheet{max-width:none}
 .pt-bg{position:fixed;inset:0;z-index:0;background:#0a0c08;overflow:hidden}
 .pt-bg-slide{position:absolute;inset:0;background-position:center;background-size:cover;opacity:0;transition:opacity 1.5s ease-in-out;filter:saturate(.92) brightness(.72)}
 .pt-bg-slide.active{opacity:1}
-.pt-bg-shade{position:absolute;inset:0;background:linear-gradient(0deg,#050607f0 0%,#050607a8 55%,#0506074d 100%)}
+.pt-bg-shade{position:absolute;inset:0;background:linear-gradient(0deg,#04060af2 0%,#04060ab0 46%,#04060a4d 100%)}
 .pt-card{width:min(100%,430px);background:#0c0f0acc;backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);border:1px solid #ffffff24;border-radius:28px;padding:28px;text-align:center;display:grid;gap:10px;justify-items:center;color:#f3f6ef;position:relative;z-index:1;box-shadow:0 30px 80px #0006}
 .pt-photo{width:124px;height:124px;border-radius:50%;overflow:hidden;border:4px solid #d2ff62;background:#1b1e18;display:grid;place-items:center;color:#d2ff62}
 .pt-photo img{width:100%;height:100%;object-fit:cover}
 .pt-photo svg{width:54px;height:54px}
-.pt-role{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#c9ccd0}
+.pt-role{font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#e2e7da}
 .pt-card h1{font-size:30px;color:#fff;display:flex;align-items:center;gap:8px}
 .pt-bio{color:#c9ccd0;font-size:14px;line-height:1.6;max-width:340px}
 .pt-gym{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#d2ff62}
@@ -467,6 +467,10 @@ dialog.app-sheet{max-width:none}
 .pt-stats>div{background:#ffffff10;border:1px solid #ffffff1f;border-radius:16px;padding:14px 8px;display:grid;gap:4px}
 .pt-stats b{font-size:26px;color:#d2ff62;line-height:1}
 .pt-stats span{font-size:11px;color:#c3c7cb}
+.pt-social{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;width:100%;margin:2px 0 4px}
+.pt-social-link{display:inline-flex;align-items:center;gap:7px;background:#ffffff12;border:1px solid #ffffff24;border-radius:99px;padding:9px 15px;color:#eef2ec;font-size:13px;font-weight:600;text-decoration:none}
+.pt-social-link:hover{background:#ffffff1f}
+.pt-social-link svg{width:17px;height:17px;color:#d2ff62}
 .pt-join{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;min-height:54px;border:0;border-radius:16px;background:#d2ff62;color:#182a0c;font-size:16px;font-weight:800}
 .pt-join:hover{background:#dfff8a}
 .pt-join:disabled{opacity:.5}

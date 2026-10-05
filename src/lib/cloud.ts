@@ -194,6 +194,7 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     phone: or(r.phone) || base.phone,
     idNumber: or(r.id_number) || base.idNumber,
     instagram: or(r.instagram) || base.instagram,
+    tiktok: or(r.tiktok) || base.tiktok,
     bio: or(r.bio) || base.bio,
   }
 }
@@ -208,6 +209,7 @@ export function profileToRow(p: Profile, id: string): Row {
     phone: p.phone ?? null,
     id_number: p.idNumber ?? null,
     instagram: p.instagram ?? null,
+    tiktok: p.tiktok ?? null,
     membership: p.membership ?? 'free',
     verified: Boolean(p.verified),
     role: p.role ?? 'trainer',
@@ -372,7 +374,15 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
   if (!supabase) return false
   const row = profileToRow(data.profile, userId)
   row.notification_state = data.notificationState ?? {}
-  const prof = await supabase.from('profiles').upsert(row)
+  let prof = await supabase.from('profiles').upsert(row)
+  if (prof.error) {
+    // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/etc.).
+    const safe = { ...row }
+    delete safe.tiktok
+    delete safe.bio
+    delete safe.notification_state
+    prof = await supabase.from('profiles').upsert(safe)
+  }
   if (prof.error) return false
   // Orden seguro por claves foráneas: padres antes que hijos (upsert)
   await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId)))
@@ -516,6 +526,7 @@ export interface PublicTrainer {
   photo: string
   phone: string
   instagram: string
+  tiktok: string
   email: string
   bio: string
   username: string

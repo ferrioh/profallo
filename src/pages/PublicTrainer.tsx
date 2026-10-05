@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { cloudPublicProfile, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
+import { socialHandle, socialUrl } from '../lib/social'
 
 export function PublicTrainer({ username }: { username: string }) {
   const [t, setT] = useState<PublicTrainerData | null>(null)
@@ -13,7 +14,7 @@ export function PublicTrainer({ username }: { username: string }) {
       .catch(() => setLoading(false))
   }, [username])
 
-  const photos = t?.photos ?? []
+  const photos = [t?.photo, ...(t?.photos ?? [])].filter(Boolean) as string[]
   useEffect(() => {
     if (photos.length < 2) return
     const timer = window.setInterval(() => setSlide((s) => (s + 1) % photos.length), 6000)
@@ -43,6 +44,8 @@ export function PublicTrainer({ username }: { username: string }) {
   const wa = t.phone
     ? `https://wa.me/${t.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${t.name}, quiero unirme a tu equipo 💪`)}`
     : ''
+  const insta = socialUrl('instagram', t.instagram)
+  const tiktok = socialUrl('tiktok', t.tiktok)
 
   return (
     <div className="public-trainer">
@@ -70,6 +73,21 @@ export function PublicTrainer({ username }: { username: string }) {
           <div><b>{t.clients}</b><span>Clientes</span></div>
           <div><b>{t.sessionsMonth}</b><span>Sesiones/mes</span></div>
         </div>
+
+        {insta || tiktok ? (
+          <div className="pt-social">
+            {insta ? (
+              <a className="pt-social-link" href={insta} target="_blank" rel="noopener noreferrer">
+                <Icon name="instagram" /> {socialHandle(t.instagram)}
+              </a>
+            ) : null}
+            {tiktok ? (
+              <a className="pt-social-link" href={tiktok} target="_blank" rel="noopener noreferrer">
+                <Icon name="tiktok" /> {socialHandle(t.tiktok)}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
 
         <button className="pt-join" type="button" disabled={!wa} onClick={() => wa && window.open(wa, '_blank', 'noopener')}>
           <Icon name="whatsapp" /> Únete a mi equipo

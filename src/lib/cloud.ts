@@ -191,7 +191,9 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     verified: Boolean(r.verified),
     trialStart: or(r.trial_start) || base.trialStart,
     username: or(r.username) || base.username,
-    bio: or(r.bio) || base.bio,
+    phone: or(r.phone) || base.phone,
+    idNumber: or(r.id_number) || base.idNumber,
+    instagram: or(r.instagram) || base.instagram,
   }
 }
 
@@ -202,13 +204,15 @@ export function profileToRow(p: Profile, id: string): Row {
     name: p.name,
     specialty: p.specialty,
     currency: p.currency,
+    phone: p.phone ?? null,
+    id_number: p.idNumber ?? null,
+    instagram: p.instagram ?? null,
     membership: p.membership ?? 'free',
     verified: Boolean(p.verified),
     role: p.role ?? 'trainer',
     trial_start: nz(p.trialStart),
     photo_url: p.photo ?? null,
     username: p.username ?? null,
-    bio: p.bio ?? null,
   }
 }
 

@@ -44,10 +44,10 @@ export function ProfilePage() {
         name: x.name.trim(),
         specialty: x.specialty.trim(),
         currency: x.currency,
+        email: (x.email ?? '').trim(),
         phone: (x.phone ?? '').trim(),
         idNumber: (x.idNumber ?? '').trim(),
         username: (x.username ?? '').trim().replace(/^@/, '').replace(/\s+/g, '').toLowerCase(),
-        bio: (x.bio ?? '').trim(),
       }
     })
     toast('Perfil actualizado.')
@@ -131,8 +131,8 @@ export function ProfilePage() {
                 <small className="form-hint">Tu ficha: profallo.vercel.app/{data.profile.username || 'tunombre'}</small>
               </div>
               <div className="full">
-                <label htmlFor="pBio">Descripción de tu ficha</label>
-                <textarea id="pBio" name="bio" defaultValue={data.profile.bio} rows={3} maxLength={300} placeholder="Cuéntale a tus clientes quién eres" />
+                <label htmlFor="pEmail">Correo electrónico</label>
+                <input id="pEmail" name="email" type="email" defaultValue={data.profile.email} maxLength={120} placeholder="tucorreo@ejemplo.com" />
               </div>
             </div>
             <div className="form-foot">

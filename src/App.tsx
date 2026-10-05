@@ -26,7 +26,8 @@ export default function App() {
 
   if (location.hash.startsWith('#ficha=')) return <PublicFicha />
 
-  const isIn = entered || (cloudEnabled && !!cloudUser)
+  // Con Supabase activo, se exige sesión en la nube (ignora la sesión local vieja).
+  const isIn = cloudEnabled ? !!cloudUser : entered
   if (!isIn) return <PublicHome />
 
   if (cloudEnabled && cloudUser && !cloudReady) {

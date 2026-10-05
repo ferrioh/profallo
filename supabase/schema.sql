@@ -22,6 +22,7 @@ create table if not exists public.profiles (
   instagram     text,
   gym           text,
   username      text unique,
+  bio           text,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
   photo_url     text,
@@ -42,6 +43,7 @@ alter table public.profiles add column if not exists id_number text;
 alter table public.profiles add column if not exists instagram text;
 alter table public.profiles add column if not exists gym text;
 alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists bio text;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
 -- ------------------------------------------------------------
@@ -349,7 +351,7 @@ begin
   return jsonb_build_object(
     'name', v.name, 'specialty', v.specialty, 'photo', v.photo_url,
     'phone', v.phone, 'instagram', v.instagram, 'email', v.email,
-    'username', v.username, 'gym', v.gym,
+    'username', v.username, 'gym', v.gym, 'bio', v.bio,
     'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions
   );
 end; $$;

@@ -194,6 +194,7 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     phone: or(r.phone) || base.phone,
     idNumber: or(r.id_number) || base.idNumber,
     instagram: or(r.instagram) || base.instagram,
+    bio: or(r.bio) || base.bio,
   }
 }
 
@@ -213,6 +214,7 @@ export function profileToRow(p: Profile, id: string): Row {
     trial_start: nz(p.trialStart),
     photo_url: p.photo ?? null,
     username: p.username ?? null,
+    bio: p.bio ?? null,
   }
 }
 

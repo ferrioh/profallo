@@ -471,7 +471,20 @@ dialog.app-sheet{max-width:none}
 .pt-contact svg{width:16px;height:16px}
 .pt-foot{color:#8a9078;font-size:11px;margin-top:10px}
 /* Compartir perfil (Inicio) */
-.share-profile{background:#2d2f36;border:1px solid #42444d;border-radius:26px;padding:22px;margin:16px 0 20px;display:grid;gap:14px}
+.share-profile{background:#2d2f36;border:1px solid #42444d;border-radius:26px;padding:18px;margin:16px 0 20px}
+.share-toggle{display:flex;align-items:center;gap:12px;width:100%;background:transparent;color:#fff;text-align:left;padding:0}
+.share-toggle-ic{width:42px;height:42px;border-radius:14px;background:#d2ff62;color:#182a0c;display:grid;place-items:center;flex:none}
+.share-toggle-ic svg{width:20px;height:20px}
+.share-toggle-txt{flex:1;display:grid}
+.share-toggle-txt b{font-size:16px}
+.share-toggle-txt small{color:#b9bdc3;font-size:12px}
+.share-toggle-chev{color:#c3c7cb;display:grid;place-items:center}
+.share-toggle-chev svg{width:20px;height:20px}
+.share-body{display:grid;gap:12px;margin-top:14px;border-top:1px solid #3a3d43;padding-top:14px}
+.share-bio{display:grid;gap:8px}
+.share-bio .eyebrow{font-size:11px;color:#b9bdc3}
+.share-bio textarea{width:100%;min-height:64px;border-radius:12px;border:1px solid #3a3d43;background:#1b1d20;color:#fff;padding:11px 12px;font:inherit;resize:vertical}
+.share-bio .button{justify-self:start}
 .share-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
 .share-head h2{font-size:24px}
 .share-head p{color:#b9bdc3;font-size:13px;margin-top:4px}

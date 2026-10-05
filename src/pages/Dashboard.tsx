@@ -82,6 +82,8 @@ export function Dashboard() {
   const actions = useActions()
   const active = data.clients.filter((c) => !c.archived)
   const [editingLink, setEditingLink] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [bioDraft, setBioDraft] = useState(data.profile.bio ?? '')
   const monthlySessions = data.sessions.filter((s) => month(s.date) === month(TODAY) && s.status !== 'Cancelada').length
   const publicUrl = `${location.origin}/${data.profile.username || ''}`
   const next = data.sessions
@@ -111,6 +113,11 @@ export function Dashboard() {
     toast(username ? 'Link actualizado.' : 'Link quitado.')
   }
 
+  function saveBio() {
+    commit((d) => { d.profile.bio = bioDraft.trim() })
+    toast('Descripción guardada.')
+  }
+
   return (
     <div className="dashboard-home">
       <PageHead
@@ -128,51 +135,6 @@ export function Dashboard() {
           </>
         }
       />
-
-      <section className="share-profile">
-        <div className="share-head">
-          <div>
-            <span className="eyebrow">TU FICHA PÚBLICA</span>
-            <h2>Comparte tu perfil</h2>
-            <p>Esto es lo que ve la gente desde afuera.</p>
-          </div>
-          <button className="button primary share-cta" onClick={shareProfile}>
-            <Icon name="share" /> Compartir perfil
-          </button>
-        </div>
-        <div className="share-link">
-          <span className="share-url">profallo.vercel.app/<b>{data.profile.username || 'tunombre'}</b></span>
-          <button className="button light" onClick={() => setEditingLink((v) => !v)}>
-            <Icon name="edit" /> Editar link
-          </button>
-        </div>
-        {editingLink ? (
-          <form className="share-edit" onSubmit={saveUsername}>
-            <span className="share-edit-prefix">profallo.vercel.app/</span>
-            <input name="username" defaultValue={data.profile.username} placeholder="tu-usuario" maxLength={30} />
-            <button className="button primary" type="submit"><Icon name="check" /> Guardar</button>
-          </form>
-        ) : null}
-        <div className="share-preview">
-          <span className="share-preview-photo">{data.profile.photo ? <img src={data.profile.photo} alt={data.profile.name} /> : <Icon name="user" />}</span>
-          <div className="share-preview-id">
-            <span className="share-preview-role">{data.profile.specialty || 'Entrenador personal'}</span>
-            <b>{data.profile.name}{data.profile.verified ? <Verified /> : null}</b>
-          </div>
-          <div className="share-preview-stats">
-            <span><b>{data.routines.length}</b> rutinas</span>
-            <span><b>{stats.active}</b> clientes</span>
-            <span><b>{monthlySessions}</b> sesiones/mes</span>
-          </div>
-          <button
-            className="button share-preview-join"
-            disabled={!data.profile.phone}
-            onClick={() => data.profile.phone && window.open(`https://wa.me/${data.profile.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${data.profile.name}, quiero unirme a tu equipo 💪`)}`, '_blank', 'noopener')}
-          >
-            <Icon name="whatsapp" /> Únete a mi equipo
-          </button>
-        </div>
-      </section>
 
       <div className="overview-stage">
         <CoachStage />
@@ -238,6 +200,56 @@ export function Dashboard() {
           </section>
         </div>
       </div>
+
+      <section className={`share-profile ${shareOpen ? 'open' : ''}`}>
+        <button className="share-toggle" type="button" onClick={() => setShareOpen((v) => !v)} aria-expanded={shareOpen}>
+          <span className="share-toggle-ic"><Icon name="share" /></span>
+          <span className="share-toggle-txt"><b>Comparte tu perfil</b><small>Tu ficha pública para tus clientes</small></span>
+          <span className="share-toggle-chev"><Icon name={shareOpen ? 'chevronUp' : 'chevronDown'} /></span>
+        </button>
+        {shareOpen ? (
+          <div className="share-body">
+            <div className="share-link">
+              <span className="share-url">profallo.vercel.app/<b>{data.profile.username || 'tunombre'}</b></span>
+              <button className="button light" onClick={() => setEditingLink((v) => !v)}><Icon name="edit" /> Editar link</button>
+            </div>
+            {editingLink ? (
+              <form className="share-edit" onSubmit={saveUsername}>
+                <span className="share-edit-prefix">profallo.vercel.app/</span>
+                <input name="username" defaultValue={data.profile.username} placeholder="tu-usuario" maxLength={30} />
+                <button className="button primary" type="submit"><Icon name="check" /> Guardar</button>
+              </form>
+            ) : null}
+            <div className="share-bio">
+              <span className="eyebrow">DESCRIPCIÓN DE TU FICHA</span>
+              <textarea value={bioDraft} onChange={(e) => setBioDraft(e.target.value)} maxLength={240} placeholder="Una pequeña descripción para tus clientes" />
+              <button className="button light" type="button" onClick={saveBio}><Icon name="check" /> Guardar descripción</button>
+            </div>
+            <div className="share-preview">
+              <span className="share-preview-photo">{data.profile.photo ? <img src={data.profile.photo} alt={data.profile.name} /> : <Icon name="user" />}</span>
+              <div className="share-preview-id">
+                <span className="share-preview-role">{data.profile.specialty || 'Entrenador personal'}</span>
+                <b>{data.profile.name}{data.profile.verified ? <Verified /> : null}</b>
+              </div>
+              <div className="share-preview-stats">
+                <span><b>{data.routines.length}</b> rutinas</span>
+                <span><b>{stats.active}</b> clientes</span>
+                <span><b>{monthlySessions}</b> sesiones/mes</span>
+              </div>
+              <button
+                className="button share-preview-join"
+                disabled={!data.profile.phone}
+                onClick={() => data.profile.phone && window.open(`https://wa.me/${data.profile.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${data.profile.name}, quiero unirme a tu equipo 💪`)}`, '_blank', 'noopener')}
+              >
+                <Icon name="whatsapp" /> Únete a mi equipo
+              </button>
+            </div>
+            <button className="button primary share-cta" onClick={shareProfile}>
+              <Icon name="share" /> Compartir perfil
+            </button>
+          </div>
+        ) : null}
+      </section>
 
       <div className="home-overview" aria-label="Resumen del día">
         <div><span>Clientes activos</span><strong>{stats.active}</strong><small>Personas en tu equipo</small></div>

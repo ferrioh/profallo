@@ -11,7 +11,7 @@ const SLIDES = [
 
 export function PublicHome() {
   const { enter, go, toast } = useApp()
-  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting'>('menu')
+  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting'>('login')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
   const [captcha, setCaptcha] = useState(() => ({ a: 2 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) }))

@@ -342,6 +342,7 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
     sessions: (sessions.data ?? []).map(rowToSession),
     measurements: (measurements.data ?? []).map(rowToMeasurement),
     payments: (payments.data ?? []).map(rowToPayment),
+    notificationState: ((prof.data as Row | null)?.notification_state as AppData['notificationState']) ?? undefined,
     demo: false,
   }
 }
@@ -358,7 +359,9 @@ async function syncTable(table: string, trainerId: string, rows: Row[]) {
 
 export async function saveCloudData(userId: string, data: AppData): Promise<boolean> {
   if (!supabase) return false
-  const prof = await supabase.from('profiles').upsert(profileToRow(data.profile, userId))
+  const row = profileToRow(data.profile, userId)
+  row.notification_state = data.notificationState ?? {}
+  const prof = await supabase.from('profiles').upsert(row)
   if (prof.error) return false
   // Orden seguro por claves foráneas: padres antes que hijos (upsert)
   await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId)))

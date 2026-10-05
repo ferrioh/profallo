@@ -20,6 +20,15 @@ import { AdminLogin } from './pages/AdminLogin'
 import { PublicTrainer } from './pages/PublicTrainer'
 import { currentAccount, useAuthVersion } from './lib/auth'
 
+function AppLoader() {
+  return (
+    <div className="entry-loader" aria-hidden="true">
+      <span className="entry-loader-logo">p</span>
+      <span className="entry-loader-line" />
+    </div>
+  )
+}
+
 export default function App() {
   const { view, entered, data, cloudEnabled, cloudUser, cloudProfile, cloudReady } = useApp()
   useAuthVersion()
@@ -37,16 +46,7 @@ export default function App() {
   // Ruta de administración: login de admin dedicado + panel.
   if (view === 'admin') {
     if (cloudEnabled && cloudUser && (!cloudReady || !cloudProfile)) {
-      return (
-        <div className="verify-wrap">
-          <div className="verify-overlay">
-            <div className="verify-card">
-              <span className="verify-spinner" aria-hidden="true" />
-              <h1>Cargando…</h1>
-            </div>
-          </div>
-        </div>
-      )
+      return <AppLoader />
     }
     const adminSession = cloudEnabled
       ? cloudProfile?.role === 'admin'
@@ -57,17 +57,7 @@ export default function App() {
   if (!isIn) return <PublicHome />
 
   if (cloudEnabled && cloudUser && !cloudReady) {
-    return (
-      <div className="verify-wrap">
-        <div className="verify-overlay">
-          <div className="verify-card">
-            <span className="verify-spinner" aria-hidden="true" />
-            <h1>Cargando tu espacio…</h1>
-            <p>Sincronizando con la nube.</p>
-          </div>
-        </div>
-      </div>
-    )
+    return <AppLoader />
   }
 
   if (membershipLocked(data.profile)) {

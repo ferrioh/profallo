@@ -23,6 +23,7 @@ create table if not exists public.profiles (
   gym           text,
   username      text unique,
   bio           text,
+  notification_state jsonb not null default '{}'::jsonb,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
   photo_url     text,
@@ -44,6 +45,7 @@ alter table public.profiles add column if not exists instagram text;
 alter table public.profiles add column if not exists gym text;
 alter table public.profiles add column if not exists username text;
 alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
 -- ------------------------------------------------------------

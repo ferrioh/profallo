@@ -182,7 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
         cloudPushTimer.current = setTimeout(() => {
           if (cloudUserRef.current) void saveCloudData(cloudUserRef.current, dataRef.current)
-        }, 900)
+        }, 500)
       }
     },
     [toast],
@@ -197,7 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseEnabled) return
     let alive = true
-    const handle = async (uid: string | null) => {
+    const handle = async (uid: string | null, event: string) => {
       if (!alive) return
       setCloudUser(uid)
       if (!uid) {
@@ -208,19 +208,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const prof = await cloudGetProfile(uid)
       if (!alive) return
       setCloudProfile(prof)
-      const fresh = await loadCloudData(uid, dataRef.current.profile)
-      if (!alive) return
-      // La nube es la fuente de verdad: nunca subimos datos locales automáticamente.
-      if (fresh) replaceData(fresh)
+      // Solo recargamos datos al iniciar sesión (no en cada refresh de token,
+      // para no pisar cambios locales que aún no se han subido).
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        const fresh = await loadCloudData(uid, dataRef.current.profile)
+        if (alive && fresh) replaceData(fresh)
+      }
       setCloudReady(true)
     }
-    cloudGetSessionUserId().then(handle)
+    cloudGetSessionUserId().then((uid) => handle(uid, 'INITIAL_SESSION'))
     const unsub = cloudOnAuth(handle)
     return () => {
       alive = false
       unsub()
     }
   }, [replaceData])
+
+  // Sube los cambios pendientes al cerrar/ocultar la pestaña.
+  useEffect(() => {
+    if (!isSupabaseEnabled) return
+    const flush = () => {
+      if (cloudUserRef.current) void saveCloudData(cloudUserRef.current, dataRef.current)
+    }
+    const onVis = () => { if (document.visibilityState === 'hidden') flush() }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
 
   const money = useCallback(
     (n: number | string) => fmtMoney(data.profile.currency, n),

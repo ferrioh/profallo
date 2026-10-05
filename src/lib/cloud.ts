@@ -257,9 +257,9 @@ export async function cloudGetSessionUserId(): Promise<string | null> {
   return data.session?.user.id ?? null
 }
 
-export function cloudOnAuth(cb: (userId: string | null) => void) {
+export function cloudOnAuth(cb: (userId: string | null, event: string) => void) {
   if (!supabase) return () => {}
-  const { data } = supabase.auth.onAuthStateChange((_evt, session) => cb(session?.user.id ?? null))
+  const { data } = supabase.auth.onAuthStateChange((event, session) => cb(session?.user.id ?? null, event))
   return () => data.subscription.unsubscribe()
 }
 

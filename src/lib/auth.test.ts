@@ -44,7 +44,6 @@ describe('auth · registro y acceso', () => {
     expect(auth.signup({ ...valid, email: 'mal' }).ok).toBe(false)
     expect(auth.signup({ ...valid, password: '123', confirm: '123' }).ok).toBe(false)
     expect(auth.signup({ ...valid, confirm: 'otraclave' }).ok).toBe(false)
-    expect(auth.signup({ ...valid, gym: '' }).ok).toBe(false)
     expect(auth.signup({ ...valid, captchaOk: false }).ok).toBe(false)
     expect(auth.signup({ ...valid, phone: 'x' }).ok).toBe(false)
     expect(auth.signup({ ...valid, idNumber: '12' }).ok).toBe(false)

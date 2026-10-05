@@ -102,7 +102,6 @@ export function signup(input: SignupInput): { ok: boolean; error?: string; accou
   if (input.password !== input.confirm) return { ok: false, error: 'Las contraseñas no coinciden.' }
   if (!PHONE_RE.test(input.phone.trim())) return { ok: false, error: 'Teléfono no válido.' }
   if (!ID_RE.test(input.idNumber.trim())) return { ok: false, error: 'Cédula no válida.' }
-  if (!input.gym) return { ok: false, error: 'Selecciona el gimnasio donde trabajas.' }
   if (!input.captchaOk) return { ok: false, error: 'Confirma que no eres un robot.' }
 
   const isFirst = accounts.length === 0

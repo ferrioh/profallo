@@ -84,7 +84,6 @@ export function NotificationsPage() {
   const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
   const items = buildNotifications(data)
   const current = items.find((n) => n.id === menuId) ?? null
-  const msgCurrent = menuId?.startsWith('msg:') ? adminMsgs.find((m) => `msg:${m.id}` === menuId) : null
   const deletedKeys = new Set(data.notificationState?.deleted ?? [])
   const visibleMsgs = adminMsgs.filter((m) => !deletedKeys.has(`msg:${m.id}`))
 
@@ -164,7 +163,7 @@ export function NotificationsPage() {
               <p>{m.text}</p>
               {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}
             </div>
-            <button className="notif-more" type="button" onClick={() => removeMsg(m.id)} aria-label="Borrar mensaje" title="Borrar"><Icon name="trash" /></button>
+            <button className="notif-more" type="button" onClick={() => setMenuId(`msg:${m.id}`)} aria-label="Más opciones"><Icon name="more" /></button>
           </div>
         ))}
         {premiumReqs.map((r) => (
@@ -214,6 +213,14 @@ export function NotificationsPage() {
             <button onClick={() => mute(current.id)}><Icon name="bell" /> Silenciar</button>
             <button onClick={() => { setMenuId(null); toast('Notificación reportada.') }}><Icon name="report" /> Reportar</button>
             <button className="danger" onClick={() => remove(current.id)}><Icon name="trash" /> Borrar notificación</button>
+          </div>
+        </div>
+      ) : menuId?.startsWith('msg:') ? (
+        <div className="notif-sheet-backdrop" onClick={() => setMenuId(null)}>
+          <div className="notif-sheet" role="dialog" aria-label="Opciones" onClick={(e) => e.stopPropagation()}>
+            <span className="notif-sheet-handle" aria-hidden="true" />
+            <p className="notif-sheet-title">Mensaje de PROFALLO</p>
+            <button className="danger" onClick={() => { const id = menuId.replace('msg:', ''); removeMsg(id); setMenuId(null) }}><Icon name="trash" /> Borrar mensaje</button>
           </div>
         </div>
       ) : null}

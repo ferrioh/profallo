@@ -54,12 +54,15 @@ export function PublicClient({ code }: { code: string }) {
       {w.clientPhoto ? <div className="pc-bg" style={{ backgroundImage: `url(${w.clientPhoto})` }} aria-hidden="true" /> : null}
       <div className="pc-bg-shade" aria-hidden="true" />
       <header className="pc-head">
-        <span className="pc-coach">TU ENTRENADOR</span>
-        <span className="pc-trainer-name">{w.trainerName}{w.trainerVerified ? <Verified /> : null}</span>
+        <div className="pc-trainer-pill">
+          <span className="pc-trainer-label">Tu entrenador</span>
+          <span className="pc-trainer-name">{w.trainerName}{w.trainerVerified ? <Verified /> : null}</span>
+        </div>
         {w.trainerGym ? <span className="pc-gym"><Icon name="dumbbell" /> {w.trainerGym}</span> : null}
         {w.clientPhoto ? <div className="pc-photo"><img src={w.clientPhoto} alt={w.clientName} /></div> : null}
         <h1>{w.clientName}</h1>
         {w.clientGoal ? <p className="pc-goal">{w.clientGoal}</p> : null}
+        {w.clientGym ? <span className="pc-gym"><Icon name="dumbbell" /> {w.clientGym}</span> : null}
         <span className="pc-week">
           <Icon name="calendar" /> Semana del {longDate(start, { day: 'numeric', month: 'long' })}
         </span>

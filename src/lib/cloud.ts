@@ -842,6 +842,7 @@ export interface ClientWeek {
   clientPhoto: string | null
   clientGoal: string | null
   clientGender?: string | null
+  clientGym?: string | null
   weekStart: string
   sessions: ClientWeekSession[]
   measurements?: ClientMeasure[]

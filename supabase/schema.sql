@@ -478,6 +478,7 @@ begin
     'clientPhoto', v_client.photo,
     'clientGoal', v_client.goal,
     'clientGender', v_client.gender,
+    'clientGym', v_client.gym,
     'weekStart', v_week,
     'sessions', v_sessions,
     'measurements', v_measures

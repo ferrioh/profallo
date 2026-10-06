@@ -807,7 +807,6 @@ dialog.app-sheet{max-width:none}
 .pc-day-name{text-transform:capitalize;font-weight:800;font-size:17px}
 .pc-day-date{color:#9aa08c;font-size:13px}
 .pc-today{margin-left:auto;background:#d2ff62;color:#182a0c;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px}
-.pc-day-chev{margin-left:auto;background:transparent;border:0;color:#d2ff62;font-size:18px;font-weight:800}
 .pc-session{display:grid;gap:9px;padding:11px 0;border-top:1px solid #262b1c}
 .pc-session:first-of-type{border-top:0}
 .pc-session-top{display:flex;align-items:center;gap:12px}
@@ -817,9 +816,9 @@ dialog.app-sheet{max-width:none}
 .pc-exercises{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .pc-exercises li{display:flex;justify-content:space-between;gap:10px;background:#1b1f14;border:1px solid #2f3520;border-radius:13px;padding:10px 12px;font-size:14px}
 .pc-exercises li small{color:#a9b09a;white-space:nowrap}
-.pc-ex-row{display:block}
-.pc-ex-row .muscle-guide{width:110px;margin:8px auto;text-align:center;display:block}
-.pc-ex-row .muscle-guide svg{width:105px;height:105px}
+.pc-ex-row{display:block;overflow:visible}
+.pc-ex-row .muscle-guide{max-width:100%;margin:8px auto;text-align:center;display:block;overflow:visible}
+.pc-ex-row .muscle-guide svg{max-width:130px;height:auto}
 .pc-notes{font-size:12.5px;color:#b9bfae;line-height:1.5;background:#1b1f14;border-radius:12px;padding:9px 11px}
 .pc-rest{color:#7f8574;font-size:13px;font-style:italic}
 .pc-metric-tabs{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}

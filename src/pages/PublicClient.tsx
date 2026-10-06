@@ -75,10 +75,10 @@ export function PublicClient({ code }: { code: string }) {
             return (
               <section key={d} className={`pc-day ${d === TODAY ? 'today' : ''} ${list.length ? 'has' : ''}`}>
                 <header className="pc-day-head" onClick={() => setExpDay(expDay === d ? null : d)}>
+                  <Icon name="dumbbell" />
                   <span className="pc-day-name">{shortWeekday(d)}</span>
                   <span className="pc-day-date">{longDate(d, { day: 'numeric', month: 'short' })}</span>
                   {d === TODAY ? <span className="pc-today">HOY</span> : null}
-                  <span className="pc-day-chev">{expanded ? '−' : '+'}</span>
                 </header>
                 {expanded && list.length ? list.map((s) => (
                   <div key={`${s.date}-${s.time}`} className="pc-session">

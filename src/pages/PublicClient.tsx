@@ -4,6 +4,7 @@ import { LineChart } from '../components/ui'
 import { EntryLoader } from '../components/EntryLoader'
 import { cloudPublicClientWeek, type ClientWeek } from '../lib/cloud'
 import { addDays, longDate, shortWeekday, TODAY } from '../lib/utils'
+import { MuscleGuide, getRoutineZones } from '../components/MuscleGuide'
 
 const METS: Array<{ key: 'weight' | 'waist' | 'fat'; label: string; unit: string }> = [
   { key: 'weight', label: 'Peso', unit: 'kg' },
@@ -15,6 +16,7 @@ export function PublicClient({ code }: { code: string }) {
   const [w, setW] = useState<ClientWeek | null>(null)
   const [loading, setLoading] = useState(true)
   const [pm, setPm] = useState<'weight' | 'waist' | 'fat'>('weight')
+  const [expDay, setExpDay] = useState<string | null>(null)
 
   useEffect(() => {
     cloudPublicClientWeek(code)
@@ -42,16 +44,9 @@ export function PublicClient({ code }: { code: string }) {
   const byDate = (d: string) => w.sessions.filter((s) => s.date === d)
   const pending = w.sessions.filter((s) => s.date >= TODAY).length
   const measures = (w.measurements ?? []).filter((m) => m.weight != null)
-  const firstW = measures[0]?.weight ?? null
-  const lastW = measures[measures.length - 1]?.weight ?? null
-  const delta = firstW != null && lastW != null ? Number((Number(lastW) - Number(firstW)).toFixed(1)) : null
-  const lastM = measures[measures.length - 1]
   const allMeas = w.measurements ?? []
   const mUnit = METS.find((m) => m.key === pm)?.unit ?? ''
   const series = allMeas.filter((m) => m[pm] != null).map((m) => Number(m[pm]))
-  const wa = w.trainerPhone
-    ? `https://wa.me/${w.trainerPhone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${w.trainerName}, vi mi semana de entrenamiento 💪`)}`
-    : ''
 
   return (
     <div className="public-client">
@@ -76,43 +71,38 @@ export function PublicClient({ code }: { code: string }) {
         <div className="pc-days">
           {days.map((d) => {
             const list = byDate(d)
+            const expanded = expDay === d
             return (
               <section key={d} className={`pc-day ${d === TODAY ? 'today' : ''} ${list.length ? 'has' : ''}`}>
-                <header className="pc-day-head">
+                <header className="pc-day-head" onClick={() => setExpDay(expDay === d ? null : d)}>
                   <span className="pc-day-name">{shortWeekday(d)}</span>
                   <span className="pc-day-date">{longDate(d, { day: 'numeric', month: 'short' })}</span>
                   {d === TODAY ? <span className="pc-today">HOY</span> : null}
+                  <span className="pc-day-chev">{expanded ? '−' : '+'}</span>
                 </header>
-                {list.length ? (
-                  list.map((s, i) => (
-                    <div key={i} className="pc-session">
-                      <div className="pc-session-top">
-                        <span className="pc-time">{s.time}</span>
-                        <div className="pc-session-copy">
-                          <b>{s.routineName || s.title || 'Entrenamiento'}</b>
-                          <small>
-                            {s.duration} min{s.category ? ` · ${s.category}` : ''}
-                          </small>
-                        </div>
+                {expanded && list.length ? list.map((s) => (
+                  <div key={`${s.date}-${s.time}`} className="pc-session">
+                    <div className="pc-session-top">
+                      <span className="pc-time">{s.time}</span>
+                      <div className="pc-session-copy">
+                        <b>{s.routineName || s.title || 'Entrenamiento'}</b>
+                        <small>{s.duration} min{s.category ? ` · ${s.category}` : ''}</small>
                       </div>
-                      {s.exercises && s.exercises.length ? (
+                    </div>
+                    {s.exercises && s.exercises.length ? (
+                      <div className="pc-ex-row">
                         <ul className="pc-exercises">
                           {s.exercises.map((ex, j) => (
-                            <li key={j}>
-                              <span>{ex.name}</span>
-                              <small>
-                                {ex.sets}×{ex.reps}{ex.rest ? ` · ${ex.rest}s` : ''}
-                              </small>
-                            </li>
+                            <li key={j}><span>{ex.name}</span><small>{ex.sets}×{ex.reps}{ex.rest ? ` · ${ex.rest}s` : ''}</small></li>
                           ))}
                         </ul>
-                      ) : null}
-                      {s.notes ? <p className="pc-notes">{s.notes}</p> : null}
-                    </div>
-                  ))
-                ) : (
-                  <p className="pc-rest">Descanso</p>
-                )}
+                        {(() => { const zones = getRoutineZones({ name: s.routineName ?? '', category: s.category ?? '', exercises: s.exercises, focusZones: [] }); return zones.length ? <MuscleGuide zones={zones} compact /> : null })()}
+                      </div>
+                    ) : null}
+                    {s.notes ? <p className="pc-notes">{s.notes}</p> : null}
+                  </div>
+                )) : null}
+                {expanded && !list.length ? <p className="pc-rest">Descanso</p> : null}
               </section>
             )
           })}
@@ -130,23 +120,7 @@ export function PublicClient({ code }: { code: string }) {
             ))}
           </div>
           <LineChart values={series} unit={mUnit} cls="metric-chart pc-chart" />
-          <div className="pc-prog-grid">
-            <div className="pc-prog-item">
-              <span>Peso actual</span>
-              <b>{lastW} kg</b>
-              {delta != null ? <small className={delta <= 0 ? 'down' : 'up'}>{delta > 0 ? '+' : ''}{delta} kg</small> : null}
-            </div>
-            {lastM?.waist != null ? <div className="pc-prog-item"><span>Cintura</span><b>{lastM.waist} cm</b></div> : null}
-            {lastM?.fat != null ? <div className="pc-prog-item"><span>Grasa</span><b>{lastM.fat}%</b></div> : null}
-            <div className="pc-prog-item"><span>Mediciones</span><b>{measures.length}</b></div>
-          </div>
         </section>
-      ) : null}
-
-      {wa ? (
-        <a className="pc-contact" href={wa} target="_blank" rel="noopener noreferrer">
-          <Icon name="whatsapp" /> Contactar a mi entrenador
-        </a>
       ) : null}
 
       <footer className="pc-foot">

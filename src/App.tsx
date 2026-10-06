@@ -48,11 +48,13 @@ export default function App() {
 
   const isIn = cloudEnabled ? !!cloudUser : entered
 
+  // Mientras se resuelve la sesión y los datos de la nube, mostramos la pantalla de carga.
+  if (cloudEnabled && !cloudReady) {
+    return <AppLoader />
+  }
+
   // Ruta de administración: login de admin dedicado + panel.
   if (view === 'admin') {
-    if (cloudEnabled && cloudUser && (!cloudReady || !cloudProfile)) {
-      return <AppLoader />
-    }
     const adminSession = cloudEnabled
       ? cloudProfile?.role === 'admin'
       : (currentAccount()?.role ?? data.profile.role) === 'admin'
@@ -60,10 +62,6 @@ export default function App() {
   }
 
   if (!isIn) return <PublicHome />
-
-  if (cloudEnabled && cloudUser && !cloudReady) {
-    return <AppLoader />
-  }
 
   if (membershipLocked(data.profile)) {
     return (

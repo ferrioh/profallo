@@ -56,7 +56,13 @@ export function ClientProfilePage() {
   const client = data.clients.find(c => c.id === ui.selectedClient)
   if (!client) return <section className="card client-profile"><h1>Selecciona un cliente</h1><button className="button primary" onClick={() => go('clientes')}>Ir a clientes</button></section>
   const routine = findRoutine(data, client.routine)
-  const sessions = data.sessions.filter(s => s.client === client.id && s.status !== 'Cancelada').sort((a,b) => b.date.localeCompare(a.date))
+  const sessions = data.sessions
+    .filter(s => s.client === client.id && s.status !== 'Cancelada')
+    .sort((a, b) => {
+      const af = a.date >= TODAY, bf = b.date >= TODAY
+      if (af !== bf) return af ? -1 : 1
+      return af ? (a.date + a.time).localeCompare(b.date + b.time) : (b.date + b.time).localeCompare(a.date + a.time)
+    })
   const completed = sessions.filter(s => s.status === 'Completada')
   const measurements = data.measurements.filter(m => m.client === client.id).sort((a,b) => b.date.localeCompare(a.date))
   const chrono = [...measurements].reverse()

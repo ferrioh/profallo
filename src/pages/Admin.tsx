@@ -745,25 +745,28 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     <button className="button primary" type="submit">{editingShareId ? 'Guardar cambios' : 'Agregar accionista'}</button>
   </div>
 </form>
-          <div className="admin-list">
+          <div className="adx-grid">
             {paySettings.shareholders.map((s) => (
-  <article className="admin-message" key={s.id}>
-    <div className="admin-share-row">
-      <span className="admin-share-photo">
-        {s.photo ? <img src={s.photo} alt={s.name} /> : <span className="admin-share-initial">{s.name.slice(0,1).toUpperCase()}</span>}
-      </span>
-      <div className="admin-share-info">
-        <b>{s.name}</b>
-        <small>{s.percent}% · {money((monthlyRevenue * s.percent) / 100)} este mes</small>
-      </div>
-    </div>
-    <div className="admin-msg-actions">
-      <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)) }}><Icon name="edit" /> Editar</button>
-      <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
-    </div>
-  </article>
-))}
-            {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : (
+              <article className="adx-card" key={s.id}>
+                <div className="adx-top">
+                  <span className="adx-avatar">
+                    {s.photo ? <img src={s.photo} alt={s.name} /> : <span>{s.name.slice(0, 1).toUpperCase()}</span>}
+                  </span>
+                  <div className="adx-id"><b>{s.name}</b><small>Accionista</small></div>
+                </div>
+                <div className="adx-stats">
+                  <div className="adx-stat"><strong>{s.percent}%</strong><span>Participación</span></div>
+                  <div className="adx-stat"><strong>{money((monthlyRevenue * s.percent) / 100)}</strong><span>Este mes</span></div>
+                </div>
+                <div className="adx-bar"><i style={{ width: `${Math.min(100, s.percent)}%` }} /></div>
+                <div className="adx-actions">
+                  <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)) }}><Icon name="edit" /> Editar</button>
+                  <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
+                </div>
+              </article>
+            ))}
+          </div>
+          {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : (
             <div className="admin-stack-wrap">
               <span className="eyebrow">Distribución de acciones</span>
               <div className="admin-stack-bar">
@@ -786,7 +789,6 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
               ) : null}
             </div>
           )}
-          </div>
         </section>
       ) : null}
 

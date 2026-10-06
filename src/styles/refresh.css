@@ -1003,6 +1003,22 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .anx-row.rank-1 .anx-bar i{background:linear-gradient(90deg,#8fbf2a,#d2ff62);box-shadow:0 0 10px #d2ff6288}
 .anx-empty{font-size:13px;color:#9aa0a6}
 @media(max-width:560px){.anx-grid{grid-template-columns:1fr}}
+/* Accionistas (tarjetas grandes y serias) */
+.adx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:16px}
+.adx-card{background:linear-gradient(160deg,#1e2024,#16181b);border:1px solid #2f3238;border-radius:22px;padding:20px;display:grid;gap:16px;color:#fff}
+.adx-top{display:flex;align-items:center;gap:14px}
+.adx-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#2a2d32;display:grid;place-items:center;font-size:26px;font-weight:800;color:#d2ff62;flex:none;border:2px solid #d2ff6240}
+.adx-avatar img{width:100%;height:100%;object-fit:cover}
+.adx-id b{font-size:20px;font-weight:750;letter-spacing:-.3px;display:block;line-height:1.15}
+.adx-id small{font-size:11px;color:#9aa0a6;text-transform:uppercase;letter-spacing:.08em}
+.adx-stats{display:flex;gap:12px}
+.adx-stat{flex:1;background:#24262b;border:1px solid #34373d;border-radius:16px;padding:14px;display:grid;gap:4px}
+.adx-stat strong{font-size:26px;font-weight:800;letter-spacing:-.6px;color:#d2ff62}
+.adx-stat span{font-size:10.5px;color:#b9bdc3;text-transform:uppercase;letter-spacing:.06em}
+.adx-bar{height:8px;border-radius:99px;background:#2a2d32;overflow:hidden}
+.adx-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5f7a2a,#d2ff62)}
+.adx-actions{display:flex;gap:8px}
+.adx-actions .button{flex:1;justify-content:center;font-size:12px;min-height:40px}
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */

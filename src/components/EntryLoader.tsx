@@ -17,12 +17,11 @@ export function BrandIcon({ size = 34 }: { size?: number }) {
   )
 }
 
-/** Pantalla de carga con el ícono de la marca. */
+/** Pantalla de carga: fondo verde, logo negro con la "p" verde, barra abajo, todo centrado. */
 export function EntryLoader({ out = false }: { out?: boolean }) {
   return (
     <div className={`entry-loader ${out ? 'out' : ''}`} aria-hidden="true">
-      <BrandIcon size={124} />
-      <span className="entry-loader-word">profallo</span>
+      <span className="entry-loader-tile">p</span>
       <span className="entry-loader-line" />
     </div>
   )

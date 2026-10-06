@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
 import { PasswordInput } from '../components/PasswordInput'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
-import { cloudGetProfile, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
+import { cloudGetProfile, cloudResetPassword, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
 
 const SLIDES = [
   'assets/trainer-hero-v2.png',
@@ -14,7 +14,7 @@ const SLIDES = [
 
 export function PublicHome() {
   const { enter, go, toast, cloudEnabled } = useApp()
-  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting'>('login')
+  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting' | 'recover'>('login')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
   const [phase, setPhase] = useState<'load' | 'out' | 'done'>('load')
@@ -77,6 +77,17 @@ export function PublicHome() {
     toast(`Hola, ${res.account?.name}.`)
     enter()
     go('inicio')
+  }
+
+  async function onRecover(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError('')
+    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    if (!cloudEnabled) { setError('La recuperación está disponible con tu cuenta en la nube.'); return }
+    const res = await cloudResetPassword((x.email ?? '').trim().toLowerCase())
+    if (!res.ok) { setError(res.error ?? 'No se pudo enviar el correo.'); return }
+    toast('Te enviamos un correo para restablecer tu contraseña.')
+    setMode('login')
   }
 
   async function onSignup(e: FormEvent<HTMLFormElement>) {
@@ -163,11 +174,24 @@ export function PublicHome() {
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
               <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
               <label className="entry-remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> <span>Recordar usuario</span></label>
+              <button className="entry-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
               {error ? <p className="entry-error">{error}</p> : null}
               <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
             </form>
             <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>No tengo cuenta, crear una</button>
             <button className="entry-back" type="button" onClick={() => { setError(''); setMode('menu') }}>‹ Volver</button>
+          </section>
+        ) : mode === 'recover' ? (
+          <section className="simple-access" aria-labelledby="recover-title">
+            <span className="simple-access-kicker">RECUPERAR CLAVE</span>
+            <h1 id="recover-title">Recupera tu cuenta<span>.</span></h1>
+            <form className="entry-form" onSubmit={onRecover}>
+              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
+              <p className="entry-hint">Te enviaremos un correo para restablecer tu contraseña.</p>
+              {error ? <p className="entry-error">{error}</p> : null}
+              <button className="simple-access-primary" type="submit">Enviar enlace <Icon name="arrow" /></button>
+            </form>
+            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('login') }}>‹ Volver a iniciar sesión</button>
           </section>
         ) : mode === 'signup' ? (
           <section className="simple-access" aria-labelledby="signup-title">

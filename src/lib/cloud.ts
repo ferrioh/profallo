@@ -263,6 +263,16 @@ export async function cloudSignOut() {
   await supabase.auth.signOut()
 }
 
+/** Envía un correo para restablecer la contraseña. */
+export async function cloudResetPassword(email: string): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Supabase no está configurado.' }
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${location.origin}/`,
+  })
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
 export async function cloudGetSessionUserId(): Promise<string | null> {
   if (!supabase) return null
   const { data } = await supabase.auth.getSession()

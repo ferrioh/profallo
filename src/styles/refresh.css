@@ -705,8 +705,9 @@ dialog.app-sheet{max-width:none}
 /* Notificaciones */
 .notif-page{max-width:760px}
 .notif-list{display:grid;gap:10px}
-.notif-swipe{position:relative;border-radius:18px;overflow:hidden}
-.notif-trash{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-right:22px;background:#3a1414;color:#ff8f7a;font-weight:700;font-size:13px}
+.notif-swipe{position:relative;border-radius:18px;overflow:hidden;max-height:360px;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .4s ease,margin .4s ease}
+.notif-swipe.removing{max-height:0;opacity:0;margin-top:-10px}
+.notif-trash{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-right:22px;background:#3a1414;color:#ff8f7a;font-weight:700;font-size:13px;transition:opacity .12s linear}
 .notif-trash svg{width:18px;height:18px}
 .notif-item{position:relative;display:flex;align-items:center;gap:13px;background:#2d3036;border:1px solid #44474e;border-radius:18px;padding:14px 15px;color:#fff;touch-action:pan-y;cursor:grab}
 .notif-item:active{cursor:grabbing}

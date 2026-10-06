@@ -31,13 +31,22 @@ function SwipeRow({
   children: ReactNode
 }) {
   const [dx, setDx] = useState(0)
+  const [removing, setRemoving] = useState(false)
   const start = useRef<number | null>(null)
+  const dxRef = useRef(0)
+  const lastX = useRef(0)
+  const lastT = useRef(0)
+  const vel = useRef(0)
   const dragged = useRef(false)
-  const THRESHOLD = 96
+  const THRESHOLD = 84
 
   function down(e: PointerEvent<HTMLDivElement>) {
     if ((e.target as HTMLElement).closest('button')) return
     start.current = e.clientX
+    dxRef.current = 0
+    lastX.current = e.clientX
+    lastT.current = performance.now()
+    vel.current = 0
     dragged.current = false
     e.currentTarget.setPointerCapture(e.pointerId)
   }
@@ -45,24 +54,46 @@ function SwipeRow({
     if (start.current == null) return
     const delta = e.clientX - start.current
     if (Math.abs(delta) > 6) dragged.current = true
-    setDx(Math.max(Math.min(0, delta), -150))
+    const t = performance.now()
+    const dt = t - lastT.current
+    if (dt > 0) vel.current = (e.clientX - lastX.current) / dt
+    lastX.current = e.clientX
+    lastT.current = t
+    // Desliza libre a la izquierda; a la derecha con resistencia elástica.
+    const clamped = delta < 0 ? Math.max(delta, -170) : Math.min(delta * 0.32, 36)
+    dxRef.current = clamped
+    setDx(clamped)
   }
   function up() {
     if (start.current == null) return
-    const shouldDelete = dx < -THRESHOLD
+    const flick = vel.current < -0.5
+    const shouldDelete = dxRef.current < -THRESHOLD || flick
     start.current = null
-    setDx(0)
-    if (shouldDelete) onDelete()
+    if (shouldDelete) {
+      setRemoving(true)
+      setDx(-170)
+      window.setTimeout(onDelete, 430)
+    } else {
+      setDx(0)
+    }
   }
 
   return (
-    <div className="notif-swipe">
-      <span className="notif-trash" aria-hidden="true"><Icon name="trash" /> Eliminar</span>
+    <div className={`notif-swipe ${removing ? 'removing' : ''}`}>
+      <span className="notif-trash" style={{ opacity: Math.min(1, Math.abs(dx) / 92) }} aria-hidden="true">
+        <Icon name="trash" /> Eliminar
+      </span>
       <div
         className={`notif-item tone-${tone} ${muted ? 'is-muted' : ''}`}
         style={{
-          transform: `translateX(${dx}px)`,
-          transition: start.current != null ? 'none' : 'transform .36s cubic-bezier(.22,1,.36,1)',
+          transform: removing ? 'translateX(-130%) rotate(-4deg)' : `translateX(${dx}px)`,
+          opacity: removing ? 0 : 1,
+          transition:
+            start.current != null
+              ? 'none'
+              : removing
+                ? 'transform .42s cubic-bezier(.4,0,.2,1), opacity .42s ease'
+                : 'transform .42s cubic-bezier(.34,1.35,.5,1)',
         }}
         onPointerDown={down}
         onPointerMove={move}

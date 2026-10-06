@@ -190,7 +190,7 @@ export function Sidebar() {
             Panel de administración
           </button>
         ) : null}
-        <button className="nav-button leave-button" onClick={() => { if (cloudEnabled) void cloudSignOut(); leave() }}>Salir al inicio público</button>
+        <button className="nav-button leave-button" onClick={() => { leave(); if (cloudEnabled) void cloudSignOut() }}>Salir al inicio público</button>
         <div
           className="coach"
           role="button"

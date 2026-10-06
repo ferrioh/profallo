@@ -152,6 +152,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEntered(true)
   }, [])
   const leave = useCallback(() => {
+    // Sube los cambios pendientes a la nube ANTES de cerrar/borrar lo local.
+    if (isSupabaseEnabled && cloudUserRef.current && !dataRef.current.demo) {
+      void saveCloudData(cloudUserRef.current, dataRef.current)
+    }
     try { sessionStorage.removeItem('protrainer.entered') } catch { /* Temporary browser session */ }
     try { localStorage.removeItem('protrainer.local.v1') } catch { /* ignore */ }
     setEntered(false)
@@ -200,16 +204,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!ok) {
         toast('No se pudo guardar: exporta un respaldo antes de cerrar.')
       }
-      if (isSupabaseEnabled && cloudUserRef.current && cloudLoadedRef.current) {
+      if (isSupabaseEnabled && cloudUserRef.current && !draft.demo) {
         dirtyRef.current = true
         if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
-        cloudPushTimer.current = setTimeout(() => {
-          const uid = cloudUserRef.current
-          if (!uid) return
-          void pushCloud(uid, dataRef.current).then((ok) => {
-            if (!ok) toast('No se pudo guardar en la nube. Revisa tu conexión o el límite de tu plan.')
-          })
-        }, 500)
+        const uid = cloudUserRef.current
+        // Guardado inmediato (no diferido): evita perder cambios si sales rápido.
+        void pushCloud(uid, dataRef.current).then((ok) => {
+          if (!ok) toast('No se pudo guardar en la nube. Revisa tu conexión o el límite de tu plan.')
+        })
       }
     },
     [toast, pushCloud],

@@ -25,9 +25,9 @@ export function ProfilePage() {
   const categories = new Set(data.routines.map((r) => r.category)).size
 
   function handleLogout() {
+    leave()
     if (cloudEnabled) void cloudSignOut()
     else logout()
-    leave()
   }
 
   async function changePhoto(file?: File) {

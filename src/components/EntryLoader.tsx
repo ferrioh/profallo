@@ -21,7 +21,7 @@ export function BrandIcon({ size = 34 }: { size?: number }) {
 export function EntryLoader({ out = false }: { out?: boolean }) {
   return (
     <div className={`entry-loader ${out ? 'out' : ''}`} aria-hidden="true">
-      <BrandIcon size={92} />
+      <BrandIcon size={124} />
       <span className="entry-loader-word">profallo</span>
       <span className="entry-loader-line" />
     </div>

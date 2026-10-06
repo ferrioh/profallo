@@ -20,7 +20,10 @@ import {
   cloudApprovePremium,
   cloudDeleteAccount,
   cloudGetAppSettings,
+  cloudListBackups,
   cloudListPremiumRequests,
+  cloudRestoreBackup,
+  type BackupRow,
   cloudListProfiles,
   cloudRejectPremium,
   cloudSaveAppSettings,
@@ -32,13 +35,14 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'premium' | 'pagos' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'premium' | 'pagos' | 'respaldo' | 'redes'
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
   ['cuentas', 'Cuentas', 'users'],
   ['premium', 'Premium', 'star'],
   ['pagos', 'Datos de pago', 'wallet'],
+  ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
 ]
 
@@ -55,6 +59,7 @@ export function AdminPage() {
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
   const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true })
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
+  const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -65,6 +70,7 @@ export function AdminPage() {
     cloudListProfiles().then((rows) => { if (alive) setCloudAccounts(rows) })
     cloudListPremiumRequests().then((rows) => { if (alive) setPremiumReqs(rows) })
     cloudGetAppSettings().then((s) => { if (alive && s) setPaySettings(s) })
+    cloudListBackups().then((rows) => { if (alive) setBackups(rows) })
     listMembershipPayments().then((rows) => { if (alive) setMembershipPays(rows ?? []) })
     return () => { alive = false }
   }, [cloudEnabled])
@@ -209,6 +215,13 @@ export function AdminPage() {
       if (!ok) { toast('No se pudo eliminar la cuenta.'); return }
       setCloudAccounts((prev) => prev?.filter((a) => a.id !== id) ?? null)
       toast('Cuenta eliminada.')
+    })
+  }
+
+  function restoreBackup(b: BackupRow, name: string) {
+    if (!window.confirm(`¿Restaurar el respaldo de ${name}? Se sobrescribirán sus datos actuales.`)) return
+    cloudRestoreBackup(b.id).then((ok) => {
+      toast(ok ? 'Respaldo restaurado.' : 'No se pudo restaurar el respaldo.')
     })
   }
 
@@ -497,6 +510,36 @@ export function AdminPage() {
             </div>
             <div className="form-foot"><button className="button primary" type="submit">Guardar datos de pago <Icon name="check" /></button></div>
           </form>
+        </section>
+      ) : null}
+
+      {tab === 'respaldo' ? (
+        <section className="admin-trainers">
+          <div className="section-line">
+            <div><span className="eyebrow">SALVAVIDAS</span><h2>Respaldos automáticos</h2></div>
+            <span>{(backups ?? []).length} respaldos</span>
+          </div>
+          <div className="admin-list">
+            {(backups ?? []).map((b) => {
+              const acc = (cloudAccounts ?? []).find((a) => a.id === b.trainer_id)
+              const name = acc?.name ?? acc?.email ?? b.trainer_id
+              return (
+                <article className="admin-trainer" key={b.id}>
+                  <div className="admin-trainer-main">
+                    <span className="admin-avatar">{(name || '?').slice(0, 2).toUpperCase()}</span>
+                    <div>
+                      <b>{name}</b>
+                      <small>{new Date(b.created_at).toLocaleString('es')}</small>
+                    </div>
+                  </div>
+                  <div className="admin-trainer-actions">
+                    <button className="button primary" onClick={() => restoreBackup(b, name)}>Restaurar</button>
+                  </div>
+                </article>
+              )
+            })}
+            {!(backups ?? []).length ? <div className="admin-empty card white">Aún no hay respaldos registrados.</div> : null}
+          </div>
         </section>
       ) : null}
 

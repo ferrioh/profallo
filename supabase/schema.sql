@@ -507,4 +507,43 @@ create policy data_backups_owner on public.data_backups
 
 alter table public.app_settings add column if not exists backup_enabled boolean not null default true;
 
+-- Restaurar un respaldo a su entrenador (solo admin).
+create or replace function public.admin_restore_backup(p_id uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare b public.data_backups; d jsonb; tid text;
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid()::text and role = 'admin') then return false; end if;
+  select * into b from public.data_backups where id = p_id limit 1;
+  if not found then return false; end if;
+  d := b.data; tid := b.trainer_id;
+
+  insert into public.routines (id, trainer_id, name, category, level, duration, notes, exercises, focus_zones)
+  select r.id, tid, r.name, r.category, r.level, r.duration, r.notes, coalesce(r.exercises,'[]'::jsonb), coalesce(r."focusZones",'[]'::jsonb)
+  from jsonb_to_recordset(coalesce(d->'routines','[]'::jsonb)) as r(id text, name text, category text, level text, duration int, notes text, exercises jsonb, "focusZones" jsonb)
+  on conflict (id) do update set name=excluded.name, category=excluded.category, level=excluded.level, duration=excluded.duration, notes=excluded.notes, exercises=excluded.exercises, focus_zones=excluded.focus_zones;
+
+  insert into public.clients (id, trainer_id, name, email, phone, id_number, gym, birth, goal, plan, fee, frequency, weight, height, routine_id, notes, gender, photo, tone, archived, joined)
+  select c.id, tid, c.name, c.email, c.phone, c."idNumber", c.gym, nullif(c.birth,'')::date, c.goal, c.plan, c.fee, c.frequency, c.weight, c.height, c.routine, c.notes, c.gender, nullif(c.photo,''), c.tone, c.archived, nullif(c.joined,'')::date
+  from jsonb_to_recordset(coalesce(d->'clients','[]'::jsonb)) as c(id text, name text, email text, phone text, "idNumber" text, gym text, birth text, goal text, plan text, fee numeric, frequency text, weight numeric, height numeric, routine text, notes text, gender text, photo text, tone int, archived boolean, joined text)
+  on conflict (id) do update set name=excluded.name, email=excluded.email, phone=excluded.phone, id_number=excluded.id_number, gym=excluded.gym, birth=excluded.birth, goal=excluded.goal, plan=excluded.plan, fee=excluded.fee, frequency=excluded.frequency, weight=excluded.weight, height=excluded.height, routine_id=excluded.routine_id, notes=excluded.notes, gender=excluded.gender, photo=excluded.photo, tone=excluded.tone, archived=excluded.archived, joined=excluded.joined;
+
+  insert into public.sessions (id, trainer_id, client_id, title, date, time, duration, status, routine_id, notes)
+  select s.id, tid, s.client, s.title, nullif(s.date,'')::date, s.time, s.duration, s.status, s.routine, s.notes
+  from jsonb_to_recordset(coalesce(d->'sessions','[]'::jsonb)) as s(id text, client text, title text, date text, time text, duration int, status text, routine text, notes text)
+  on conflict (id) do update set client_id=excluded.client_id, title=excluded.title, date=excluded.date, time=excluded.time, duration=excluded.duration, status=excluded.status, routine_id=excluded.routine_id, notes=excluded.notes;
+
+  insert into public.measurements (id, trainer_id, client_id, date, weight, waist, fat, note)
+  select m.id, tid, m.client, nullif(m.date,'')::date, m.weight, m.waist, m.fat, m.note
+  from jsonb_to_recordset(coalesce(d->'measurements','[]'::jsonb)) as m(id text, client text, date text, weight numeric, waist numeric, fat numeric, note text)
+  on conflict (id) do update set client_id=excluded.client_id, date=excluded.date, weight=excluded.weight, waist=excluded.waist, fat=excluded.fat, note=excluded.note;
+
+  insert into public.payments (id, trainer_id, client_id, amount, due, paid, paid_date, method, note)
+  select p.id, tid, p.client, p.amount, nullif(p.due,'')::date, p.paid, nullif(p."paidDate",'')::date, p.method, p.note
+  from jsonb_to_recordset(coalesce(d->'payments','[]'::jsonb)) as p(id text, client text, amount numeric, due text, paid boolean, "paidDate" text, method text, note text)
+  on conflict (id) do update set client_id=excluded.client_id, amount=excluded.amount, due=excluded.due, paid=excluded.paid, paid_date=excluded.paid_date, method=excluded.method, note=excluded.note;
+
+  return true;
+end; $$;
+grant execute on function public.admin_restore_backup(uuid) to authenticated;
+
 commit;

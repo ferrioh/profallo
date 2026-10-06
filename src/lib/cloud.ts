@@ -534,6 +534,32 @@ export async function cloudLatestBackup(userId: string): Promise<AppData | null>
   return ((data as Row).data as AppData) ?? null
 }
 
+export interface BackupRow {
+  id: string
+  trainer_id: string
+  created_at: string
+}
+
+/** Lista los respaldos (solo admin). */
+export async function cloudListBackups(): Promise<BackupRow[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('data_backups')
+    .select('id,trainer_id,created_at')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error || !data) return null
+  return data as BackupRow[]
+}
+
+/** Restaura un respaldo a su entrenador (solo admin). */
+export async function cloudRestoreBackup(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { data, error } = await supabase.rpc('admin_restore_backup', { p_id: id })
+  if (error) return false
+  return Boolean(data)
+}
+
 export async function cloudCreatePremiumRequest(req: {
   trainerId: string
   name: string

@@ -45,26 +45,8 @@ export function CoachStage({ full = false }: { full?: boolean }) {
       </div>
       <div className="stage-title">
         <span className="eyebrow">UN EQUIPO. MUCHAS HISTORIAS.</span>
-        <h2>
-          {full ? (
-            <>
-              Tu forma de entrenar.
-              <br />
-              Tu forma de inspirar.
-            </>
-          ) : (
-            phrase.main
-          )}
-        </h2>
-        <p>{full ? (
-          <>
-            Cada sesión suma.
-            <br />
-            Cada persona importa.
-          </>
-        ) : (
-          phrase.sub
-        )}</p>
+        <h2>{phrase.main}</h2>
+        <p>{phrase.sub}</p>
       </div>
       <div className="stage-identity" />
       <button className="stage-orbit orbit-a glass-button" onClick={() => go('clientes')}>
@@ -84,18 +66,6 @@ export function CoachStage({ full = false }: { full?: boolean }) {
         <strong>{totalSessions}</strong>
         <span>Sesiones</span>
       </button>
-      {!full ? (
-        <button
-          className="stage-orbit orbit-c glass-button"
-          onClick={() => go('rutinas')}
-        >
-          <span className="orbit-icon">
-            <Icon name="dumbbell" />
-          </span>
-          <strong>{data.routines.length}</strong>
-          <span>Rutinas</span>
-        </button>
-      ) : null}
       <div className="stage-caption">
         <i /> COACH BETTER. EVERY DAY.
       </div>

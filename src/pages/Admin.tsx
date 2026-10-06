@@ -739,6 +739,29 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
             <span>Ganancia mensual: <b>{money(monthlyRevenue)}</b></span>
           </div>
 
+          {(() => {
+            const used = paySettings.shareholders.reduce((sum, x) => sum + Number(x.percent || 0), 0)
+            const available = Math.max(0, 100 - used)
+            const over = used > 100.001
+            const free = Math.round(available * 10) / 10
+            return (
+              <div className={`adx-available ${over ? 'over' : available <= 0 ? 'full' : ''}`}>
+                <div className="adx-available-num"><CountUp value={available} /><small>%</small></div>
+                <div className="adx-available-info">
+                  <b>Acciones disponibles</b>
+                  <small>
+                    {over
+                      ? `Te pasaste por ${Math.round((used - 100) * 10) / 10}%. Quita o reduce accionistas para balancear.`
+                      : free > 0
+                        ? `Libres para asignar · ${Math.round(used * 10) / 10}% en uso.`
+                        : 'Reparto completo (100%). Quita acciones para asignar a otro accionista.'}
+                  </small>
+                  <div className="adx-available-bar"><i style={{ width: `${Math.min(100, used)}%` }} /></div>
+                </div>
+              </div>
+            )
+          })()}
+
           <button
             className="adx-add-toggle"
             type="button"

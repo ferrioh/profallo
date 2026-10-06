@@ -1029,6 +1029,19 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .adx-bar i{transform-origin:left;animation:adxGrow .9s cubic-bezier(.22,1,.36,1) both}
 @keyframes adxGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .adx-history{margin-top:8px}
+.adx-available{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#d2ff6218,#18290c14);border:1px solid #d2ff6244;border-radius:20px;padding:16px 20px;margin-bottom:18px}
+.adx-available.over{border-color:#ff6b6b66;background:linear-gradient(135deg,#ff6b6b18,#2a0c0c14)}
+.adx-available.full{border-color:#ffb45466;background:linear-gradient(135deg,#ffb45418,#2a1c0c14)}
+.adx-available-num{display:flex;align-items:baseline;gap:2px;font-size:46px;font-weight:800;letter-spacing:-2px;line-height:1;color:#d2ff62;flex:none}
+.adx-available-num small{font-size:20px}
+.adx-available.over .adx-available-num{color:#ff8f7a}
+.adx-available.full .adx-available-num{color:#ffb454}
+.adx-available-info{flex:1;min-width:0;display:grid;gap:6px}
+.adx-available-info b{font-size:16px}
+.adx-available-info small{font-size:12.5px;color:#c8ccbf;line-height:1.4}
+.adx-available-bar{height:8px;border-radius:99px;background:#2a2d32;overflow:hidden}
+.adx-available-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5f7a2a,#d2ff62);transform-origin:left;animation:adxGrow .9s cubic-bezier(.22,1,.36,1) both}
+@media(max-width:520px){.adx-available{flex-wrap:wrap;gap:10px}.adx-available-num{font-size:38px}}
 .adx-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#2a2d32;display:grid;place-items:center;font-size:26px;font-weight:800;color:#d2ff62;flex:none;border:2px solid #d2ff6240}
 .adx-avatar img{width:100%;height:100%;object-fit:cover}
 .adx-id b{font-size:20px;font-weight:750;letter-spacing:-.3px;display:block;line-height:1.15}

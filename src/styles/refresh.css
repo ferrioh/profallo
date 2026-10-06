@@ -886,6 +886,12 @@ dialog.app-sheet{max-width:none}
 .rev-form textarea{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
 .pay-backup-toggle{display:flex;align-items:center;gap:10px}
 .pay-backup-toggle input{width:auto;min-height:0}
+/* Clientes de Inicio: deslizar con el dedo */
+@media(max-width:560px){
+  .team-mosaic{display:flex;overflow-x:auto;gap:10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
+  .team-mosaic::-webkit-scrollbar{display:none}
+  .team-mosaic>*{flex:0 0 82%;scroll-snap-align:center}
+}
 /* Reseñas en la ficha pública */
 .pt-reviews{width:100%;margin:10px 0 2px;text-align:left}
 .pt-reviews-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}

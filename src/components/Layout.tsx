@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { useApp } from '../context/AppContext'
 import type { View } from '../types'
 import { Icon, type IconName } from './Icon'
@@ -6,6 +6,7 @@ import { initials } from '../lib/utils'
 import { currentAccount, useAuthVersion } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
 import { buildNotifications, notificationStateOf } from '../lib/notifications'
+import { playTick } from '../lib/sound'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
@@ -51,6 +52,39 @@ export function Sidebar() {
   const activeView = view === 'cliente-perfil' ? 'clientes' : view
   const navRef = useRef<HTMLElement>(null)
   const [pill, setPill] = useState({ left: 0, width: 0, ready: false })
+  const dragRef = useRef<{ x: number } | null>(null)
+  const [dragDx, setDragDx] = useState(0)
+  const [dragging, setDragging] = useState(false)
+
+  function navIndex() {
+    return NAV.findIndex(([v]) => v === activeView)
+  }
+  function switchBy(dir: number) {
+    const i = navIndex()
+    const next = NAV[i + dir]
+    if (next && next[0] !== activeView) {
+      playTick()
+      go(next[0])
+    }
+  }
+  function onNavDown(e: ReactPointerEvent<HTMLElement>) {
+    dragRef.current = { x: e.clientX }
+    setDragging(true)
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  function onNavMove(e: ReactPointerEvent<HTMLElement>) {
+    if (!dragRef.current) return
+    const d = e.clientX - dragRef.current.x
+    setDragDx(Math.max(-90, Math.min(90, d)))
+  }
+  function onNavUp() {
+    const d = dragDx
+    dragRef.current = null
+    setDragging(false)
+    setDragDx(0)
+    if (d < -40) switchBy(1)
+    else if (d > 40) switchBy(-1)
+  }
 
   useEffect(() => {
     const nav = navRef.current
@@ -81,7 +115,16 @@ export function Sidebar() {
           {data.demo ? 'DEMO LOCAL' : 'ESPACIO LOCAL'}
         </span>
       </div>
-      <nav aria-label="Navegación principal" id="nav" ref={navRef}>
+      <nav
+        aria-label="Navegación principal"
+        id="nav"
+        ref={navRef}
+        onPointerDown={onNavDown}
+        onPointerMove={onNavMove}
+        onPointerUp={onNavUp}
+        onPointerCancel={onNavUp}
+        style={{ transform: `translateX(${dragDx}px)`, transition: dragging ? 'none' : 'transform .25s ease' }}
+      >
         <span
           className="nav-pill"
           aria-hidden="true"
@@ -91,7 +134,7 @@ export function Sidebar() {
           <button
             key={v}
             className={`nav-button ${activeView === v ? 'active' : ''}`}
-            onClick={() => go(v)}
+            onClick={() => { playTick(); go(v) }}
             title={t}
             aria-label={t}
             aria-current={activeView === v ? 'page' : undefined}

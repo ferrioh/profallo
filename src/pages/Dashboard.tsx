@@ -255,7 +255,7 @@ export function Dashboard() {
               .map((c) => ({ c, photo: c.photo || clientPhotos[c.id] }))
               .filter((x) => x.photo)
               .concat(active.map((c) => ({ c, photo: c.photo || clientPhotos[c.id] })).filter((x) => !x.photo))
-              .slice(0, 3)
+              .slice(0, 12)
               .map(({ c, photo }) => (
                 <button
                   key={c.id}

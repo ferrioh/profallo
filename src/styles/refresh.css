@@ -865,6 +865,23 @@ dialog.app-sheet{max-width:none}
 .reviews-home-empty{color:#c2c6bd;font-size:14px;background:#2d2f36;border:1px dashed #4b4e55;border-radius:18px;padding:18px}
 .rev-scroll{display:flex;gap:10px;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-x:contain;padding:3px 1px 10px;scrollbar-width:none;min-width:0;max-width:100%}
 .rev-scroll::-webkit-scrollbar{display:none}
+/* Vista de clientes: lista vs cuadrícula */
+.layout-toggle{display:flex;gap:4px;background:#2b2d34;border:1px solid #444650;border-radius:99px;padding:3px;margin-left:auto}
+.layout-toggle button{background:transparent;color:#c8cad0;border-radius:99px;width:40px;min-height:40px;display:grid;place-items:center;padding:0}
+.layout-toggle button.active{background:#d2ff62;color:#17220c}
+.layout-toggle svg{width:18px;height:18px}
+.client-list{display:grid;gap:10px}
+.client-list-item{display:flex;align-items:center;gap:13px;background:#292b32;border:1px solid #454750;border-radius:18px;padding:12px 14px;color:#fff}
+.client-list-item .avatar{width:46px;height:46px;font-size:15px}
+.cli-main{flex:1;min-width:0}
+.cli-main b{font-size:16px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cli-main small{font-size:12.5px;color:#bcc0c6;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+.cli-meta{display:grid;justify-items:end;gap:2px;flex:none}
+.cli-meta b{font-size:16px;color:#d2ff62}
+.cli-meta small{font-size:10.5px;color:#9aa0a6}
+.cli-actions{display:flex;gap:7px;flex:none}
+.cli-actions button{width:40px;min-height:40px;border-radius:50%;display:grid;place-items:center;background:#3a3d45;color:#fff;border:1px solid #575a62;padding:0}
+.cli-actions svg{width:16px;height:16px}
 .rev-scroll::-webkit-scrollbar{height:6px}
 .rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
 .rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}

@@ -191,13 +191,10 @@ language sql stable security definer set search_path = public as $$
   );
 $$;
 
--- ¿El usuario autenticado tiene el acceso aprobado por el admin?
+-- Sin verificación por estado: todo usuario autenticado tiene acceso (ya no hay gate).
 create or replace function public.is_approved() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid()::text and p.status = 'approved'
-  );
+  select auth.uid() is not null;
 $$;
 
 -- Crea el perfil automáticamente al registrarse con Supabase Auth.

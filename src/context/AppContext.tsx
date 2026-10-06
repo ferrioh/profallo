@@ -253,6 +253,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const result = local.demo ? fresh : mergeLocalCloud(local, fresh)
             replaceData(result)
             cloudLoadedRef.current = true
+            // Si había borrados pendientes, limpia la nube (por si un borrado previo no se aplicó).
+            if (result.deleted && result.deleted.length) void pushCloud(uid, result)
           }
         }
       }

@@ -28,5 +28,29 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Auto-actualización: al volver a la app, si hay una versión nueva, recarga.
+      (function () {
+        function mainSrc() {
+          var s = document.querySelector('script[type="module"]')
+          return s ? s.getAttribute('src') : ''
+        }
+        function check() {
+          var initial = mainSrc()
+          if (!initial) return
+          fetch('/', { cache: 'no-store' })
+            .then(function (r) { return r.text() })
+            .then(function (html) {
+              var m = html.match(/<script[^>]+type="module"[^>]+src="([^"]+)"/)
+              if (m && m[1] && m[1] !== initial) location.reload()
+            })
+            .catch(function () {})
+        }
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') check()
+        })
+        window.addEventListener('focus', check)
+      })()
+    </script>
   </body>
 </html>

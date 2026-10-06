@@ -796,15 +796,15 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
             <span>{(analytics ?? []).length} entrenadores</span>
           </div>
           <div className="admin-list">
-            {(analytics ?? []).map((a) => (
+            {(analytics ?? []).sort((a, b) => Number((b as any).usageSeconds) - Number((a as any).usageSeconds)).map((a) => (
               <article className="admin-trainer" key={a.id}>
                 <div className="admin-trainer-main">
                   <span className="admin-avatar">{a.name.slice(0, 2).toUpperCase()}</span>
                   <div>
                     <b>{a.name}</b>
                     <small title="Correo">{a.email ?? '—'}</small>
-                    <small>🕐 Uso: {Math.round(a.usageSeconds / 60)} min · Clientes {a.clients} · Routines {a.routines}</small>
-                    <small title="Sesiones programadas, envíos de link compartido, pagos, reseñas totales y positivas">{a.sessions} ses · {a.shares} compartidos · {a.payments} pagos · {a.reviews} reseñas ({a.reviewsPos} +8)</small>
+                    <small>🕐 Uso: {Math.round(Number((a as any).usageSeconds) / 60)} min · Clientes {a.clients} · Routines {(a as any).routines}</small>
+                    <small>{a.sessions} ses · {a.shares} compartidos · {a.payments} pagos · {a.reviews} reseñas ({a.reviewsPos} +8)</small>
                   </div>
                 </div>
               </article>

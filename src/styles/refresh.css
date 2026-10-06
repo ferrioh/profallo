@@ -906,3 +906,11 @@ dialog.app-sheet{max-width:none}
 .pt-brand-mark{width:20px!important;height:20px!important;font-size:19px!important;line-height:19px!important;border-radius:6px;padding-left:4px!important}
 /* Glass gris real en la ficha compartida */
 .pt-card.pt-glass{background:linear-gradient(160deg,rgba(150,158,150,.24),rgba(78,84,78,.13));backdrop-filter:blur(28px) saturate(140%);-webkit-backdrop-filter:blur(28px) saturate(140%);border:1px solid #ffffff33;box-shadow:0 30px 80px #0007,inset 0 1px 0 #ffffff22}
+/* Stats dinámicas de la ficha */
+.public-trainer .pt-stats{grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.public-trainer .pt-stats>div{position:relative;display:grid;gap:5px;justify-items:center;padding:16px 8px 14px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,rgba(150,158,150,.20),rgba(80,86,80,.10));border:1px solid #ffffff28;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.public-trainer .pt-stats>div::after{content:'';position:absolute;top:0;left:16px;right:16px;height:3px;border-radius:0 0 8px 8px;background:linear-gradient(90deg,transparent,var(--pt-accent,#d2ff62),transparent)}
+.public-trainer .pt-stat-ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#ffffff1c;color:var(--pt-accent,#d2ff62);margin-bottom:2px}
+.public-trainer .pt-stat-ic svg{width:18px;height:18px}
+.public-trainer .pt-stats b{font-size:30px;font-weight:700;letter-spacing:-.6px;color:var(--pt-accent,#d2ff62);line-height:1}
+.public-trainer .pt-stats span{font-size:11px;color:#c9ccc2;letter-spacing:.02em}

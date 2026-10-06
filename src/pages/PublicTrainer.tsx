@@ -19,6 +19,24 @@ function ratingColor(r: number): string {
   return `hsl(${hue}, 90%, ${light}%)`
 }
 
+/** Número que sube animado. */
+function Count({ value }: { value: number }) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const start = performance.now()
+    const dur = 1100
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur)
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return <>{n}</>
+}
+
 /** Mide la eficiencia de entrenamiento (porcentaje) y la anima al entrar. */
 function EfficiencyMeter({ value }: { value: number }) {
   const [n, setN] = useState(0)
@@ -165,9 +183,21 @@ export function PublicTrainer({ username }: { username: string }) {
         {t.bio ? <p className="pt-bio">{t.bio}</p> : null}
 
         <div className="pt-stats pt-glass-block">
-          <div><b>{t.routines}</b><span>Rutinas</span></div>
-          <div><b>{t.clients}</b><span>Clientes</span></div>
-          <div><b>{t.sessionsMonth}</b><span>Sesiones/mes</span></div>
+          <div>
+            <span className="pt-stat-ic"><Icon name="dumbbell" /></span>
+            <b><Count value={t.routines} /></b>
+            <span>Rutinas</span>
+          </div>
+          <div>
+            <span className="pt-stat-ic"><Icon name="clients" /></span>
+            <b><Count value={t.clients} /></b>
+            <span>Clientes</span>
+          </div>
+          <div>
+            <span className="pt-stat-ic"><Icon name="calendar" /></span>
+            <b><Count value={t.sessionsMonth} /></b>
+            <span>Sesiones/mes</span>
+          </div>
         </div>
 
         <EfficiencyMeter value={efficiency} />

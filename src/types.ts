@@ -151,6 +151,8 @@ export interface AppData {
   }
   /** IDs eliminados (tombstones) para que no vuelvan a aparecer al sincronizar. */
   deleted?: string[]
+  /** Marca de tiempo (ms) del último cambio local, para decidir qué versión gana al mezclar. */
+  updatedAt?: number
   membershipPayments?: Array<{
     id: string
     amount: number

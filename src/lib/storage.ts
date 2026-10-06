@@ -74,8 +74,13 @@ export interface LoadResult {
 }
 
 export function loadData(): LoadResult {
+  return loadDataFrom(KEY)
+}
+
+/** Carga los datos desde una clave concreta (para tener una copia por usuario). */
+export function loadDataFrom(key: string): LoadResult {
   try {
-    const stored = localStorage.getItem(KEY)
+    const stored = localStorage.getItem(key)
     const data: AppData = stored ? normalize(JSON.parse(stored)) : demoData()
     if (!validData(data)) throw new Error('Respaldo inválido')
     return { data, storageAvailable: true }
@@ -85,8 +90,12 @@ export function loadData(): LoadResult {
 }
 
 export function persist(data: AppData): boolean {
+  return persistTo(KEY, data)
+}
+
+export function persistTo(key: string, data: AppData): boolean {
   try {
-    localStorage.setItem(KEY, JSON.stringify(data))
+    localStorage.setItem(key, JSON.stringify(data))
     return true
   } catch {
     return false

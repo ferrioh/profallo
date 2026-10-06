@@ -53,6 +53,7 @@ alter table public.profiles add column if not exists accent text default 'lime';
 alter table public.profiles add column if not exists reviews jsonb not null default '[]'::jsonb;
 alter table public.profiles add column if not exists referral boolean not null default false;
 alter table public.profiles add column if not exists usage_seconds bigint not null default 0;
+alter table public.profiles add column if not exists data_updated_at timestamptz default now();
 alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 

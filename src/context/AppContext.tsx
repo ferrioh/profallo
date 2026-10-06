@@ -15,7 +15,7 @@ import type {
   View,
 } from '../types'
 import { VIEWS } from '../types'
-import { clone, loadData, persist } from '../lib/storage'
+import { clone, loadData, loadDataFrom, persistTo } from '../lib/storage'
 import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../lib/utils'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
@@ -111,15 +111,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cloudReady, setCloudReady] = useState(!isSupabaseEnabled)
   const cloudUserRef = useRef<string | null>(null)
   cloudUserRef.current = cloudUser
+  const storageKeyRef = useRef('protrainer.local.v1')
   const dirtyRef = useRef(false)
   const cloudLoadedRef = useRef(false)
   const backupEnabledRef = useRef(true)
   const lastBackupRef = useRef(0)
   const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const pushCloud = useCallback(async (uid: string, snapshot: AppData) => {
-    const ok = await saveCloudData(uid, snapshot)
-    if (ok) {
+  const pushCloud = useCallback(async (uid: string, snapshot: AppData): Promise<string | null> => {
+    const err = await saveCloudData(uid, snapshot)
+    if (!err) {
       dirtyRef.current = false
       // Respaldo automático (salvavidas): como máximo cada 2 minutos.
       if (backupEnabledRef.current && Date.now() - lastBackupRef.current > 120000) {
@@ -127,7 +128,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         void cloudBackupNow(uid, snapshot)
       }
     }
-    return ok
+    return err
   }, [])
 
   const [ui, setUi] = useState<UiState>(() => ({
@@ -152,12 +153,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setEntered(true)
   }, [])
   const leave = useCallback(() => {
-    // Sube los cambios pendientes a la nube ANTES de cerrar/borrar lo local.
+    // Sube los cambios pendientes a la nube antes de salir.
     if (isSupabaseEnabled && cloudUserRef.current && !dataRef.current.demo) {
       void saveCloudData(cloudUserRef.current, dataRef.current)
     }
     try { sessionStorage.removeItem('protrainer.entered') } catch { /* Temporary browser session */ }
-    try { localStorage.removeItem('protrainer.local.v1') } catch { /* ignore */ }
+    // La copia local es POR USUARIO (protrainer.local.<uid>), así NO se borra:
+    // otra cuenta no la verá y el mismo usuario no pierde nada si algo falló al subir.
     setEntered(false)
     location.hash = 'bienvenida'
     window.scrollTo(0, 0)
@@ -197,9 +199,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (mutator: (draft: AppData) => void) => {
       const draft = clone(dataRef.current)
       mutator(draft)
+      draft.updatedAt = Date.now()
       dataRef.current = draft
       setData(draft)
-      const ok = persist(draft)
+      const ok = persistTo(storageKeyRef.current, draft)
       setStorageAvailable(ok)
       if (!ok) {
         toast('No se pudo guardar: exporta un respaldo antes de cerrar.')
@@ -209,8 +212,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
         const uid = cloudUserRef.current
         // Guardado inmediato (no diferido): evita perder cambios si sales rápido.
-        void pushCloud(uid, dataRef.current).then((ok) => {
-          if (!ok) toast('No se pudo guardar en la nube. Revisa tu conexión o el límite de tu plan.')
+        void pushCloud(uid, dataRef.current).then((err) => {
+          if (err) toast(`No se pudo guardar en la nube (${err}).`)
         })
       }
     },
@@ -220,7 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const replaceData = useCallback((next: AppData) => {
     dataRef.current = next
     setData(next)
-    setStorageAvailable(persist(next))
+    setStorageAvailable(persistTo(storageKeyRef.current, next))
   }, [])
 
   useEffect(() => {
@@ -271,16 +274,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Solo recargamos datos al iniciar sesión (no en cada refresh de token,
       // para no pisar cambios locales que aún no se han subido).
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        // Copia local POR USUARIO: evita ver datos de otra cuenta y protege datos sin subir.
+        const scopedKey = `protrainer.local.${uid}`
+        storageKeyRef.current = scopedKey
+        const scoped = loadDataFrom(scopedKey)
+        const base = scoped.storageAvailable && !scoped.data.demo ? scoped.data : dataRef.current
+        if (base !== dataRef.current) { dataRef.current = base; setData(base) }
         if (dirtyRef.current) {
           // Hay cambios locales sin subir: no los pisamos, los empujamos.
           await pushCloud(uid, dataRef.current)
           cloudLoadedRef.current = true
         } else {
-          const fresh = await loadCloudData(uid, dataRef.current.profile)
+          const fresh = await loadCloudData(uid, base.profile)
           if (alive && fresh) {
-            const local = dataRef.current
-            // Nunca se pisa lo local: se combina con la nube (la nube gana en conflictos).
-            const result = local.demo ? fresh : mergeLocalCloud(local, fresh)
+            // Nunca se pisa lo local: se combina con la nube (gana la versión más reciente).
+            const result = base.demo ? fresh : mergeLocalCloud(base, fresh)
             replaceData(result)
             cloudLoadedRef.current = true
             // Si había borrados pendientes, limpia la nube (por si un borrado previo no se aplicó).

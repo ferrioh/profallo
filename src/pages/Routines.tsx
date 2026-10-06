@@ -18,6 +18,7 @@ export function RoutinesPage() {
       d.routines = d.routines.filter((x) => x.id !== id)
       d.clients.forEach((c) => { if (c.routine === id) c.routine = '' })
       d.sessions.forEach((s) => { if (s.routine === id) s.routine = '' })
+      d.deleted = [...new Set([...(d.deleted ?? []), id])]
     })
     setOpenId((prev) => (prev === id ? null : prev))
     toast('Rutina eliminada.')

@@ -396,6 +396,7 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
     measurements: (measurements.data ?? []).map(rowToMeasurement),
     payments: (payments.data ?? []).map(rowToPayment),
     notificationState,
+    updatedAt: (prof.data as Row | null)?.data_updated_at ? Date.parse(String((prof.data as Row).data_updated_at)) || 0 : 0,
     demo: false,
   }
 }
@@ -410,10 +411,11 @@ async function syncTable(table: string, _trainerId: string, rows: Row[]): Promis
   return !error
 }
 
-export async function saveCloudData(userId: string, data: AppData): Promise<boolean> {
-  if (!supabase) return false
+export async function saveCloudData(userId: string, data: AppData): Promise<string | null> {
+  if (!supabase) return 'Supabase no configurado'
   const row = profileToRow(data.profile, userId)
   row.notification_state = data.notificationState ?? {}
+  row.data_updated_at = new Date().toISOString()
   let prof = await supabase.from('profiles').upsert(row)
   if (prof.error) {
     // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/accent/reviews/etc.).
@@ -423,20 +425,21 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
     delete safe.accent
     delete safe.reviews
     delete safe.notification_state
+    delete safe.data_updated_at
     prof = await supabase.from('profiles').upsert(safe)
   }
   if (prof.error) {
     console.error('[profallo] fallo al guardar el perfil:', prof.error.message)
-    return false
+    return `perfil: ${prof.error.message}`
   }
   // Orden seguro por claves foráneas: padres antes que hijos (upsert)
   const tomb = new Set(data.deleted ?? [])
-  const results = [
-    await syncTable('routines', userId, data.routines.filter((r) => !tomb.has(r.id)).map((r) => routineToRow(r, userId))),
-    await syncTable('clients', userId, data.clients.filter((c) => !tomb.has(c.id)).map((c) => clientToRow(c, userId))),
-    await syncTable('sessions', userId, data.sessions.filter((s) => !tomb.has(s.id)).map((s) => sessionToRow(s, userId))),
-    await syncTable('measurements', userId, data.measurements.filter((m) => !tomb.has(m.id)).map((m) => measurementToRow(m, userId))),
-    await syncTable('payments', userId, data.payments.filter((p) => !tomb.has(p.id)).map((p) => paymentToRow(p, userId))),
+  const checks: Array<[string, boolean]> = [
+    ['rutinas', await syncTable('routines', userId, data.routines.filter((r) => !tomb.has(r.id)).map((r) => routineToRow(r, userId)))],
+    ['clientes', await syncTable('clients', userId, data.clients.filter((c) => !tomb.has(c.id)).map((c) => clientToRow(c, userId)))],
+    ['sesiones', await syncTable('sessions', userId, data.sessions.filter((s) => !tomb.has(s.id)).map((s) => sessionToRow(s, userId)))],
+    ['mediciones', await syncTable('measurements', userId, data.measurements.filter((m) => !tomb.has(m.id)).map((m) => measurementToRow(m, userId)))],
+    ['pagos', await syncTable('payments', userId, data.payments.filter((p) => !tomb.has(p.id)).map((p) => paymentToRow(p, userId)))],
   ]
   // Elimina de la nube lo marcado como borrado (para que no vuelva a aparecer).
   if (tomb.size) {
@@ -447,29 +450,35 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
     await supabase.from('measurements').delete().in('id', ids)
     await supabase.from('payments').delete().in('id', ids)
   }
-  return results.every(Boolean)
+  const failed = checks.find(([, ok]) => !ok)
+  return failed ? failed[0] : null
 }
 
 export const cloudToday = TODAY
 
-/** Combina los datos locales con los de la nube sin perder nada (unión por id; gana la nube). */
+/** Combina los datos locales con los de la nube sin perder nada (unión por id). */
 export function mergeLocalCloud(local: AppData, cloud: AppData): AppData {
   const tomb = new Set([...(local.deleted ?? []), ...(cloud.deleted ?? [])])
+  const localNewer = (local.updatedAt ?? 0) > (cloud.updatedAt ?? 0)
   const byId = <T extends { id: string }>(a: T[], b: T[]): T[] => {
+    // el segundo gana en conflictos
     const m = new Map<string, T>()
     a.forEach((x) => { if (!tomb.has(x.id)) m.set(x.id, x) })
     b.forEach((x) => { if (!tomb.has(x.id)) m.set(x.id, x) })
     return [...m.values()]
   }
+  // Gana la versión más reciente (según updatedAt). Así una edición local no se pisa.
+  const merge = <T extends { id: string }>(l: T[], c: T[]) => (localNewer ? byId(c, l) : byId(l, c))
   return {
     ...cloud,
     deleted: [...tomb],
-    clients: byId(local.clients, cloud.clients),
-    routines: byId(local.routines, cloud.routines),
-    sessions: byId(local.sessions, cloud.sessions),
-    measurements: byId(local.measurements, cloud.measurements),
-    payments: byId(local.payments, cloud.payments),
-    notificationState: cloud.notificationState ?? local.notificationState,
+    updatedAt: Math.max(local.updatedAt ?? 0, cloud.updatedAt ?? 0),
+    clients: merge(local.clients, cloud.clients),
+    routines: merge(local.routines, cloud.routines),
+    sessions: merge(local.sessions, cloud.sessions),
+    measurements: merge(local.measurements, cloud.measurements),
+    payments: merge(local.payments, cloud.payments),
+    notificationState: localNewer ? (local.notificationState ?? cloud.notificationState) : (cloud.notificationState ?? local.notificationState),
   }
 }
 

@@ -5,6 +5,8 @@ export const ICON_PATHS: Record<string, string> = {
   users:
     'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M19 8a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M4 21a8 8 0 0 1 16 0',
+  clients:
+    'M3 5h18v14H3z M8 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4 M4.6 17c.6-1.8 2-2.6 3.4-2.6s2.8.8 3.4 2.6 M14.5 8.5h4 M14.5 12h4 M14.5 15.5h2.5',
   calendar: 'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2 M8 18h2',
   dumbbell:
     'M3 9v6 M6 6.5v11 M18 6.5v11 M21 9v6 M6 12h12',

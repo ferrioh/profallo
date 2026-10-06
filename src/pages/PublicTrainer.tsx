@@ -1,6 +1,6 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { Icon } from '../components/Icon'
-import { cloudPublicProfile, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
+import { cloudPublicProfile, type PublicReview, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
 import { socialHandle, socialUrl } from '../lib/social'
 
 const ACCENT: Record<string, string> = {
@@ -10,6 +10,14 @@ const ACCENT: Record<string, string> = {
 }
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n))
+
+/** Color según la nota: 1 = oscuro, 10 = amarillo. */
+function ratingColor(r: number): string {
+  const t = clamp((r - 1) / 9, 0, 1)
+  const hue = 28 + t * 32
+  const light = 26 + t * 46
+  return `hsl(${hue}, 90%, ${light}%)`
+}
 
 /** Mide la eficiencia de entrenamiento (porcentaje) y la anima al entrar. */
 function EfficiencyMeter({ value }: { value: number }) {
@@ -41,6 +49,53 @@ function EfficiencyMeter({ value }: { value: number }) {
   )
 }
 
+function ReviewCarousel({ reviews }: { reviews: PublicReview[] }) {
+  const [page, setPage] = useState(0)
+  const startX = useRef<number | null>(null)
+  const total = Math.max(1, Math.ceil(reviews.length / 3))
+  const current = reviews.slice(page * 3, page * 3 + 3)
+
+  function down(e: ReactPointerEvent<HTMLDivElement>) { startX.current = e.clientX }
+  function up(e: ReactPointerEvent<HTMLDivElement>) {
+    if (startX.current == null) return
+    const dx = e.clientX - startX.current
+    startX.current = null
+    if (dx < -42) setPage((p) => Math.min(total - 1, p + 1))
+    else if (dx > 42) setPage((p) => Math.max(0, p - 1))
+  }
+
+  const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+  return (
+    <div className="pt-reviews">
+      <div className="pt-reviews-head">
+        <span>Reseñas de clientes</span>
+        <span className="pt-reviews-avg" style={{ color: ratingColor(avg), borderColor: ratingColor(avg) }}>
+          {avg.toFixed(1)}<small>/10</small>
+        </span>
+      </div>
+      <div className="pt-reviews-viewport" onPointerDown={down} onPointerUp={up}>
+        {current.map((r) => (
+          <div key={r.id} className="pt-review">
+            <div className="pt-review-top">
+              <span className="pt-review-photo">{r.clientPhoto ? <img src={r.clientPhoto} alt={r.clientName ?? ''} /> : <Icon name="user" />}</span>
+              <b>{r.clientName || 'Cliente'}</b>
+              <span className="pt-review-note" style={{ color: ratingColor(r.rating) }}>{r.rating}</span>
+            </div>
+            {r.text ? <p>{r.text}</p> : null}
+          </div>
+        ))}
+      </div>
+      {total > 1 ? (
+        <div className="pt-reviews-dots">
+          {Array.from({ length: total }, (_, i) => (
+            <button key={i} type="button" className={i === page ? 'active' : ''} aria-label={`Página ${i + 1}`} onClick={() => setPage(i)} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function PublicTrainer({ username }: { username: string }) {
   const [t, setT] = useState<PublicTrainerData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -63,6 +118,7 @@ export function PublicTrainer({ username }: { username: string }) {
     return (
       <div className="entry-loader" aria-hidden="true">
         <span className="entry-loader-logo">p</span>
+        <span className="entry-loader-word">profallo</span>
         <span className="entry-loader-line" />
       </div>
     )
@@ -81,6 +137,7 @@ export function PublicTrainer({ username }: { username: string }) {
 
   const accent = ACCENT[t.accent] ?? ACCENT.lime
   const efficiency = Math.round(clamp(58 + t.clients * 3 + t.routines * 1.2 + t.sessionsMonth * 0.8, 55, 98))
+  const reviews = t.reviews ?? []
   const wa = t.phone
     ? `https://wa.me/${t.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${t.name}, quiero unirme a tu equipo 💪`)}`
     : ''
@@ -115,6 +172,8 @@ export function PublicTrainer({ username }: { username: string }) {
 
         <EfficiencyMeter value={efficiency} />
 
+        {reviews.length ? <ReviewCarousel reviews={reviews} /> : null}
+
         {insta || tiktok ? (
           <div className="pt-social">
             {insta ? (
@@ -135,7 +194,7 @@ export function PublicTrainer({ username }: { username: string }) {
         </button>
 
         <footer className="pt-foot">
-          <span className="pt-brand">PROFALLO</span>
+          <span className="pt-brand"><span className="brand-mark pt-brand-mark">p</span>PROFALLO</span>
           <span>profallo.vercel.app</span>
         </footer>
       </div>

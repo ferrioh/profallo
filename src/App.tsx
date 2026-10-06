@@ -25,6 +25,7 @@ function AppLoader() {
   return (
     <div className="entry-loader" aria-hidden="true">
       <span className="entry-loader-logo">p</span>
+      <span className="entry-loader-word">profallo</span>
       <span className="entry-loader-line" />
     </div>
   )

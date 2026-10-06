@@ -9,7 +9,7 @@ import { buildNotifications, notificationStateOf } from '../lib/notifications'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
-  ['clientes', 'Clientes', 'users'],
+  ['clientes', 'Clientes', 'clients'],
   ['calendario', 'Calendario', 'calendar'],
   ['rutinas', 'Rutinas', 'dumbbell'],
   ['pagos', 'Pagos', 'wallet'],

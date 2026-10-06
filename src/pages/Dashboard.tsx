@@ -7,6 +7,7 @@ import { PageHead } from '../components/ui'
 import { WeekStrip } from '../components/WeekStrip'
 import { Agenda } from '../components/Agenda'
 import { Verified } from '../components/Layout'
+import { ReviewsSection } from '../components/Reviews'
 import { MOTIVATIONAL_MAIN, MOTIVATIONAL_SUB, randomFrom } from '../lib/phrases'
 import {
   clientPhotos,
@@ -83,16 +84,18 @@ export function CoachStage({ full = false }: { full?: boolean }) {
         <strong>{totalSessions}</strong>
         <span>Sesiones</span>
       </button>
-      <button
-        className="stage-orbit orbit-c glass-button"
-        onClick={() => go('rutinas')}
-      >
-        <span className="orbit-icon">
-          <Icon name="dumbbell" />
-        </span>
-        <strong>{data.routines.length}</strong>
-        <span>Rutinas</span>
-      </button>
+      {!full ? (
+        <button
+          className="stage-orbit orbit-c glass-button"
+          onClick={() => go('rutinas')}
+        >
+          <span className="orbit-icon">
+            <Icon name="dumbbell" />
+          </span>
+          <strong>{data.routines.length}</strong>
+          <span>Rutinas</span>
+        </button>
+      ) : null}
       <div className="stage-caption">
         <i /> COACH BETTER. EVERY DAY.
       </div>
@@ -239,6 +242,8 @@ export function Dashboard() {
         <div><span>Sesiones hoy</span><strong>{stats.todaySessions.length}</strong><small>En el calendario</small></div>
         <div><span>Rutinas</span><strong>{data.routines.length}</strong><small>Planes disponibles</small></div>
       </div>
+
+      <ReviewsSection />
 
       <div className="modern-grid">
         <section className="team-block">

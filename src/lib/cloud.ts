@@ -196,6 +196,7 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     instagram: or(r.instagram) || base.instagram,
     tiktok: or(r.tiktok) || base.tiktok,
     accent: r.accent === 'cyan' || r.accent === 'amber' || r.accent === 'lime' ? r.accent : (base.accent ?? 'lime'),
+    reviews: Array.isArray(r.reviews) ? (r.reviews as Profile['reviews']) : base.reviews,
     bio: or(r.bio) || base.bio,
   }
 }
@@ -212,6 +213,7 @@ export function profileToRow(p: Profile, id: string): Row {
     instagram: p.instagram ?? null,
     tiktok: p.tiktok ?? null,
     accent: p.accent ?? 'lime',
+    reviews: p.reviews ?? [],
     membership: p.membership ?? 'free',
     verified: Boolean(p.verified),
     role: p.role ?? 'trainer',
@@ -522,6 +524,15 @@ export async function cloudRejectPremium(id: string): Promise<boolean> {
 
 /* ------------------- Ficha pública del entrenador ------------------- */
 
+export interface PublicReview {
+  id: string
+  rating: number
+  text: string
+  date: string
+  clientName: string | null
+  clientPhoto: string | null
+}
+
 export interface PublicTrainer {
   name: string
   specialty: string
@@ -539,6 +550,7 @@ export interface PublicTrainer {
   routines: number
   sessionsMonth: number
   photos: string[]
+  reviews: PublicReview[]
 }
 
 export async function cloudPublicProfile(username: string): Promise<PublicTrainer | null> {

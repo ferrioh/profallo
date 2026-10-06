@@ -72,12 +72,13 @@ export function PublicHome() {
     e.preventDefault()
     setError('')
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    const idNumber = `${x.idType || 'V'}-${(x.idNumber ?? '').replace(/\D/g, '')}`
     if (cloudEnabled) {
       if (!robot || Number(captchaAnswer) !== captcha.a + captcha.b) { setError('Confirma el captcha.'); refreshCaptcha(); return }
       if ((x.password ?? '').length < PASS_MIN) { setError(`La contraseña debe tener al menos ${PASS_MIN} caracteres.`); return }
       if (x.password !== x.confirm) { setError('Las contraseñas no coinciden.'); return }
       const res = await cloudSignUp((x.email ?? '').trim().toLowerCase(), x.password ?? '', {
-        name: x.name ?? '', phone: x.phone ?? '', idNumber: x.idNumber ?? '', gym: '', instagram: x.instagram ?? '',
+        name: x.name ?? '', phone: x.phone ?? '', idNumber, gym: '', instagram: x.instagram ?? '',
       })
       if (!res.ok) { setError(res.error ?? 'No se pudo crear la cuenta.'); refreshCaptcha(); return }
       if (res.needsConfirmation) {
@@ -94,7 +95,7 @@ export function PublicHome() {
       password: x.password ?? '',
       confirm: x.confirm ?? '',
       phone: x.phone ?? '',
-      idNumber: x.idNumber ?? '',
+      idNumber,
       gym: x.gym ?? '',
       instagram: x.instagram ?? '',
       captchaOk: robot && Number(captchaAnswer) === captcha.a + captcha.b,
@@ -168,7 +169,16 @@ export function PublicHome() {
               </div>
               <div className="entry-row">
                 <label>Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>
-                <label>Cédula<input name="idNumber" required pattern="^[A-Za-z0-9-]{5,20}$" placeholder="V-00000000" /></label>
+                <label>Cédula
+                  <div className="entry-id">
+                    <select name="idType" defaultValue="V" aria-label="Tipo de cédula">
+                      <option value="V">V</option>
+                      <option value="E">E</option>
+                      <option value="R">R</option>
+                    </select>
+                    <input name="idNumber" required inputMode="numeric" pattern="\d{5,10}" placeholder="12345678" />
+                  </div>
+                </label>
               </div>
               <label>Instagram<input name="instagram" placeholder="@tuusuario" maxLength={60} /></label>
               <div className="entry-captcha">

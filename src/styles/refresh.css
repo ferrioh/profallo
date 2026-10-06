@@ -852,3 +852,55 @@ dialog.app-sheet{max-width:none}
 @media(max-width:1150px){.coach-stage{min-height:440px}}
 @media(max-width:800px){.coach-stage{min-height:465px}.stage-orbit.orbit-c{top:358px}}
 @media(max-width:560px){.coach-stage{min-height:425px}.stage-orbit.orbit-c{top:324px}.full-profile .orbit-c{top:380px}}
+/* Registro: cédula V/E/R */
+.entry-id{display:flex;gap:8px;margin-top:6px}
+.entry-id select{width:64px;flex:none;background:#1a1c22;color:#fff;border:1px solid #3a3d45;border-radius:12px;text-align:center;text-align-last:center;color-scheme:dark}
+.entry-id input{margin-top:0}
+/* Marca en el loader */
+.entry-loader-word{font-size:15px;font-weight:800;letter-spacing:.28em;text-transform:lowercase;color:#17220a;margin-top:-16px;padding-left:.28em}
+/* Reseñas en Inicio */
+.reviews-home{margin:22px 0 6px}
+.reviews-home-empty{color:#c2c6bd;font-size:14px;background:#2d2f36;border:1px dashed #4b4e55;border-radius:18px;padding:18px}
+.rev-scroll{display:flex;gap:10px;overflow-x:auto;padding:3px 1px 10px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.rev-scroll::-webkit-scrollbar{height:6px}
+.rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
+.rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}
+.rev-card.open{width:258px}
+.rev-card-head{display:flex;align-items:center;gap:9px;width:100%;padding:11px 12px;background:transparent;text-align:left}
+.rev-card-head .avatar{width:34px;height:34px}
+.rev-card-name{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+.rev-card-note{background:#d2ff62;color:#182a0c;font-weight:800;font-size:12px;border-radius:9px;padding:4px 8px}
+.rev-card-body{border-top:1px solid #454750;padding:11px 13px;display:grid;gap:10px}
+.rev-card-body p{font-size:12.5px;color:#c6c9cc;line-height:1.5}
+.rev-card-actions{display:flex;gap:8px}
+.rev-card-actions button{display:inline-flex;align-items:center;gap:6px;background:#3a3d45;color:#fff;border:1px solid #575a62;border-radius:99px;padding:8px 11px;font-size:12px}
+.rev-card-actions button svg{width:14px;height:14px}
+.rev-card-actions button.danger{color:#ff9a8a;border-color:#6b403a}
+.rev-form{margin-top:12px;background:#2d2f36;border:1px solid #454750;border-radius:20px;padding:16px;display:grid;gap:12px}
+.rev-form-client{display:grid;gap:7px;font-size:12px;color:#c8cad0}
+.rev-form-client select{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+.rev-form-stars{display:grid;gap:7px;font-size:12px;color:#c8cad0}
+.rev-stars-input{display:flex;gap:2px;flex-wrap:wrap}
+.rev-stars-input button{background:transparent;color:#5b5e66;font-size:21px;line-height:1;padding:1px;min-width:0}
+.rev-stars-input button.on{color:#ffd23f;text-shadow:0 0 8px #ffd23f66}
+.rev-form textarea{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+/* Reseñas en la ficha pública */
+.pt-reviews{width:100%;margin:10px 0 2px;text-align:left}
+.pt-reviews-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.pt-reviews-head>span:first-child{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#c9ccc2}
+.pt-reviews-avg{font-size:20px;font-weight:800;border:1px solid;border-radius:12px;padding:2px 10px;line-height:1.2}
+.pt-reviews-avg small{font-size:11px;font-weight:600;opacity:.7;margin-left:1px}
+.pt-reviews-viewport{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;touch-action:pan-y;cursor:grab}
+.pt-review{background:#ffffff10;border:1px solid #ffffff22;border-radius:16px;padding:12px;display:grid;gap:8px}
+.pt-review-top{display:flex;align-items:center;gap:8px}
+.pt-review-photo{width:30px;height:30px;border-radius:50%;overflow:hidden;background:#1b1e18;display:grid;place-items:center;color:#c9ccc2;flex:none}
+.pt-review-photo img{width:100%;height:100%;object-fit:cover}
+.pt-review-photo svg{width:16px;height:16px}
+.pt-review-top b{flex:1;min-width:0;font-size:13px;color:#f2f5ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-review-note{font-size:18px;font-weight:800}
+.pt-review p{font-size:12px;line-height:1.5;color:#cfd3c8}
+.pt-reviews-dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.pt-reviews-dots button{width:7px;height:7px;border-radius:50%;background:#ffffff33;padding:0;min-width:0}
+.pt-reviews-dots button.active{background:var(--pt-accent,#d2ff62)}
+.pt-brand{display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.pt-brand-mark{width:20px!important;height:20px!important;font-size:19px!important;line-height:19px!important;border-radius:6px;padding-left:4px!important}

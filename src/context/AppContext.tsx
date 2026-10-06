@@ -112,6 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const cloudUserRef = useRef<string | null>(null)
   cloudUserRef.current = cloudUser
   const storageKeyRef = useRef('protrainer.local.v1')
+  const loadedUidRef = useRef<string | null>(null)
   const dirtyRef = useRef(false)
   const cloudLoadedRef = useRef(false)
   const backupEnabledRef = useRef(true)
@@ -274,13 +275,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Solo recargamos datos al iniciar sesión (no en cada refresh de token,
       // para no pisar cambios locales que aún no se han subido).
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        // Detecta cambio de cuenta: si el usuario es distinto al cargado, arrancamos
+        // desde cero (su copia local o vacío), NUNCA con la memoria del usuario anterior.
+        const switched = loadedUidRef.current !== uid
+        loadedUidRef.current = uid
+        if (switched) dirtyRef.current = false
         // Copia local POR USUARIO: evita ver datos de otra cuenta y protege datos sin subir.
         const scopedKey = `protrainer.local.${uid}`
         storageKeyRef.current = scopedKey
         const scoped = loadDataFrom(scopedKey)
-        const base = scoped.storageAvailable && !scoped.data.demo ? scoped.data : dataRef.current
+        // Si no hay copia de ESTE usuario, `scoped.data` es un espacio vacío (demo).
+        const base = scoped.data
         if (base !== dataRef.current) { dataRef.current = base; setData(base) }
-        if (dirtyRef.current) {
+        if (!switched && dirtyRef.current) {
           // Hay cambios locales sin subir: no los pisamos, los empujamos.
           await pushCloud(uid, dataRef.current)
           cloudLoadedRef.current = true

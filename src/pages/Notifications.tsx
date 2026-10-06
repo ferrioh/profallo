@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from '
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
+import { Verified } from '../components/Layout'
 import { PageHead } from '../components/ui'
 import { buildNotifications, notificationStateOf, timeAgo, type AppNotification } from '../lib/notifications'
 import { cloudMyAdminMessages, cloudMyPremiumRequests, type AdminMessage, type PremiumRequestRow } from '../lib/cloud'
@@ -83,6 +84,8 @@ export function NotificationsPage() {
   const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
   const items = buildNotifications(data)
   const current = items.find((n) => n.id === menuId) ?? null
+  const deletedKeys = new Set(data.notificationState?.deleted ?? [])
+  const visibleMsgs = adminMsgs.filter((m) => !deletedKeys.has(`msg:${m.id}`))
 
   useEffect(() => {
     if (!cloudEnabled || !cloudUser) return
@@ -102,6 +105,14 @@ export function NotificationsPage() {
     })
     setMenuId(null)
     toast('Notificación borrada.')
+  }
+  function removeMsg(id: string) {
+    commit((d) => {
+      const s = ensure(d)
+      const key = `msg:${id}`
+      if (!s.deleted.includes(key)) s.deleted.push(key)
+    })
+    toast('Mensaje borrado.')
   }
   function mute(id: string) {
     commit((d) => {
@@ -143,16 +154,16 @@ export function NotificationsPage() {
         sub="Toca para abrir. Desliza a la izquierda para borrar."
       />
       <div className="notif-list">
-        {adminMsgs.map((m) => (
+        {visibleMsgs.map((m) => (
           <div className="notif-item admin-msg-item" key={m.id}>
-            <span className="notif-mark violet"><Icon name="bell" /></span>
+            <span className="notif-mark violet"><Verified /></span>
             <div className="notif-copy">
               <span className="admin-msg-tag">PROFALLO</span>
               {m.title ? <b className="admin-msg-title">{m.title}</b> : null}
               <p>{m.text}</p>
               {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}
             </div>
-            <span className="notif-time">{new Date(m.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' })}</span>
+            <button className="notif-more" type="button" onClick={() => removeMsg(m.id)} aria-label="Borrar mensaje" title="Borrar"><Icon name="trash" /></button>
           </div>
         ))}
         {premiumReqs.map((r) => (

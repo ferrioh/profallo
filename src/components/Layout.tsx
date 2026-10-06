@@ -227,6 +227,7 @@ export function Topbar() {
   const label = PAGE_LABELS[view] ?? 'Inicio'
   const notifications = buildNotifications(data)
   const readIds = new Set(notificationStateOf(data).read)
+  const delIds = new Set(notificationStateOf(data).deleted)
   const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
 
   useEffect(() => {
@@ -239,7 +240,7 @@ export function Topbar() {
     return () => { alive = false; unsub(); window.clearInterval(id) }
   }, [cloudEnabled, cloudUser])
 
-  const msgUnread = adminMsgs.filter((m) => !readIds.has(`msg:${m.id}`)).length
+  const msgUnread = adminMsgs.filter((m) => !readIds.has(`msg:${m.id}`) && !delIds.has(`msg:${m.id}`)).length
   const unread = notifications.filter((n) => !readIds.has(n.id)).length + msgUnread
 
   function openNotifications() {

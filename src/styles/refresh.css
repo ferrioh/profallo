@@ -961,6 +961,40 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-rank-pos.top{background:#47701a;color:#d2ff62}
 .admin-rank-name{flex:1;min-width:0;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .admin-rank-score{font-size:13px;font-weight:600;color:var(--lime,#d2ff62);flex:none;white-space:nowrap}
+/* Analítica profesional (tarjetas + barras) */
+.anx{display:grid;gap:18px}
+.anx-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.anx-head h2{font-size:28px}
+.anx-count{font-size:13px;color:#c8ccbf}
+.anx-mvp{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#d2ff6226,#18290c22);border:1px solid #d2ff6255;border-radius:22px;padding:18px 20px}
+.anx-mvp-crown{font-size:40px;line-height:1}
+.anx-mvp-info{flex:1;min-width:0;display:grid;gap:3px}
+.anx-mvp-info b{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.anx-mvp-info small{font-size:13px;color:#c8ccbf}
+.anx-mvp-tag{background:#d2ff62;color:#182a0c;font-weight:800;font-size:16px;padding:6px 12px;border-radius:99px}
+.anx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.anx-card{background:#1a1c1f;border:1px solid #2c2f33;border-radius:20px;padding:16px}
+.anx-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.anx-card-ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#d2ff6218;color:#d2ff62;flex:none}
+.anx-card-ic svg{width:18px;height:18px}
+.anx-card-head h3{font-size:19px;font-weight:750;letter-spacing:-.4px}
+.anx-list{display:grid;gap:9px}
+.anx-row{display:flex;align-items:center;gap:11px}
+.anx-pos{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:#2a2d32;color:#c8ccbf;flex:none}
+.anx-pos.top{background:#3f5a1c;color:#d2ff62}
+.anx-pos.gold{background:#d2ff62;color:#182a0c}
+.anx-row-body{flex:1;min-width:0;display:grid;gap:5px}
+.anx-row-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.anx-row-top b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.anx-val{font-size:13px;font-weight:700;color:#d2ff62;flex:none}
+.anx-row.rank-1 .anx-row-top b{font-size:20px;font-weight:800}
+.anx-row.rank-2 .anx-row-top b{font-size:17px;font-weight:700}
+.anx-row.rank-3 .anx-row-top b{font-size:15px}
+.anx-bar{height:7px;border-radius:99px;background:#2a2d32;overflow:hidden}
+.anx-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#5f7a2a,#d2ff62)}
+.anx-row.rank-1 .anx-bar i{background:linear-gradient(90deg,#8fbf2a,#d2ff62);box-shadow:0 0 10px #d2ff6288}
+.anx-empty{font-size:13px;color:#9aa0a6}
+@media(max-width:560px){.anx-grid{grid-template-columns:1fr}}
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */

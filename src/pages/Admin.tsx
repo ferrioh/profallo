@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { LineChart } from '../components/ui'
+import { AnalyticsView } from '../components/Analytics'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
@@ -790,28 +791,7 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
       ) : null}
 
       {tab === 'analitica' ? (
-        <section className="admin-trainers">
-          <div className="section-line">
-            <div><span className="eyebrow">MÉTRICAS</span><h2>Analítica de usuarios</h2></div>
-            <span>{(analytics ?? []).length} entrenadores</span>
-          </div>
-          <div className="admin-list">
-            {(analytics ?? []).sort((a, b) => Number((b as any).usageSeconds) - Number((a as any).usageSeconds)).map((a) => (
-              <article className="admin-trainer" key={a.id}>
-                <div className="admin-trainer-main">
-                  <span className="admin-avatar">{a.name.slice(0, 2).toUpperCase()}</span>
-                  <div>
-                    <b>{a.name}</b>
-                    <small title="Correo">{a.email ?? '—'}</small>
-                    <small>🕐 Uso: {Math.round(Number((a as any).usageSeconds) / 60)} min · Clientes {a.clients} · Routines {(a as any).routines}</small>
-                    <small>{a.sessions} ses · {a.shares} compartidos · {a.payments} pagos · {a.reviews} reseñas ({a.reviewsPos} +8)</small>
-                  </div>
-                </div>
-              </article>
-            ))}
-            {!(analytics ?? []).length ? <div className="admin-empty card white">No hay datos aún.</div> : null}
-          </div>
-        </section>
+        <AnalyticsView rows={analytics ?? []} />
       ) : null}
 
       {tab === 'respaldo' ? (

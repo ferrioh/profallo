@@ -35,12 +35,13 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'premium' | 'pagos' | 'respaldo' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'respaldo' | 'redes'
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
   ['cuentas', 'Cuentas', 'users'],
-  ['premium', 'Premium', 'star'],
+  ['socios', 'Premium', 'star'],
+  ['premium', 'Pagos', 'wallet'],
   ['pagos', 'Datos de pago', 'wallet'],
   ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
@@ -63,6 +64,9 @@ export function AdminPage() {
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
+  const cloudList = cloudAccounts ?? []
+  const freeAccs = cloudList.filter((a) => a.membership !== 'premium')
+  const premAccs = cloudList.filter((a) => a.membership === 'premium')
 
   useEffect(() => {
     if (!cloudEnabled) return
@@ -311,12 +315,12 @@ export function AdminPage() {
         <>
           <section className="admin-trainers">
             <div className="section-line">
-              <div><span className="eyebrow">CUENTAS Y ACCESOS</span><h2>Solicitudes de registro</h2></div>
-              <span>{cloudEnabled ? (cloudAccounts ?? []).filter((a) => a.status === 'pending').length : accounts.filter((a) => a.status === 'pending').length} pendientes</span>
+              <div><span className="eyebrow">CUENTAS Y ACCESOS</span><h2>Cuentas (prueba)</h2></div>
+              <span>{freeAccs.length} cuentas · {cloudEnabled ? cloudList.filter((a) => a.status === 'pending').length : accounts.filter((a) => a.status === 'pending').length} pendientes</span>
             </div>
             <div className="admin-list">
               {cloudEnabled
-                ? (cloudAccounts ?? []).map((a) => (
+                ? freeAccs.map((a) => (
                     <article className="admin-trainer" key={a.id}>
                       <div className="admin-trainer-main">
                         <span className={`admin-avatar ${a.status === 'approved' ? 'premium' : ''}`}>{(a.name || '?').slice(0, 2).toUpperCase()}</span>
@@ -333,7 +337,7 @@ export function AdminPage() {
                         {a.membership === 'premium' ? (
                           <span className="admin-status premium">Premium</span>
                         ) : trialDaysLeft(a.trial_start ?? undefined) > 0 ? (
-                          <span className="admin-status trial">Prueba · {trialDaysLeft(a.trial_start ?? undefined)} d</span>
+                          <span className="admin-status trial">Le faltan {trialDaysLeft(a.trial_start ?? undefined)} días</span>
                         ) : (
                           <span className="admin-status expired">Prueba vencida</span>
                         )}
@@ -415,6 +419,41 @@ export function AdminPage() {
             </div>
           </section>
         </>
+      ) : null}
+
+      {tab === 'socios' ? (
+        <section className="admin-trainers">
+          <div className="section-line">
+            <div><span className="eyebrow">CUENTAS PREMIUM</span><h2>Premium</h2></div>
+            <span>{premAccs.length} premium</span>
+          </div>
+          <div className="admin-list">
+            {premAccs.map((a) => (
+              <article className="admin-trainer" key={a.id}>
+                <div className="admin-trainer-main">
+                  <span className="admin-avatar premium">{(a.name || '?').slice(0, 2).toUpperCase()}</span>
+                  <div>
+                    <b>{a.name} {a.role === 'admin' ? <span className="verified" title="Administrador"><Icon name="check" /></span> : null}</b>
+                    <small>{a.email ?? 'Sin correo'}</small>
+                    {a.trial_start ? <small>Desde {a.trial_start}</small> : null}
+                  </div>
+                </div>
+                <div className="admin-trainer-meta">
+                  <span className="admin-status premium">Premium</span>
+                  <span className={`admin-status ${a.status === 'approved' ? 'premium' : a.status === 'pending' ? 'trial' : 'expired'}`}>
+                    {a.status === 'approved' ? 'Acceso permitido' : a.status === 'pending' ? 'Pendiente' : 'Denegado'}
+                  </span>
+                </div>
+                <div className="admin-trainer-actions">
+                  {a.status !== 'approved' ? <button className="button primary" onClick={() => setCloudStatus(a.id, 'approved')}>Permitir acceso</button> : null}
+                  {a.status !== 'rejected' ? <button className="button light" onClick={() => setCloudStatus(a.id, 'rejected')}>Denegar</button> : null}
+                  <button className="button light" onClick={() => deleteCloudAccount(a.id, a.name)}>Eliminar</button>
+                </div>
+              </article>
+            ))}
+            {!premAccs.length ? <div className="admin-empty card white">Aún no hay cuentas Premium.</div> : null}
+          </div>
+        </section>
       ) : null}
 
       {tab === 'premium' ? (

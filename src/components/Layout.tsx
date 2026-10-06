@@ -123,12 +123,17 @@ export function Sidebar() {
         onPointerMove={onNavMove}
         onPointerUp={onNavUp}
         onPointerCancel={onNavUp}
-        style={{ transform: `translateX(${dragDx}px)`, transition: dragging ? 'none' : 'transform .25s ease' }}
       >
         <span
           className="nav-pill"
           aria-hidden="true"
-          style={{ left: pill.left, width: pill.width, opacity: pill.ready ? 1 : 0 }}
+          style={{
+            left: pill.left,
+            width: pill.width,
+            opacity: pill.ready ? 1 : 0,
+            transform: `translateY(-50%) translateX(${dragDx}px)`,
+            transition: dragging ? 'none' : undefined,
+          }}
         />
         {NAV.map(([v, t, ic]) => (
           <button

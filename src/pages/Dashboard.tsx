@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
@@ -86,6 +86,34 @@ export function Dashboard() {
     .filter((x) => x.date >= TODAY && x.status === 'Programada')
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]
   const nextClient = next ? findClient(data, next.client) : null
+
+  // Auto-deslizamiento lento de la fila de clientes (derecha a izquierda).
+  const mosaicRef = useRef<HTMLDivElement>(null)
+  const pausedRef = useRef(false)
+  useEffect(() => {
+    const el = mosaicRef.current
+    if (!el) return
+    let raf = 0
+    const step = () => {
+      if (!pausedRef.current && el.scrollWidth > el.clientWidth + 4) {
+        el.scrollLeft += 0.3
+        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) el.scrollLeft = 0
+      }
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    const pause = () => { pausedRef.current = true }
+    const resume = () => { pausedRef.current = false }
+    el.addEventListener('pointerdown', pause)
+    el.addEventListener('pointerup', resume)
+    el.addEventListener('pointercancel', resume)
+    return () => {
+      cancelAnimationFrame(raf)
+      el.removeEventListener('pointerdown', pause)
+      el.removeEventListener('pointerup', resume)
+      el.removeEventListener('pointercancel', resume)
+    }
+  }, [])
 
   async function shareProfile() {
     if (!data.profile.username) {
@@ -220,7 +248,7 @@ export function Dashboard() {
             <h2>Clientes</h2>
             <button onClick={() => go('clientes')}>Ver todos ↗</button>
           </div>
-          <div className="team-mosaic">
+          <div className="team-mosaic" ref={mosaicRef}>
             {active
               .map((c) => ({ c, photo: c.photo || clientPhotos[c.id] }))
               .filter((x) => x.photo)

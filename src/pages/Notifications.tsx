@@ -84,6 +84,7 @@ export function NotificationsPage() {
   const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
   const items = buildNotifications(data)
   const current = items.find((n) => n.id === menuId) ?? null
+  const msgCurrent = menuId?.startsWith('msg:') ? adminMsgs.find((m) => `msg:${m.id}` === menuId) : null
   const deletedKeys = new Set(data.notificationState?.deleted ?? [])
   const visibleMsgs = adminMsgs.filter((m) => !deletedKeys.has(`msg:${m.id}`))
 
@@ -147,7 +148,7 @@ export function NotificationsPage() {
 
   return (
     <div className="notif-page">
-      <button className="text-back" onClick={goBack}><Icon name="chevron" style={{ transform: 'rotate(180deg)' }} /> Volver</button>
+      <button className="text-back" onClick={goBack}><Icon name="chevron" /> Volver</button>
       <PageHead
         k="TODO LO IMPORTANTE, EN UN SOLO LUGAR."
         title={<>Notificaciones<span style={{ color: 'var(--lime)' }}>.</span></>}

@@ -107,7 +107,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [cloudReady, setCloudReady] = useState(!isSupabaseEnabled)
   const cloudUserRef = useRef<string | null>(null)
   cloudUserRef.current = cloudUser
+  const dirtyRef = useRef(false)
   const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const pushCloud = useCallback(async (uid: string, snapshot: AppData) => {
+    const ok = await saveCloudData(uid, snapshot)
+    if (ok) dirtyRef.current = false
+    return ok
+  }, [])
 
   const [ui, setUi] = useState<UiState>(() => ({
     query: '',
@@ -179,13 +186,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toast('No se pudo guardar: exporta un respaldo antes de cerrar.')
       }
       if (isSupabaseEnabled && cloudUserRef.current) {
+        dirtyRef.current = true
         if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
         cloudPushTimer.current = setTimeout(() => {
-          if (cloudUserRef.current) void saveCloudData(cloudUserRef.current, dataRef.current)
+          const uid = cloudUserRef.current
+          if (!uid) return
+          void pushCloud(uid, dataRef.current).then((ok) => {
+            if (!ok) toast('No se pudo guardar en la nube. Revisa tu conexión o el límite de tu plan.')
+          })
         }, 500)
       }
     },
-    [toast],
+    [toast, pushCloud],
   )
 
   const replaceData = useCallback((next: AppData) => {
@@ -211,8 +223,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Solo recargamos datos al iniciar sesión (no en cada refresh de token,
       // para no pisar cambios locales que aún no se han subido).
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-        const fresh = await loadCloudData(uid, dataRef.current.profile)
-        if (alive && fresh) replaceData(fresh)
+        if (dirtyRef.current) {
+          // Hay cambios locales sin subir: no los pisamos, los empujamos.
+          await pushCloud(uid, dataRef.current)
+        } else {
+          const fresh = await loadCloudData(uid, dataRef.current.profile)
+          if (alive && fresh) replaceData(fresh)
+        }
       }
       setCloudReady(true)
     }
@@ -228,7 +245,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseEnabled) return
     const flush = () => {
-      if (cloudUserRef.current) void saveCloudData(cloudUserRef.current, dataRef.current)
+      const uid = cloudUserRef.current
+      if (uid) void pushCloud(uid, dataRef.current)
     }
     const onVis = () => { if (document.visibilityState === 'hidden') flush() }
     window.addEventListener('pagehide', flush)
@@ -237,7 +255,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('pagehide', flush)
       document.removeEventListener('visibilitychange', onVis)
     }
-  }, [])
+  }, [pushCloud])
 
   const money = useCallback(
     (n: number | string) => fmtMoney(data.profile.currency, n),

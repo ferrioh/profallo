@@ -575,7 +575,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
           </option>
         ))}
       </SelectField>
-      <div><label>Duración del plan</label><input type="hidden" name="duration" value={duration} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker({ mode: 'duration' })}><Icon name="clock" />{duration} min<Icon name="chevron" /></button></div>
+      <div><label>Duración del plan</label><select name="duration" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{[20, 30, 40, 45, 50, 60, 75, 90].map((m) => <option key={m} value={m}>{m} min</option>)}</select></div>
       <div className="full editor-intro">
         <span className="editor-step">02</span>
         <div>
@@ -712,12 +712,24 @@ export function AssignRoutineModal({ id }: { id: string }) {
     try {
       const target = data.clients.find((c) => c.id === x.client)
       if (!target) throw new Error('Selecciona un cliente.')
+      const date = x.date || TODAY
       commit((d) => {
         const c = d.clients.find((cc) => cc.id === x.client)
         if (c) c.routine = id
+        d.sessions.push({
+          id: uid(),
+          client: x.client,
+          title: routine?.name || 'Entrenamiento',
+          date,
+          time: '07:00',
+          duration: routine?.duration ?? 60,
+          status: 'Programada',
+          routine: id,
+          notes: '',
+        })
       })
       closeModal()
-      toast('Rutina asignada.')
+      toast('Rutina asignada y agendada.')
     } catch (err) {
       fail(err)
     }
@@ -732,9 +744,10 @@ export function AssignRoutineModal({ id }: { id: string }) {
           </option>
         ))}
       </SelectField>
+      <Field name="date" label="Fecha a asignar" type="date" value={TODAY} required />
       <div className="full alert-info">
-        Plan: <b>{routine?.name}</b>. Se reemplazará la rutina asignada a este
-        cliente; sus sesiones anteriores se conservan.
+        Se asignará <b>{routine?.name}</b> al cliente y se agendará una sesión ese día.
+        Sus sesiones anteriores se conservan.
       </div>
     </FormWrap>
   )

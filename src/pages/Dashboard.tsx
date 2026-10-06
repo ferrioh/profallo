@@ -233,6 +233,7 @@ export function Dashboard() {
             <button className="button primary share-cta" onClick={shareProfile}>
               <Icon name="share" /> Compartir perfil
             </button>
+            <ReviewsSection />
           </div>
         ) : null}
       </section>
@@ -242,8 +243,6 @@ export function Dashboard() {
         <div><span>Sesiones hoy</span><strong>{stats.todaySessions.length}</strong><small>En el calendario</small></div>
         <div><span>Rutinas</span><strong>{data.routines.length}</strong><small>Planes disponibles</small></div>
       </div>
-
-      <ReviewsSection />
 
       <div className="modern-grid">
         <section className="team-block">

@@ -96,7 +96,11 @@ export default function App() {
         Ir al contenido
       </a>
       <Sidebar />
-      <Shell>{page}</Shell>
+      <Shell>
+        <div key={view} className="page-anim">
+          {page}
+        </div>
+      </Shell>
       <ModalHost />
       <Toast />
     </>

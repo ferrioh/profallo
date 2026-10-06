@@ -23,6 +23,7 @@ import {
   cloudGetSessionUserId,
   cloudOnAuth,
   loadCloudData,
+  mergeLocalCloud,
   saveCloudData,
   type CloudProfileRow,
 } from '../lib/cloud'
@@ -230,7 +231,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           cloudLoadedRef.current = true
         } else {
           const fresh = await loadCloudData(uid, dataRef.current.profile)
-          if (alive && fresh) { replaceData(fresh); cloudLoadedRef.current = true }
+          if (alive && fresh) {
+            const local = dataRef.current
+            // Nunca se pisa lo local: se combina con la nube (la nube gana en conflictos).
+            const result = local.demo ? fresh : mergeLocalCloud(local, fresh)
+            replaceData(result)
+            cloudLoadedRef.current = true
+          }
         }
       }
       setCloudReady(true)

@@ -371,11 +371,14 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
   }
 }
 
-async function syncTable(table: string, _trainerId: string, rows: Row[]) {
-  if (!supabase) return
+async function syncTable(table: string, _trainerId: string, rows: Row[]): Promise<boolean> {
+  if (!supabase) return false
   // Upsert únicamente: NUNCA borramos datos de la nube automáticamente
   // (evita perder clientes/rutinas si el estado local llega incompleto).
-  if (rows.length) await supabase.from(table).upsert(rows)
+  if (!rows.length) return true
+  const { error } = await supabase.from(table).upsert(rows)
+  if (error) console.error(`[profallo] fallo al guardar ${table}:`, error.message)
+  return !error
 }
 
 export async function saveCloudData(userId: string, data: AppData): Promise<boolean> {
@@ -393,17 +396,41 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
     delete safe.notification_state
     prof = await supabase.from('profiles').upsert(safe)
   }
-  if (prof.error) return false
+  if (prof.error) {
+    console.error('[profallo] fallo al guardar el perfil:', prof.error.message)
+    return false
+  }
   // Orden seguro por claves foráneas: padres antes que hijos (upsert)
-  await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId)))
-  await syncTable('clients', userId, data.clients.map((c) => clientToRow(c, userId)))
-  await syncTable('sessions', userId, data.sessions.map((s) => sessionToRow(s, userId)))
-  await syncTable('measurements', userId, data.measurements.map((m) => measurementToRow(m, userId)))
-  await syncTable('payments', userId, data.payments.map((p) => paymentToRow(p, userId)))
-  return true
+  const results = [
+    await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId))),
+    await syncTable('clients', userId, data.clients.map((c) => clientToRow(c, userId))),
+    await syncTable('sessions', userId, data.sessions.map((s) => sessionToRow(s, userId))),
+    await syncTable('measurements', userId, data.measurements.map((m) => measurementToRow(m, userId))),
+    await syncTable('payments', userId, data.payments.map((p) => paymentToRow(p, userId))),
+  ]
+  return results.every(Boolean)
 }
 
 export const cloudToday = TODAY
+
+/** Combina los datos locales con los de la nube sin perder nada (unión por id; gana la nube). */
+export function mergeLocalCloud(local: AppData, cloud: AppData): AppData {
+  const byId = <T extends { id: string }>(a: T[], b: T[]): T[] => {
+    const m = new Map<string, T>()
+    a.forEach((x) => m.set(x.id, x))
+    b.forEach((x) => m.set(x.id, x))
+    return [...m.values()]
+  }
+  return {
+    ...cloud,
+    clients: byId(local.clients, cloud.clients),
+    routines: byId(local.routines, cloud.routines),
+    sessions: byId(local.sessions, cloud.sessions),
+    measurements: byId(local.measurements, cloud.measurements),
+    payments: byId(local.payments, cloud.payments),
+    notificationState: cloud.notificationState ?? local.notificationState,
+  }
+}
 
 /* ------------------- Pagos Premium (Pago Móvil / Binance / Zelle) ------------------- */
 

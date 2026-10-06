@@ -91,10 +91,12 @@ export function Sidebar() {
   function onNavUp() {
     const target = dragRef.current?.target
     dragRef.current = null
-    // Mantener la transición desactivada durante el cambio para que el pase sea
-    // instantáneo y no se vea el tirón (doble animación transform + left).
+    // Pasar directo a la posición destino (mismo frame): evita el "flash" en la
+    // posición anterior. Se mantiene la transición desactivada durante el pase.
     setDragDx(0)
     if (target != null) {
+      const el = navButtons()[target]
+      if (el) setPill({ left: el.offsetLeft + 3, width: Math.max(0, el.offsetWidth - 6), ready: true })
       const v = NAV[target]?.[0]
       if (v && v !== activeView) {
         playTick()

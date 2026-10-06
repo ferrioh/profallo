@@ -525,10 +525,13 @@ create table if not exists public.admin_messages (
   created_at timestamptz not null default now()
 );
 create index if not exists admin_messages_trainer_idx on public.admin_messages (trainer_id, created_at desc);
+alter table public.admin_messages add column if not exists title text;
+alter table public.admin_messages add column if not exists link text;
+alter table public.admin_messages alter column trainer_id drop not null;
 alter table public.admin_messages enable row level security;
 drop policy if exists admin_messages_read on public.admin_messages;
 create policy admin_messages_read on public.admin_messages
-  for select using (public.is_admin() or trainer_id = auth.uid()::text);
+  for select using (public.is_admin() or trainer_id = auth.uid()::text or trainer_id is null);
 drop policy if exists admin_messages_write on public.admin_messages;
 create policy admin_messages_write on public.admin_messages
   for insert with check (public.is_admin());

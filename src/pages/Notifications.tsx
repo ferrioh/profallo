@@ -85,10 +85,14 @@ export function NotificationsPage() {
   const current = items.find((n) => n.id === menuId) ?? null
 
   useEffect(() => {
-    if (cloudEnabled && cloudUser) {
+    if (!cloudEnabled || !cloudUser) return
+    const load = () => {
       cloudMyPremiumRequests(cloudUser).then(setPremiumReqs)
       cloudMyAdminMessages(cloudUser).then(setAdminMsgs)
     }
+    load()
+    const id = window.setInterval(load, 15000)
+    return () => window.clearInterval(id)
   }, [cloudEnabled, cloudUser])
 
   function remove(id: string) {
@@ -144,7 +148,9 @@ export function NotificationsPage() {
             <span className="notif-mark violet"><Icon name="bell" /></span>
             <div className="notif-copy">
               <span className="admin-msg-tag">PROFALLO</span>
+              {m.title ? <b className="admin-msg-title">{m.title}</b> : null}
               <p>{m.text}</p>
+              {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}
             </div>
             <span className="notif-time">{new Date(m.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' })}</span>
           </div>

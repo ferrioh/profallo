@@ -77,10 +77,8 @@ export function Dashboard() {
   const publicUrl = `${location.origin}/${data.profile.username || ''}`
   const next = data.sessions
     .filter((x) => x.date >= TODAY && x.status === 'Programada')
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-  const upcoming = next.slice(0, 3)
-  const nextS = upcoming[0]
-  const nextClient = nextS ? findClient(data, nextS.client) : null
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]
+  const nextClient = next ? findClient(data, next.client) : null
 
   // Auto-deslizamiento constante y lineal de la fila de clientes.
   const mosaicRef = useAutoScroll(0.03)
@@ -234,36 +232,22 @@ export function Dashboard() {
         <section className="focus-card white">
           <div className="card-head">
             <span className="eyebrow">TU PRÓXIMA SESIÓN</span>
-            <span className="pill green">{nextS ? 'EN AGENDA' : 'ESPACIO LIBRE'}</span>
+            <span className="pill green">{next ? 'EN AGENDA' : 'ESPACIO LIBRE'}</span>
           </div>
           <div className="focus-time">
-            {nextS ? nextS.time : '—'}
-            <span>{nextS ? 'h' : 'Tu momento'}</span>
+            {next ? next.time : '—'}
+            <span>{next ? 'h' : 'Tu momento'}</span>
           </div>
-          {nextS && nextClient ? (
+          {next && nextClient ? (
             <>
               <div className="session-person">
                 <Avatar client={nextClient} />
                 <div>
                   <b>{nextClient.name}</b>
-                  <p>{nextS.title}</p>
+                  <p>{next.title}</p>
                 </div>
               </div>
-              {upcoming.length > 1 ? (
-                <div className="session-row">
-                  {upcoming.slice(1, 3).map((s) => {
-                    const c = findClient(data, s.client)
-                    return (
-                      <button key={s.id} className="session-mini" onClick={() => actions.focusSession(s.id)}>
-                        <Avatar client={c} />
-                        <b>{c.name}</b>
-                        <small>{s.time}</small>
-                      </button>
-                    )
-                  })}
-                </div>
-              ) : null}
-              <button className="button dark focus-cta" onClick={() => actions.focusSession(nextS.id)}>
+              <button className="button dark focus-cta" onClick={() => actions.focusSession(next.id)}>
                 Ver sesión <Icon name="up" />
               </button>
             </>

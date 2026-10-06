@@ -68,6 +68,8 @@ export function AdminPage() {
   const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
   const [msgTo, setMsgTo] = useState('')
   const [msgText, setMsgText] = useState('')
+  const [msgTitle, setMsgTitle] = useState('')
+  const [msgLink, setMsgLink] = useState('')
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -241,10 +243,11 @@ export function AdminPage() {
     e.preventDefault()
     if (!msgTo) { toast('Selecciona un destinatario.'); return }
     if (!msgText.trim()) { toast('Escribe un mensaje.'); return }
-    const ok = await cloudSendAdminMessage(msgTo, msgText.trim())
+    const target = msgTo === '__all__' ? null : msgTo
+    const ok = await cloudSendAdminMessage(target, msgText.trim(), msgTitle, msgLink)
     if (!ok) { toast('No se pudo enviar el mensaje.'); return }
-    setSentMsgs((prev) => [{ id: `local-${Date.now()}`, trainer_id: msgTo, text: msgText.trim(), created_at: new Date().toISOString() }, ...(prev ?? [])])
-    setMsgText('')
+    setSentMsgs((prev) => [{ id: `local-${Date.now()}`, trainer_id: target, title: msgTitle.trim() || null, text: msgText.trim(), link: msgLink.trim() || null, created_at: new Date().toISOString() }, ...(prev ?? [])])
+    setMsgText(''); setMsgTitle(''); setMsgLink('')
     toast('Mensaje enviado.')
   }
 
@@ -580,13 +583,20 @@ export function AdminPage() {
             <label>Destinatario
               <select value={msgTo} onChange={(e) => setMsgTo(e.target.value)}>
                 <option value="">Selecciona un entrenador…</option>
+                <option value="__all__">📣 Todos (everyone)</option>
                 {cloudList.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}{a.email ? ` · ${a.email}` : ''}</option>
                 ))}
               </select>
             </label>
+            <label>Encabezado (opcional)
+              <input value={msgTitle} onChange={(e) => setMsgTitle(e.target.value)} maxLength={60} placeholder="Título grande del mensaje" />
+            </label>
             <label>Mensaje
               <textarea value={msgText} onChange={(e) => setMsgText(e.target.value)} rows={3} maxLength={500} placeholder="Escribe el mensaje que verá en sus notificaciones" />
+            </label>
+            <label>Link (opcional)
+              <input value={msgLink} onChange={(e) => setMsgLink(e.target.value)} maxLength={300} placeholder="https://…" />
             </label>
             <div className="form-foot">
               <button className="button primary" type="submit"><Icon name="bell" /> Enviar mensaje</button>
@@ -603,8 +613,10 @@ export function AdminPage() {
               return (
                 <article className="admin-message" key={m.id}>
                   <span className="admin-msg-tag">PROFALLO</span>
+                  {m.title ? <h4 className="admin-msg-title">{m.title}</h4> : null}
                   <p>{m.text}</p>
-                  <small>{acc?.name ?? m.trainer_id} · {new Date(m.created_at).toLocaleString('es')}</small>
+                  {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}
+                  <small>{m.trainer_id ? (acc?.name ?? m.trainer_id) : 'Todos'} · {new Date(m.created_at).toLocaleString('es')}</small>
                 </article>
               )
             })}

@@ -571,14 +571,26 @@ export async function cloudRestoreBackup(id: string): Promise<boolean> {
 
 export interface AdminMessage {
   id: string
-  trainer_id: string
+  trainer_id: string | null
+  title: string | null
   text: string
+  link: string | null
   created_at: string
 }
 
-export async function cloudSendAdminMessage(trainerId: string, text: string): Promise<boolean> {
+export async function cloudSendAdminMessage(
+  trainerId: string | null,
+  text: string,
+  title?: string,
+  link?: string,
+): Promise<boolean> {
   if (!supabase) return false
-  const { error } = await supabase.from('admin_messages').insert({ trainer_id: trainerId, text })
+  const { error } = await supabase.from('admin_messages').insert({
+    trainer_id: trainerId,
+    text,
+    title: title?.trim() ? title.trim() : null,
+    link: link?.trim() ? link.trim() : null,
+  })
   return !error
 }
 
@@ -593,7 +605,9 @@ export async function cloudListAdminMessages(): Promise<AdminMessage[] | null> {
 export async function cloudMyAdminMessages(userId: string): Promise<AdminMessage[]> {
   if (!supabase) return []
   const { data } = await supabase
-    .from('admin_messages').select('*').eq('trainer_id', userId).order('created_at', { ascending: false })
+    .from('admin_messages').select('*')
+    .or(`trainer_id.eq.${userId},trainer_id.is.null`)
+    .order('created_at', { ascending: false })
   return (data as AdminMessage[]) ?? []
 }
 

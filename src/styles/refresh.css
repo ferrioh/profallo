@@ -905,6 +905,9 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-message{background:linear-gradient(135deg,#2a1745,#1c1130);border:1px solid #7c3aed66;border-radius:18px;padding:14px 16px;color:#fff}
 .admin-message p{font-size:14px;line-height:1.5;margin:9px 0 6px}
 .admin-message small{font-size:11.5px;color:#c9b8ec}
+.admin-msg-title{display:block;font-size:16px;font-weight:800;color:#fff;margin:6px 0 4px}
+.admin-msg-link{display:inline-block;color:#c4b5fd;text-decoration:underline;font-size:13px;margin-top:4px;word-break:break-all}
+.admin-msg-form input{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
 /* Barra de clientes + fila de próximas sesiones */
 .toolbar-title{font-size:18px;font-weight:700;letter-spacing:-.3px}
 .session-row{display:flex;gap:8px;margin-top:10px}

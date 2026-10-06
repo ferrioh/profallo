@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
-import { fileToDataUrl } from '../lib/image'
 import {
   listMembershipPayments,
   listTrainers,
@@ -83,8 +82,6 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const [msgTitle, setMsgTitle] = useState('')
   const [msgLink, setMsgLink] = useState('')
   const [editingMsgId, setEditingMsgId] = useState<string | null>(null)
-  const [pendingPhotoId, setPendingPhotoId] = useState<string | null>(null)
-  const photoInputRef = useRef<HTMLInputElement>(null)
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -363,11 +360,6 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
 
   function removeShareholder(id: string) {
     saveShareholders(paySettings.shareholders.filter((s) => s.id !== id))
-  }
-
-  function changePhoto(id: string) {
-    setPendingPhotoId(id)
-    // The input will be triggered; onChange handles the result.
   }
 
   function saveSocial(e: FormEvent<HTMLFormElement>) {
@@ -757,7 +749,6 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     </div>
     <div className="admin-msg-actions">
       <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)) }}><Icon name="edit" /> Editar</button>
-      <button className="button light" onClick={() => changePhoto(s.id)}><Icon name="edit" /> Foto</button>
       <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
     </div>
   </article>
@@ -766,16 +757,6 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
           </div>
         </section>
       ) : null}
-
-      <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={(e) => {
-        const [file] = Array.from(e.target.files ?? [])
-        if (!file || !pendingPhotoId) return
-        fileToDataUrl(file).then((url) => {
-          if (url) saveShareholders(paySettings.shareholders.map((s) => s.id === pendingPhotoId ? { ...s, photo: url } : s))
-          setPendingPhotoId(null)
-          ;(e.currentTarget as HTMLInputElement).value = ''
-        }, () => toast('No se pudo cargar la imagen.'))
-      }} />
 
       {tab === 'analitica' ? (
         <section className="admin-trainers">

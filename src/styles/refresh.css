@@ -809,7 +809,11 @@ dialog.app-sheet{max-width:none}
 .pc-days{display:grid;gap:12px}
 .pc-day{background:rgba(120,128,120,.18);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(140%);border:1px solid #ffffff2e;padding:14px 15px;border-radius:22px}
 .pc-day.today{border-color:#d2ff62;box-shadow:0 0 0 1px #d2ff6240}
-.pc-day.today{border-color:#d2ff62;box-shadow:0 0 0 1px #d2ff6240}
+/* SpotlightCard (React Bits): halo que sigue el puntero/dedo */
+.pc-head,.pc-day{position:relative}
+.pc-head::before,.pc-day::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;opacity:0;transition:opacity .35s ease;background:radial-gradient(240px circle at var(--mx,50%) var(--my,-20%),rgba(210,255,98,.22),transparent 42%)}
+.pc-head:hover::before,.pc-day:hover::before{opacity:1}
+.pc-head>*, .pc-day>*{position:relative;z-index:1}
 .pc-day-head{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 .pc-day-name{text-transform:capitalize;font-weight:800;font-size:17px}
 .pc-day-date{color:#9aa08c;font-size:13px}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { Verified } from '../components/Layout'
 import { LineChart } from '../components/ui'
@@ -18,6 +18,13 @@ export function PublicClient({ code }: { code: string }) {
   const [loading, setLoading] = useState(true)
   const [pm, setPm] = useState<'weight' | 'waist' | 'fat'>('weight')
   const [expDay, setExpDay] = useState<string | null>(null)
+
+  function spot(e: ReactPointerEvent<HTMLElement>) {
+    const el = e.currentTarget
+    const r = el.getBoundingClientRect()
+    el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+    el.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }
 
   useEffect(() => {
     cloudPublicClientWeek(code)
@@ -53,7 +60,7 @@ export function PublicClient({ code }: { code: string }) {
     <div className="public-client">
       {w.clientPhoto ? <div className="pc-bg" style={{ backgroundImage: `url(${w.clientPhoto})` }} aria-hidden="true" /> : null}
       <div className="pc-bg-shade" aria-hidden="true" />
-      <header className="pc-head">
+      <header className="pc-head" onPointerMove={spot}>
         <div className="pc-trainer-pill">
           <span className="pc-trainer-label">Tu entrenador</span>
           <span className="pc-trainer-name">{w.trainerName}{w.trainerVerified ? <Verified /> : null}</span>
@@ -79,7 +86,7 @@ export function PublicClient({ code }: { code: string }) {
             const list = byDate(d)
             const expanded = expDay === d
             return (
-              <section key={d} className={`pc-day ${d === TODAY ? 'today' : ''} ${list.length ? 'has' : ''}`}>
+              <section key={d} className={`pc-day ${d === TODAY ? 'today' : ''} ${list.length ? 'has' : ''}`} onPointerMove={spot}>
                 <header className="pc-day-head" onClick={() => setExpDay(expDay === d ? null : d)}>
                   <Icon name="dumbbell" />
                   <span className="pc-day-name">{shortWeekday(d)}</span>

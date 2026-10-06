@@ -6,6 +6,7 @@ import { initials } from '../lib/utils'
 import { currentAccount, useAuthVersion } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
 import { buildNotifications, notificationStateOf } from '../lib/notifications'
+import { cloudSubscribeAdminMessages, cloudMyAdminMessages, type AdminMessage } from '../lib/cloud'
 import { playTick } from '../lib/sound'
 
 export const NAV: Array<[View, string, IconName]> = [
@@ -226,13 +227,27 @@ export function Topbar() {
   const label = PAGE_LABELS[view] ?? 'Inicio'
   const notifications = buildNotifications(data)
   const readIds = new Set(notificationStateOf(data).read)
-  const unread = notifications.filter((n) => !readIds.has(n.id)).length
+  const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
+
+  useEffect(() => {
+    if (!cloudEnabled || !cloudUser) return
+    let alive = true
+    const load = () => { cloudMyAdminMessages(cloudUser).then((m) => { if (alive) setAdminMsgs(m) }) }
+    load()
+    const unsub = cloudSubscribeAdminMessages(load)
+    const id = window.setInterval(load, 20000)
+    return () => { alive = false; unsub(); window.clearInterval(id) }
+  }, [cloudEnabled, cloudUser])
+
+  const msgUnread = adminMsgs.filter((m) => !readIds.has(`msg:${m.id}`)).length
+  const unread = notifications.filter((n) => !readIds.has(n.id)).length + msgUnread
 
   function openNotifications() {
     commit((d) => {
       const ns = notificationStateOf(d)
       const set = new Set(ns.read)
       notifications.forEach((n) => set.add(n.id))
+      adminMsgs.forEach((m) => set.add(`msg:${m.id}`))
       d.notificationState = { ...ns, read: [...set] }
     })
     go('notificaciones')

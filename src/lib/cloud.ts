@@ -647,6 +647,16 @@ export async function cloudMyAdminMessages(userId: string): Promise<AdminMessage
   return (data as AdminMessage[]) ?? []
 }
 
+/** Realtime: avisa cuando llega/cambia un mensaje del admin (WebSocket). */
+export function cloudSubscribeAdminMessages(cb: () => void): () => void {
+  if (!supabase) return () => {}
+  const channel = supabase
+    .channel('admin_messages_rt')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_messages' }, () => cb())
+    .subscribe()
+  return () => { void supabase?.removeChannel(channel) }
+}
+
 export async function cloudCreatePremiumRequest(req: {
   trainerId: string
   name: string

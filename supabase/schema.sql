@@ -52,6 +52,7 @@ alter table public.profiles add column if not exists bio text;
 alter table public.profiles add column if not exists accent text default 'lime';
 alter table public.profiles add column if not exists reviews jsonb not null default '[]'::jsonb;
 alter table public.profiles add column if not exists referral boolean not null default false;
+alter table public.profiles add column if not exists usage_seconds bigint not null default 0;
 alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
@@ -481,9 +482,7 @@ begin
 end; $$;
 grant execute on function public.public_client_week(text) to anon, authenticated;
 
--- ------------------------------------------------------------
 -- Eliminar cuenta (solo admin): borra el perfil (y sus datos) y el usuario de auth.
--- ------------------------------------------------------------
 create or replace function public.admin_delete_account(p_id text)
 returns boolean language plpgsql security definer set search_path = public as $$
 begin
@@ -582,5 +581,38 @@ begin
   return true;
 end; $$;
 grant execute on function public.admin_restore_backup(uuid) to authenticated;
+
+-- ------------------------------------------------------------
+-- Analítica de usuarios
+-- ------------------------------------------------------------
+create or replace function public.bump_usage(p_seconds int)
+returns void language sql security definer set search_path = public as $$
+  update public.profiles set usage_seconds = coalesce(usage_seconds, 0) + greatest(0, p_seconds)
+  where id = auth.uid()::text;
+$$;
+grant execute on function public.bump_usage(int) to authenticated;
+
+create or replace function public.admin_user_analytics()
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v jsonb;
+begin
+  if not exists(select 1 from public.profiles where id = auth.uid()::text and role = 'admin') then return null; end if;
+  select jsonb_agg(row) into v from (
+    select jsonb_build_object(
+      'id', p.id, 'name', p.name, 'email', p.email, 'created_at', p.created_at,
+      'clients', (select count(*) from public.clients c where c.trainer_id = p.id and c.archived = false),
+      'routines', (select count(*) from public.routines r where r.trainer_id = p.id),
+      'sessions', (select count(*) from public.sessions s where s.trainer_id = p.id),
+      'shares', (select count(*) from public.client_links cl where cl.trainer_id = p.id),
+      'reviews', coalesce(jsonb_array_length(coalesce(to_jsonb(p)->'reviews', '[]'::jsonb)), 0),
+      'reviewsPos', (select count(*) from jsonb_array_elements(coalesce(to_jsonb(p)->'reviews', '[]'::jsonb)) rv where coalesce((rv->>'rating')::numeric, 0) >= 8),
+      'usageSeconds', coalesce((to_jsonb(p)->>'usage_seconds')::bigint, 0),
+      'payments', (select count(*) from public.membership_payments mp where mp.trainer_id = p.id and mp.paid = true)
+    ) as row
+    from public.profiles p
+  ) t;
+  return coalesce(v, '[]'::jsonb);
+end; $$;
+grant execute on function public.admin_user_analytics() to authenticated;
 
 commit;

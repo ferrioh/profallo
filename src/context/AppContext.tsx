@@ -19,6 +19,7 @@ import { clone, loadData, persist } from '../lib/storage'
 import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../lib/utils'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
+  cloudAddUsage,
   cloudBackupNow,
   cloudEnsureProfile,
   cloudGetAppSettings,
@@ -222,6 +223,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isSupabaseEnabled) return
     cloudGetAppSettings().then((s) => { if (s) backupEnabledRef.current = s.backup_enabled })
+  }, [])
+
+  // Registra el tiempo de uso del entrenador (para la analítica del admin).
+  useEffect(() => {
+    if (!isSupabaseEnabled) return
+    let last = Date.now()
+    const flush = () => {
+      const uid = cloudUserRef.current
+      if (!uid) return
+      const secs = Math.round((Date.now() - last) / 1000)
+      last = Date.now()
+      if (secs > 0) void cloudAddUsage(secs)
+    }
+    const onVis = () => {
+      if (document.visibilityState === 'visible') last = Date.now()
+      else flush()
+    }
+    const id = window.setInterval(flush, 60000)
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      flush()
+      window.clearInterval(id)
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', onVis)
+    }
   }, [])
 
   useEffect(() => {

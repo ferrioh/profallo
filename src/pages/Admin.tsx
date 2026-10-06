@@ -28,7 +28,9 @@ import {
   cloudRestoreBackup,
   cloudSendAdminMessage,
   cloudUpdateAdminMessage,
+  cloudUserAnalytics,
   type AdminMessage,
+  type UserAnalyticsRow,
   type BackupRow,
   cloudListProfiles,
   cloudRejectPremium,
@@ -41,7 +43,7 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'accionistas' | 'respaldo' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'accionistas' | 'analitica' | 'respaldo' | 'redes'
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
@@ -51,6 +53,7 @@ const TABS: Array<[Tab, string, string]> = [
   ['pagos', 'Datos de pago', 'wallet'],
   ['mensajes', 'Mensaje', 'bell'],
   ['accionistas', 'Accionistas', 'users'],
+  ['analitica', 'Analítica', 'chart'],
   ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
 ]
@@ -70,6 +73,7 @@ export function AdminPage() {
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
+  const [analytics, setAnalytics] = useState<UserAnalyticsRow[] | null>(null)
   const [msgTo, setMsgTo] = useState('')
   const [msgText, setMsgText] = useState('')
   const [msgTitle, setMsgTitle] = useState('')
@@ -90,6 +94,7 @@ export function AdminPage() {
     cloudGetAppSettings().then((s) => { if (alive && s) setPaySettings(s) })
     cloudListBackups().then((rows) => { if (alive) setBackups(rows) })
     cloudListAdminMessages().then((rows) => { if (alive) setSentMsgs(rows) })
+    cloudUserAnalytics().then((rows) => { if (alive) setAnalytics(rows) })
     listMembershipPayments().then((rows) => { if (alive) setMembershipPays(rows ?? []) })
     return () => { alive = false }
   }, [cloudEnabled])
@@ -731,6 +736,31 @@ export function AdminPage() {
               </article>
             ))}
             {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : null}
+          </div>
+        </section>
+      ) : null}
+
+      {tab === 'analitica' ? (
+        <section className="admin-trainers">
+          <div className="section-line">
+            <div><span className="eyebrow">MÉTRICAS</span><h2>Analítica de usuarios</h2></div>
+            <span>{(analytics ?? []).length} entrenadores</span>
+          </div>
+          <div className="admin-list">
+            {(analytics ?? []).map((a) => (
+              <article className="admin-trainer" key={a.id}>
+                <div className="admin-trainer-main">
+                  <span className="admin-avatar">{a.name.slice(0, 2).toUpperCase()}</span>
+                  <div>
+                    <b>{a.name}</b>
+                    <small title="Correo">{a.email ?? '—'}</small>
+                    <small>🕐 Uso: {Math.round(a.usageSeconds / 60)} min · Clientes {a.clients} · Routines {a.routines}</small>
+                    <small title="Sesiones programadas, envíos de link compartido, pagos, reseñas totales y positivas">{a.sessions} ses · {a.shares} compartidos · {a.payments} pagos · {a.reviews} reseñas ({a.reviewsPos} +8)</small>
+                  </div>
+                </div>
+              </article>
+            ))}
+            {!(analytics ?? []).length ? <div className="admin-empty card white">No hay datos aún.</div> : null}
           </div>
         </section>
       ) : null}

@@ -657,6 +657,36 @@ export function cloudSubscribeAdminMessages(cb: () => void): () => void {
   return () => { void supabase?.removeChannel(channel) }
 }
 
+/* ------------------- Analítica de usuarios ------------------- */
+
+export interface UserAnalyticsRow {
+  id: string
+  name: string
+  email: string | null
+  created_at: string | null
+  clients: number
+  routines: number
+  sessions: number
+  shares: number
+  reviews: number
+  reviewsPos: number
+  usageSeconds: number
+  payments: number
+}
+
+/** Suma segundos de uso del entrenador actual. */
+export async function cloudAddUsage(seconds: number): Promise<void> {
+  if (!supabase || seconds <= 0) return
+  await supabase.rpc('bump_usage', { p_seconds: Math.round(seconds) })
+}
+
+export async function cloudUserAnalytics(): Promise<UserAnalyticsRow[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase.rpc('admin_user_analytics')
+  if (error || !data) return null
+  return data as UserAnalyticsRow[]
+}
+
 export async function cloudCreatePremiumRequest(req: {
   trainerId: string
   name: string

@@ -25,6 +25,7 @@ create table if not exists public.profiles (
   username      text unique,
   bio           text,
   accent        text default 'lime',
+  reviews       jsonb not null default '[]'::jsonb,
   notification_state jsonb not null default '{}'::jsonb,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
@@ -49,6 +50,7 @@ alter table public.profiles add column if not exists gym text;
 alter table public.profiles add column if not exists username text;
 alter table public.profiles add column if not exists bio text;
 alter table public.profiles add column if not exists accent text default 'lime';
+alter table public.profiles add column if not exists reviews jsonb not null default '[]'::jsonb;
 alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
@@ -344,13 +346,16 @@ returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   v public.profiles;
+  v_json jsonb;
   v_clients int;
   v_routines int;
   v_sessions int;
   v_photos jsonb;
+  v_reviews jsonb;
 begin
   select * into v from public.profiles where lower(username) = lower(p_username) limit 1;
   if not found then return null; end if;
+  v_json := to_jsonb(v);
   select count(*) into v_clients from public.clients where trainer_id = v.id and archived = false;
   select count(*) into v_routines from public.routines where trainer_id = v.id;
   select count(*) into v_sessions from public.sessions
@@ -359,13 +364,27 @@ begin
     select photo from public.clients
      where trainer_id = v.id and photo is not null and photo <> '' limit 6
   ) s;
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'id', rv->>'id',
+      'rating', coalesce((rv->>'rating')::numeric, 0),
+      'text', coalesce(rv->>'text', ''),
+      'date', coalesce(rv->>'date', ''),
+      'clientName', c.name,
+      'clientPhoto', c.photo
+    ) order by rv->>'date' desc), '[]'::jsonb)
+  into v_reviews
+  from jsonb_array_elements(coalesce(v_json->'reviews', '[]'::jsonb)) rv
+  left join public.clients c on c.id = rv->>'client';
   return jsonb_build_object(
     'name', v.name, 'specialty', v.specialty, 'photo', v.photo_url,
-    'phone', v.phone, 'instagram', v.instagram, 'tiktok', v.tiktok, 'email', v.email,
-    'username', v.username, 'gym', v.gym, 'bio', v.bio, 'verified', v.verified,
-    'accent', coalesce(v.accent, 'lime'),
+    'phone', v.phone, 'email', v.email,
+    'instagram', v_json->>'instagram', 'tiktok', v_json->>'tiktok',
+    'username', v_json->>'username', 'gym', v_json->>'gym', 'bio', v_json->>'bio',
+    'accent', coalesce(v_json->>'accent', 'lime'),
+    'verified', v.verified,
     'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions,
-    'photos', v_photos
+    'photos', v_photos,
+    'reviews', v_reviews
   );
 end; $$;
 

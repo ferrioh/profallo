@@ -197,7 +197,7 @@ export function Dashboard() {
       <section className="team-block">
           <div className="section-heading">
             <h2>Clientes</h2>
-            <button onClick={() => go('clientes')}>Ver todos ↗</button>
+            <button className="button primary" onClick={() => go('clientes')}>Ver todos</button>
           </div>
           <div className="team-mosaic" ref={mosaicRef}>
             {[...mosaicItems, ...mosaicItems].map(({ c, photo }, i) => (

@@ -2,6 +2,8 @@ import { useApp } from './context/AppContext'
 import { Sidebar, Shell } from './components/Layout'
 import { ModalHost } from './components/Modals'
 import { Toast } from './components/Toast'
+import { Paywall } from './components/Paywall'
+import { membershipLocked } from './lib/plans'
 import { Dashboard } from './pages/Dashboard'
 import { ClientsPage } from './pages/Clients'
 import { CalendarPage } from './pages/Calendar'
@@ -61,6 +63,16 @@ export default function App() {
   }
 
   if (!isIn) return <PublicHome />
+
+  // Al terminar los 15 días de prueba, se debe pagar Premium para seguir.
+  if (membershipLocked(data.profile)) {
+    return (
+      <>
+        <Paywall />
+        <Toast />
+      </>
+    )
+  }
 
   const page =
     view === 'clientes' ? (

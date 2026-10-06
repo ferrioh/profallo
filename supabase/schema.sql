@@ -515,6 +515,27 @@ create policy data_backups_owner on public.data_backups
 
 alter table public.app_settings add column if not exists backup_enabled boolean not null default true;
 
+-- ------------------------------------------------------------
+-- Mensajes del administrador (llegan a las notificaciones del usuario)
+-- ------------------------------------------------------------
+create table if not exists public.admin_messages (
+  id         uuid primary key default gen_random_uuid(),
+  trainer_id text not null references public.profiles(id) on delete cascade,
+  text       text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists admin_messages_trainer_idx on public.admin_messages (trainer_id, created_at desc);
+alter table public.admin_messages enable row level security;
+drop policy if exists admin_messages_read on public.admin_messages;
+create policy admin_messages_read on public.admin_messages
+  for select using (public.is_admin() or trainer_id = auth.uid()::text);
+drop policy if exists admin_messages_write on public.admin_messages;
+create policy admin_messages_write on public.admin_messages
+  for insert with check (public.is_admin());
+drop policy if exists admin_messages_delete on public.admin_messages;
+create policy admin_messages_delete on public.admin_messages
+  for delete using (public.is_admin() or trainer_id = auth.uid()::text);
+
 -- Restaurar un respaldo a su entrenador (solo admin).
 create or replace function public.admin_restore_backup(p_id uuid)
 returns boolean language plpgsql security definer set search_path = public as $$

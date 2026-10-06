@@ -20,9 +20,12 @@ import {
   cloudApprovePremium,
   cloudDeleteAccount,
   cloudGetAppSettings,
+  cloudListAdminMessages,
   cloudListBackups,
   cloudListPremiumRequests,
   cloudRestoreBackup,
+  cloudSendAdminMessage,
+  type AdminMessage,
   type BackupRow,
   cloudListProfiles,
   cloudRejectPremium,
@@ -35,7 +38,7 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'respaldo' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'respaldo' | 'redes'
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
@@ -43,6 +46,7 @@ const TABS: Array<[Tab, string, string]> = [
   ['socios', 'Premium', 'star'],
   ['premium', 'Pagos', 'wallet'],
   ['pagos', 'Datos de pago', 'wallet'],
+  ['mensajes', 'Mensaje', 'bell'],
   ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
 ]
@@ -61,6 +65,9 @@ export function AdminPage() {
   const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true })
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const [backups, setBackups] = useState<BackupRow[] | null>(null)
+  const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
+  const [msgTo, setMsgTo] = useState('')
+  const [msgText, setMsgText] = useState('')
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -75,6 +82,7 @@ export function AdminPage() {
     cloudListPremiumRequests().then((rows) => { if (alive) setPremiumReqs(rows) })
     cloudGetAppSettings().then((s) => { if (alive && s) setPaySettings(s) })
     cloudListBackups().then((rows) => { if (alive) setBackups(rows) })
+    cloudListAdminMessages().then((rows) => { if (alive) setSentMsgs(rows) })
     listMembershipPayments().then((rows) => { if (alive) setMembershipPays(rows ?? []) })
     return () => { alive = false }
   }, [cloudEnabled])
@@ -227,6 +235,17 @@ export function AdminPage() {
     cloudRestoreBackup(b.id).then((ok) => {
       toast(ok ? 'Respaldo restaurado.' : 'No se pudo restaurar el respaldo.')
     })
+  }
+
+  async function sendMessage(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!msgTo) { toast('Selecciona un destinatario.'); return }
+    if (!msgText.trim()) { toast('Escribe un mensaje.'); return }
+    const ok = await cloudSendAdminMessage(msgTo, msgText.trim())
+    if (!ok) { toast('No se pudo enviar el mensaje.'); return }
+    setSentMsgs((prev) => [{ id: `local-${Date.now()}`, trainer_id: msgTo, text: msgText.trim(), created_at: new Date().toISOString() }, ...(prev ?? [])])
+    setMsgText('')
+    toast('Mensaje enviado.')
   }
 
   function approvePremium(req: PremiumRequestRow) {
@@ -549,6 +568,48 @@ export function AdminPage() {
             </div>
             <div className="form-foot"><button className="button primary" type="submit">Guardar datos de pago <Icon name="check" /></button></div>
           </form>
+        </section>
+      ) : null}
+
+      {tab === 'mensajes' ? (
+        <section className="admin-trainers">
+          <div className="section-line">
+            <div><span className="eyebrow">MENSAJE A ENTRENADORES</span><h2>Enviar mensaje</h2></div>
+          </div>
+          <form className="admin-msg-form" onSubmit={sendMessage}>
+            <label>Destinatario
+              <select value={msgTo} onChange={(e) => setMsgTo(e.target.value)}>
+                <option value="">Selecciona un entrenador…</option>
+                {cloudList.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}{a.email ? ` · ${a.email}` : ''}</option>
+                ))}
+              </select>
+            </label>
+            <label>Mensaje
+              <textarea value={msgText} onChange={(e) => setMsgText(e.target.value)} rows={3} maxLength={500} placeholder="Escribe el mensaje que verá en sus notificaciones" />
+            </label>
+            <div className="form-foot">
+              <button className="button primary" type="submit"><Icon name="bell" /> Enviar mensaje</button>
+            </div>
+          </form>
+
+          <div className="section-line" style={{ marginTop: 24 }}>
+            <div><span className="eyebrow">ENVIADOS</span><h2>Mensajes enviados</h2></div>
+            <span>{(sentMsgs ?? []).length}</span>
+          </div>
+          <div className="admin-list">
+            {(sentMsgs ?? []).map((m) => {
+              const acc = cloudList.find((a) => a.id === m.trainer_id)
+              return (
+                <article className="admin-message" key={m.id}>
+                  <span className="admin-msg-tag">PROFALLO</span>
+                  <p>{m.text}</p>
+                  <small>{acc?.name ?? m.trainer_id} · {new Date(m.created_at).toLocaleString('es')}</small>
+                </article>
+              )
+            })}
+            {!(sentMsgs ?? []).length ? <div className="admin-empty card white">Aún no has enviado mensajes.</div> : null}
+          </div>
         </section>
       ) : null}
 

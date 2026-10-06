@@ -80,9 +80,11 @@ export function ReviewsSection() {
           <div className="rev-scroll" ref={scrollRef}>
             {[...reviews, ...reviews].map((r, i) => {
               const client = findClient(data, r.client)
-              const isOpen = expanded === r.id
+              const rid = `${r.id}-${i}`
+              const isOpen = expanded === rid
               return (
-                <div key={`${r.id}-${i}`} className={`rev-card ${isOpen ? 'open' : ''}`}>                <button className="rev-card-head" type="button" onClick={() => setExpanded(isOpen ? null : r.id)}>
+                <div key={rid} className={`rev-card ${isOpen ? 'open' : ''}`}>
+                  <button className="rev-card-head" type="button" onClick={() => setExpanded(isOpen ? null : rid)}>
                   <Avatar client={client} />
                   <span className="rev-card-name">{client.name}</span>
                   <span className="rev-card-note">{r.rating}</span>

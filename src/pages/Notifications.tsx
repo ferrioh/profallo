@@ -4,7 +4,7 @@ import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { buildNotifications, notificationStateOf, timeAgo, type AppNotification } from '../lib/notifications'
-import { cloudMyPremiumRequests, type PremiumRequestRow } from '../lib/cloud'
+import { cloudMyAdminMessages, cloudMyPremiumRequests, type AdminMessage, type PremiumRequestRow } from '../lib/cloud'
 import { month } from '../lib/utils'
 import type { AppData } from '../types'
 
@@ -80,11 +80,15 @@ export function NotificationsPage() {
   const actions = useActions()
   const [menuId, setMenuId] = useState<string | null>(null)
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[]>([])
+  const [adminMsgs, setAdminMsgs] = useState<AdminMessage[]>([])
   const items = buildNotifications(data)
   const current = items.find((n) => n.id === menuId) ?? null
 
   useEffect(() => {
-    if (cloudEnabled && cloudUser) cloudMyPremiumRequests(cloudUser).then(setPremiumReqs)
+    if (cloudEnabled && cloudUser) {
+      cloudMyPremiumRequests(cloudUser).then(setPremiumReqs)
+      cloudMyAdminMessages(cloudUser).then(setAdminMsgs)
+    }
   }, [cloudEnabled, cloudUser])
 
   function remove(id: string) {
@@ -135,6 +139,16 @@ export function NotificationsPage() {
         sub="Toca para abrir. Desliza a la izquierda para borrar."
       />
       <div className="notif-list">
+        {adminMsgs.map((m) => (
+          <div className="notif-item admin-msg-item" key={m.id}>
+            <span className="notif-mark violet"><Icon name="bell" /></span>
+            <div className="notif-copy">
+              <span className="admin-msg-tag">PROFALLO</span>
+              <p>{m.text}</p>
+            </div>
+            <span className="notif-time">{new Date(m.created_at).toLocaleDateString('es', { day: 'numeric', month: 'short' })}</span>
+          </div>
+        ))}
         {premiumReqs.map((r) => (
           <div className={`notif-item tone-${r.status === 'approved' ? 'accent' : r.status === 'pending' ? 'white' : 'red'}`} key={r.id}>
             <span className="notif-mark"><Icon name="star" /></span>

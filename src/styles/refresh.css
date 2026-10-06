@@ -888,6 +888,23 @@ input[type="date"],input[type="datetime-local"],input[type="month"],input[type="
 .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 dialog .form-grid>div{min-width:0}
 @media(max-width:560px){.form-grid{grid-template-columns:minmax(0,1fr)}}
+/* Evitar desbordes horizontales (agenda semanal, clientes, etc.) */
+html,body{overflow-x:hidden;max-width:100%}
+main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.agenda-modern,.agenda-modern .card,.client-grid,.client-list,.client-toolbar{min-width:0;max-width:100%}
+.calendar-week,.week-strip{min-width:0}
+.focus-card,.slot,.agenda-item,.day-pill{min-width:0}
+/* Mensajes del administrador (morado) */
+.notif-mark.violet{background:#7c3aed33;color:#c4b5fd}
+.notif-item.admin-msg-item{background:linear-gradient(135deg,#2a1745,#1c1130);border-color:#8b5cf666}
+.notif-item.admin-msg-item .notif-copy{min-width:0}
+.notif-item.admin-msg-item .notif-copy p{color:#e9d5ff;white-space:normal;overflow:visible;text-overflow:clip}
+.admin-msg-tag{display:inline-block;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;border-radius:99px;padding:3px 9px;margin-bottom:5px}
+.admin-msg-form{display:grid;gap:14px;background:#292b32;border:1px solid #454750;border-radius:20px;padding:18px;max-width:560px}
+.admin-msg-form label{display:grid;gap:7px;font-size:13px;color:#c8cad0}
+.admin-msg-form select,.admin-msg-form textarea{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+.admin-message{background:linear-gradient(135deg,#2a1745,#1c1130);border:1px solid #7c3aed66;border-radius:18px;padding:14px 16px;color:#fff}
+.admin-message p{font-size:14px;line-height:1.5;margin:9px 0 6px}
+.admin-message small{font-size:11.5px;color:#c9b8ec}
 .rev-scroll::-webkit-scrollbar{height:6px}
 .rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
 .rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}

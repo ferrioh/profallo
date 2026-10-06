@@ -905,6 +905,13 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-message{background:linear-gradient(135deg,#2a1745,#1c1130);border:1px solid #7c3aed66;border-radius:18px;padding:14px 16px;color:#fff}
 .admin-message p{font-size:14px;line-height:1.5;margin:9px 0 6px}
 .admin-message small{font-size:11.5px;color:#c9b8ec}
+/* Barra de clientes + fila de próximas sesiones */
+.toolbar-title{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.session-row{display:flex;gap:8px;margin-top:10px}
+.session-mini{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:#f1f4ec;border:1px solid #e2e7da;border-radius:14px;padding:8px 10px;color:#20301a}
+.session-mini .avatar{width:30px;height:30px;font-size:11px}
+.session-mini b{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.session-mini small{color:#6d7867;font-size:11px;margin-left:auto;flex:none}
 .rev-scroll::-webkit-scrollbar{height:6px}
 .rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
 .rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}

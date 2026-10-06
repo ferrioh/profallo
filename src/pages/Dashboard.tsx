@@ -4,8 +4,6 @@ import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { PageHead } from '../components/ui'
-import { WeekStrip } from '../components/WeekStrip'
-import { Agenda } from '../components/Agenda'
 import { Verified } from '../components/Layout'
 import { ReviewsSection } from '../components/Reviews'
 import { useAutoScroll } from '../hooks/useAutoScroll'
@@ -69,7 +67,7 @@ export function CoachStage({ full = false }: { full?: boolean }) {
 }
 
 export function Dashboard() {
-  const { data, stats, money, go, ui, commit, toast } = useApp()
+  const { data, stats, money, go, commit, toast } = useApp()
   const actions = useActions()
   const active = data.clients.filter((c) => !c.archived)
   const [editingLink, setEditingLink] = useState(false)
@@ -79,8 +77,10 @@ export function Dashboard() {
   const publicUrl = `${location.origin}/${data.profile.username || ''}`
   const next = data.sessions
     .filter((x) => x.date >= TODAY && x.status === 'Programada')
-    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]
-  const nextClient = next ? findClient(data, next.client) : null
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+  const upcoming = next.slice(0, 3)
+  const nextS = upcoming[0]
+  const nextClient = nextS ? findClient(data, nextS.client) : null
 
   // Auto-deslizamiento constante y lineal de la fila de clientes.
   const mosaicRef = useAutoScroll(0.03)
@@ -196,8 +196,7 @@ export function Dashboard() {
         <div><span>Rutinas</span><strong>{data.routines.length}</strong><small>Planes disponibles</small></div>
       </div>
 
-      <div className="modern-grid">
-        <section className="team-block">
+      <section className="team-block">
           <div className="section-heading">
             <h2>Clientes</h2>
             <button onClick={() => go('clientes')}>Ver todos ↗</button>
@@ -230,61 +229,41 @@ export function Dashboard() {
             )}
           </div>
         </section>
-        <section className="agenda-modern">
-          <div className="section-heading">
-            <h2>Agenda de la semana</h2>
-            <button onClick={() => go('calendario')}>Abrir calendario ↗</button>
-          </div>
-          <div className="card white">
-            <WeekStrip
-              selected={ui.calendarDate}
-              data={data}
-              onSelect={actions.selectDay}
-            />
-            <div className="calendar-subhead">
-              <span>
-                {ui.calendarDate === TODAY
-                  ? 'HOY'
-                  : longDate(ui.calendarDate).toUpperCase()}
-              </span>
-              <span>SESIONES & PAGOS</span>
-            </div>
-            <Agenda
-              day={ui.calendarDate}
-              data={data}
-              money={money}
-              limit={3}
-              onOpen={(kind, id) => {
-                if (kind === 'payment') actions.editPayment(id)
-                else actions.focusSession(id)
-              }}
-            />
-          </div>
-        </section>
-      </div>
 
       <div className="focus-stack focus-bottom">
         <section className="focus-card white">
           <div className="card-head">
             <span className="eyebrow">TU PRÓXIMA SESIÓN</span>
-            <span className="pill green">
-              {next ? 'EN AGENDA' : 'ESPACIO LIBRE'}
-            </span>
+            <span className="pill green">{nextS ? 'EN AGENDA' : 'ESPACIO LIBRE'}</span>
           </div>
           <div className="focus-time">
-            {next ? next.time : '—'}
-            <span>{next ? 'h' : 'Tu momento'}</span>
+            {nextS ? nextS.time : '—'}
+            <span>{nextS ? 'h' : 'Tu momento'}</span>
           </div>
-          {next && nextClient ? (
+          {nextS && nextClient ? (
             <>
               <div className="session-person">
                 <Avatar client={nextClient} />
                 <div>
                   <b>{nextClient.name}</b>
-                  <p>{next.title}</p>
+                  <p>{nextS.title}</p>
                 </div>
               </div>
-              <button className="button dark focus-cta" onClick={() => actions.editSession(next.id)}>
+              {upcoming.length > 1 ? (
+                <div className="session-row">
+                  {upcoming.slice(1, 3).map((s) => {
+                    const c = findClient(data, s.client)
+                    return (
+                      <button key={s.id} className="session-mini" onClick={() => actions.focusSession(s.id)}>
+                        <Avatar client={c} />
+                        <b>{c.name}</b>
+                        <small>{s.time}</small>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : null}
+              <button className="button dark focus-cta" onClick={() => actions.focusSession(nextS.id)}>
                 Ver sesión <Icon name="up" />
               </button>
             </>

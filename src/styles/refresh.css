@@ -778,6 +778,10 @@ dialog.app-sheet{max-width:none}
 .plan-pill.featured small{opacity:.72}
 .plan-pill.featured .plan-pill-badge{color:#3a4d18}
 .plan-pill.current{outline:2px solid #d2ff62}
+.plan-pill:disabled,.plan-pill.disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.35)}
+.plan-pill:disabled:hover,.plan-pill.disabled:hover{filter:grayscale(.35);background:#15171b}
+.plan-pill.disabled .plan-pill-main b,.plan-pill.disabled .plan-pill-main small{opacity:.8}
+.plan-pill-badge.muted{color:#8a8f95;font-weight:600}
 .plan-pay{margin-top:14px;display:grid;gap:12px}
 .plan-pay .form-foot{margin-top:0}
 .plan-pay label{display:grid;gap:6px;font-size:13px;color:#c3c7c9}

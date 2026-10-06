@@ -917,13 +917,17 @@ export function MembershipModal() {
         const plan = MEMBERSHIP_PLANS[pid]
         const isCurrent = current.id === pid
         const featured = pid === 'premium'
+        const locked = isPremium && pid === 'free'
         return (
           <button
             key={pid}
-            className={`plan-pill ${featured ? 'featured' : ''} ${isCurrent ? 'current' : ''}`}
+            className={`plan-pill ${featured ? 'featured' : ''} ${isCurrent ? 'current' : ''} ${locked ? 'disabled' : ''}`}
             type="button"
+            disabled={locked}
+            aria-disabled={locked}
+            title={locked ? 'Ya tienes Premium activo' : undefined}
             onClick={() => {
-              if (isCurrent) return
+              if (locked || isCurrent) return
               if (pid === 'premium') {
                 if (cloudEnabled) setStep('method')
                 else activateLocal('premium')
@@ -938,6 +942,8 @@ export function MembershipModal() {
             </div>
             {isCurrent ? (
               <span className="plan-pill-badge">Activo</span>
+            ) : locked ? (
+              <span className="plan-pill-badge muted">No disponible</span>
             ) : featured ? (
               <span className="plan-pill-badge">Recomendado</span>
             ) : (

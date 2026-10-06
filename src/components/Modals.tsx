@@ -19,7 +19,7 @@ import {
 } from '../lib/utils'
 import { exportData } from '../lib/backup'
 import { PLANS as MEMBERSHIP_PLANS, planOf } from '../lib/plans'
-import { cloudCreatePremiumRequest, cloudGetAppSettings, cloudMyPremiumRequests, type AppSettings, type PremiumMethod, type PremiumRequestRow } from '../lib/cloud'
+import { cloudCreatePremiumRequest, cloudDeleteClient, cloudGetAppSettings, cloudMyPremiumRequests, type AppSettings, type PremiumMethod, type PremiumRequestRow } from '../lib/cloud'
 import { fileToDataUrl, fitImage, loadImage } from '../lib/image'
 import { ImageEditor } from './ImageEditor'
 import { Icon } from './Icon'
@@ -703,22 +703,24 @@ export function MeasurementFormModal({ id }: { id?: string }) {
 
 export function AssignRoutineModal({ id }: { id: string }) {
   const { data, commit, closeModal, toast, error, fail } = useForm()
+  const { cloudEnabled, cloudUser } = useApp()
   const routine = findRoutine(data, id) ?? null
   const activeClients = data.clients.filter((c) => !c.archived)
+  const [clientId, setClientId] = useState(activeClients[0]?.id ?? '')
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
     try {
-      const target = data.clients.find((c) => c.id === x.client)
+      const target = data.clients.find((c) => c.id === clientId)
       if (!target) throw new Error('Selecciona un cliente.')
       const date = x.date || TODAY
       commit((d) => {
-        const c = d.clients.find((cc) => cc.id === x.client)
+        const c = d.clients.find((cc) => cc.id === clientId)
         if (c) c.routine = id
         d.sessions.push({
           id: uid(),
-          client: x.client,
+          client: clientId,
           title: routine?.name || 'Entrenamiento',
           date,
           time: '07:00',
@@ -735,19 +737,42 @@ export function AssignRoutineModal({ id }: { id: string }) {
     }
   }
 
+  async function removeClient() {
+    if (!clientId) { toast('Selecciona un cliente.'); return }
+    const name = data.clients.find((c) => c.id === clientId)?.name ?? 'este cliente'
+    if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
+    if (cloudEnabled && cloudUser) await cloudDeleteClient(clientId)
+    commit((d) => {
+      d.clients = d.clients.filter((c) => c.id !== clientId)
+      d.sessions = d.sessions.filter((s) => s.client !== clientId)
+      d.measurements = d.measurements.filter((m) => m.client !== clientId)
+      d.payments = d.payments.filter((p) => p.client !== clientId)
+    })
+    closeModal()
+    toast('Cliente eliminado.')
+  }
+
   return (
     <FormWrap kind="assign" id={id} error={error} onSubmit={onSubmit}>
-      <SelectField name="client" label="Cliente" value="">
-        {activeClients.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </SelectField>
+      <div>
+        <label htmlFor="f-client">Cliente</label>
+        <select id="f-client" name="client" value={clientId} onChange={(e) => setClientId(e.target.value)}>
+          {activeClients.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <Field name="date" label="Fecha a asignar" type="date" value={TODAY} required />
       <div className="full alert-info">
         Se asignará <b>{routine?.name}</b> al cliente y se agendará una sesión ese día.
         Sus sesiones anteriores se conservan.
+      </div>
+      <div className="full">
+        <button className="button danger" type="button" onClick={removeClient}>
+          <Icon name="trash" /> Eliminar cliente
+        </button>
       </div>
     </FormWrap>
   )

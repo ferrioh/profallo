@@ -334,6 +334,13 @@ export async function cloudSaveReviews(userId: string, reviews: unknown): Promis
   return !error
 }
 
+/** Elimina un cliente (y en cascada sus sesiones, mediciones y pagos). */
+export async function cloudDeleteClient(clientId: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase.from('clients').delete().eq('id', clientId)
+  return !error
+}
+
 /** Cambia la contraseña verificando primero la actual. */
 export async function cloudChangePassword(
   email: string,

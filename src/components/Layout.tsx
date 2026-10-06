@@ -74,10 +74,6 @@ export function Sidebar() {
     })
     return best
   }
-  function centerOf(i: number) {
-    const el = navButtons()[i]
-    return el ? el.offsetLeft + el.offsetWidth / 2 : 0
-  }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
     dragRef.current = { startX: e.clientX, target: navIndex() }
     setDragging(true)
@@ -85,10 +81,12 @@ export function Sidebar() {
   }
   function onNavMove(e: ReactPointerEvent<HTMLElement>) {
     if (!dragRef.current) return
-    const idx = nearestIndex(e.clientX)
-    dragRef.current.target = idx
-    const activeCenter = pill.left + pill.width / 2
-    setDragDx(centerOf(idx) - activeCenter)
+    // Movilidad libre: el píldora sigue el dedo sin saltos.
+    const d = e.clientX - dragRef.current.startX
+    const w = navRef.current?.clientWidth ?? 320
+    setDragDx(Math.max(-w, Math.min(w, d)))
+    // Tracker: recuerda el botón más cercano para dejarlo ahí al soltar.
+    dragRef.current.target = nearestIndex(e.clientX)
   }
   function onNavUp() {
     const target = dragRef.current?.target

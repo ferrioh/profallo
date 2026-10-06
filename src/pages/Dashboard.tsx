@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
@@ -8,6 +8,7 @@ import { WeekStrip } from '../components/WeekStrip'
 import { Agenda } from '../components/Agenda'
 import { Verified } from '../components/Layout'
 import { ReviewsSection } from '../components/Reviews'
+import { useAutoScroll } from '../hooks/useAutoScroll'
 import { MOTIVATIONAL_MAIN, MOTIVATIONAL_SUB, randomFrom } from '../lib/phrases'
 import {
   clientPhotos,
@@ -87,38 +88,8 @@ export function Dashboard() {
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0]
   const nextClient = next ? findClient(data, next.client) : null
 
-  // Auto-deslizamiento lento de la fila de clientes (derecha a izquierda).
-  const mosaicRef = useRef<HTMLDivElement>(null)
-  const pausedRef = useRef(false)
-  useEffect(() => {
-    const el = mosaicRef.current
-    if (!el) return
-    let raf = 0
-    let pos = el.scrollLeft
-    const step = () => {
-      const max = el.scrollWidth - el.clientWidth
-      if (pausedRef.current) {
-        pos = el.scrollLeft
-      } else if (max > 4) {
-        pos += 0.4
-        if (pos >= max) pos = 0
-        el.scrollLeft = pos
-      }
-      raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    const pause = () => { pausedRef.current = true }
-    const resume = () => { pausedRef.current = false }
-    el.addEventListener('pointerdown', pause)
-    el.addEventListener('pointerup', resume)
-    el.addEventListener('pointercancel', resume)
-    return () => {
-      cancelAnimationFrame(raf)
-      el.removeEventListener('pointerdown', pause)
-      el.removeEventListener('pointerup', resume)
-      el.removeEventListener('pointercancel', resume)
-    }
-  }, [])
+  // Auto-deslizamiento constante y lineal de la fila de clientes.
+  const mosaicRef = useAutoScroll(0.03)
 
   async function shareProfile() {
     if (!data.profile.username) {

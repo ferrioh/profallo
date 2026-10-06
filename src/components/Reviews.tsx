@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { findClient, TODAY, uid } from '../lib/utils'
 import { cloudSaveReviews } from '../lib/cloud'
+import { useAutoScroll } from '../hooks/useAutoScroll'
 import type { Profile } from '../types'
 
 type Review = NonNullable<Profile['reviews']>[number]
@@ -11,8 +12,7 @@ type Review = NonNullable<Profile['reviews']>[number]
 export function ReviewsSection() {
   const { data, commit, toast, cloudEnabled, cloudUser } = useApp()
   const reviews = data.profile.reviews ?? []
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const pausedRef = useRef(false)
+  const scrollRef = useAutoScroll(0.03)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -28,36 +28,6 @@ export function ReviewsSection() {
       })
     }
   }
-
-  // Auto-deslizamiento lento de las reseñas (pausa al tocar, reanuda al soltar).
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    let raf = 0
-    let pos = el.scrollLeft
-    const step = () => {
-      const max = el.scrollWidth - el.clientWidth
-      if (pausedRef.current) pos = el.scrollLeft
-      else if (max > 4) {
-        pos += 0.35
-        if (pos >= max) pos = 0
-        el.scrollLeft = pos
-      }
-      raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    const pause = () => { pausedRef.current = true }
-    const resume = () => { pausedRef.current = false }
-    el.addEventListener('pointerdown', pause)
-    el.addEventListener('pointerup', resume)
-    el.addEventListener('pointercancel', resume)
-    return () => {
-      cancelAnimationFrame(raf)
-      el.removeEventListener('pointerdown', pause)
-      el.removeEventListener('pointerup', resume)
-      el.removeEventListener('pointercancel', resume)
-    }
-  }, [])
 
   function reset() {
     setFormOpen(false)

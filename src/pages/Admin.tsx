@@ -18,6 +18,7 @@ import { addDays, iso, longDate, month, parseDate, TODAY } from '../lib/utils'
 import { currentAccount, setAccountRole, setAccountStatus, useAccounts, useAuthVersion } from '../lib/auth'
 import {
   cloudApprovePremium,
+  cloudDeleteAccount,
   cloudGetAppSettings,
   cloudListPremiumRequests,
   cloudListProfiles,
@@ -202,6 +203,15 @@ export function AdminPage() {
     })
   }
 
+  function deleteCloudAccount(id: string, name: string) {
+    if (!window.confirm(`¿Eliminar la cuenta de ${name}? Se borrarán sus datos.`)) return
+    cloudDeleteAccount(id).then((ok) => {
+      if (!ok) { toast('No se pudo eliminar la cuenta.'); return }
+      setCloudAccounts((prev) => prev?.filter((a) => a.id !== id) ?? null)
+      toast('Cuenta eliminada.')
+    })
+  }
+
   function approvePremium(req: PremiumRequestRow) {
     cloudApprovePremium(req).then((ok) => {
       if (!ok) { toast('No se pudo aprobar.'); return }
@@ -321,6 +331,7 @@ export function AdminPage() {
                         <button className="button light" onClick={() => setCloudRole(a.id, a.role === 'admin' ? 'trainer' : 'admin')}>
                           {a.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
                         </button>
+                        <button className="button light" onClick={() => deleteCloudAccount(a.id, a.name)}>Eliminar</button>
                       </div>
                     </article>
                   ))

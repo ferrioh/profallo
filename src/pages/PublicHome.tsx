@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
 import { PasswordInput } from '../components/PasswordInput'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
-import { cloudSignIn, cloudSignUp } from '../lib/cloud'
+import { cloudGetProfile, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
 
 const SLIDES = [
   'assets/trainer-hero-v2.png',
@@ -55,6 +55,15 @@ export function PublicHome() {
     if (cloudEnabled) {
       const res = await cloudSignIn(x.email ?? '', x.password ?? '')
       if (!res.ok) { setError(res.error ?? 'No se pudo iniciar sesión.'); return }
+      const uid = res.session?.user.id
+      if (uid) {
+        const prof = await cloudGetProfile(uid)
+        if (prof?.status === 'rejected') {
+          await cloudSignOut()
+          setError('Tu acceso fue denegado por el administrador.')
+          return
+        }
+      }
       persistEmail(x.email ?? '')
       toast('Bienvenido.')
       enter()

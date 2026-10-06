@@ -8,7 +8,8 @@ import { ImageEditor } from '../components/ImageEditor'
 import { fileToDataUrl } from '../lib/image'
 import { planOf, trialDaysLeft } from '../lib/plans'
 import { logout } from '../lib/auth'
-import { cloudSignOut } from '../lib/cloud'
+import { cloudSignOut, cloudChangePassword } from '../lib/cloud'
+import { PasswordInput } from '../components/PasswordInput'
 import { socialUrl } from '../lib/social'
 
 const CURRENCIES = ['USD', 'EUR', 'VES']
@@ -53,6 +54,19 @@ export function ProfilePage() {
       }
     })
     toast('Perfil actualizado.')
+  }
+
+  async function changePassword(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const x = Object.fromEntries(new FormData(form)) as Record<string, string>
+    if (!cloudEnabled) { toast('Disponible con tu cuenta en la nube.'); return }
+    if ((x.next ?? '').length < 8) { toast('La nueva contraseña debe tener al menos 8 caracteres.'); return }
+    if (x.next !== x.confirm) { toast('Las contraseñas nuevas no coinciden.'); return }
+    const res = await cloudChangePassword(data.profile.email ?? '', x.current ?? '', x.next ?? '')
+    if (!res.ok) { toast(res.error ?? 'No se pudo cambiar la contraseña.'); return }
+    toast('Contraseña actualizada.')
+    form.reset()
   }
 
   const SUPPORT_NUMBER = '584221126199'
@@ -142,6 +156,28 @@ export function ProfilePage() {
             </div>
             <div className="form-foot">
               <button className="button primary" type="submit">Guardar <Icon name="check" /></button>
+            </div>
+          </form>
+        </Option>
+
+        <Option id="clave" icon="eye" label="Cambiar contraseña">
+          <form onSubmit={changePassword}>
+            <div className="form-grid">
+              <div className="full">
+                <label htmlFor="pOldPass">Contraseña actual</label>
+                <PasswordInput id="pOldPass" name="current" required autoComplete="current-password" placeholder="Tu contraseña actual" />
+              </div>
+              <div>
+                <label htmlFor="pNewPass">Nueva contraseña</label>
+                <PasswordInput id="pNewPass" name="next" required minLength={8} autoComplete="new-password" placeholder="Mínimo 8" />
+              </div>
+              <div>
+                <label htmlFor="pNewPass2">Repetir nueva</label>
+                <PasswordInput id="pNewPass2" name="confirm" required minLength={8} autoComplete="new-password" placeholder="Repite la nueva" />
+              </div>
+            </div>
+            <div className="form-foot">
+              <button className="button primary" type="submit">Cambiar contraseña <Icon name="check" /></button>
             </div>
           </form>
         </Option>

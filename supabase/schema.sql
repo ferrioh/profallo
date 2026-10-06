@@ -472,4 +472,21 @@ begin
 end; $$;
 grant execute on function public.public_client_week(text) to anon, authenticated;
 
+-- ------------------------------------------------------------
+-- Eliminar cuenta (solo admin): borra el perfil (y sus datos) y el usuario de auth.
+-- ------------------------------------------------------------
+create or replace function public.admin_delete_account(p_id text)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid()::text and role = 'admin') then
+    return false;
+  end if;
+  delete from public.profiles where id = p_id;
+  delete from auth.users where id = p_id::uuid;
+  return true;
+exception when others then
+  return false;
+end; $$;
+grant execute on function public.admin_delete_account(text) to authenticated;
+
 commit;

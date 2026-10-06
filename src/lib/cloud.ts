@@ -334,6 +334,28 @@ export async function cloudSaveReviews(userId: string, reviews: unknown): Promis
   return !error
 }
 
+/** Cambia la contraseña verificando primero la actual. */
+export async function cloudChangePassword(
+  email: string,
+  current: string,
+  next: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Supabase no está configurado.' }
+  const { error: signErr } = await supabase.auth.signInWithPassword({ email, password: current })
+  if (signErr) return { ok: false, error: 'La contraseña actual no es correcta.' }
+  const { error } = await supabase.auth.updateUser({ password: next })
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
+/** Elimina una cuenta (solo admin). */
+export async function cloudDeleteAccount(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { data, error } = await supabase.rpc('admin_delete_account', { p_id: id })
+  if (error) return false
+  return Boolean(data)
+}
+
 /* ----------------------------- Datos ----------------------------- */
 
 export async function loadCloudData(userId: string, base: Profile): Promise<AppData | null> {

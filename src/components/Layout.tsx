@@ -52,7 +52,7 @@ export function Sidebar() {
   const activeView = view === 'cliente-perfil' ? 'clientes' : view
   const navRef = useRef<HTMLElement>(null)
   const [pill, setPill] = useState({ left: 0, width: 0, ready: false })
-  const dragRef = useRef<{ x: number } | null>(null)
+  const dragRef = useRef<{ startX: number; dx: number } | null>(null)
   const [dragDx, setDragDx] = useState(0)
   const [dragging, setDragging] = useState(false)
 
@@ -68,22 +68,24 @@ export function Sidebar() {
     }
   }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
-    dragRef.current = { x: e.clientX }
+    dragRef.current = { startX: e.clientX, dx: 0 }
     setDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   function onNavMove(e: ReactPointerEvent<HTMLElement>) {
     if (!dragRef.current) return
-    const d = e.clientX - dragRef.current.x
-    setDragDx(Math.max(-90, Math.min(90, d)))
+    const d = e.clientX - dragRef.current.startX
+    dragRef.current.dx = d
+    const w = navRef.current?.clientWidth ?? 320
+    setDragDx(Math.max(-w, Math.min(w, d)))
   }
   function onNavUp() {
-    const d = dragDx
+    const d = dragRef.current?.dx ?? 0
     dragRef.current = null
     setDragging(false)
     setDragDx(0)
-    if (d < -40) switchBy(1)
-    else if (d > 40) switchBy(-1)
+    if (d < -30) switchBy(1)
+    else if (d > 30) switchBy(-1)
   }
 
   useEffect(() => {

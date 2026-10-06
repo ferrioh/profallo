@@ -24,6 +24,7 @@ create table if not exists public.profiles (
   gym           text,
   username      text unique,
   bio           text,
+  accent        text default 'lime',
   notification_state jsonb not null default '{}'::jsonb,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
@@ -47,6 +48,7 @@ alter table public.profiles add column if not exists tiktok text;
 alter table public.profiles add column if not exists gym text;
 alter table public.profiles add column if not exists username text;
 alter table public.profiles add column if not exists bio text;
+alter table public.profiles add column if not exists accent text default 'lime';
 alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
@@ -361,6 +363,7 @@ begin
     'name', v.name, 'specialty', v.specialty, 'photo', v.photo_url,
     'phone', v.phone, 'instagram', v.instagram, 'tiktok', v.tiktok, 'email', v.email,
     'username', v.username, 'gym', v.gym, 'bio', v.bio, 'verified', v.verified,
+    'accent', coalesce(v.accent, 'lime'),
     'clients', v_clients, 'routines', v_routines, 'sessionsMonth', v_sessions,
     'photos', v_photos
   );

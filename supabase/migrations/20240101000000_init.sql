@@ -21,6 +21,7 @@ create table if not exists public.profiles (
   id_number     text,
   instagram     text,
   tiktok        text,
+  accent        text default 'lime',
   gym           text,
   specialty     text default 'Entrenamiento personal',
   currency      text not null default 'USD',
@@ -41,6 +42,7 @@ alter table public.profiles add column if not exists phone text;
 alter table public.profiles add column if not exists id_number text;
 alter table public.profiles add column if not exists instagram text;
 alter table public.profiles add column if not exists tiktok text;
+alter table public.profiles add column if not exists accent text default 'lime';
 alter table public.profiles add column if not exists gym text;
 
 -- ------------------------------------------------------------

@@ -195,6 +195,7 @@ export function rowToProfile(r: Row, base: Profile): Profile {
     idNumber: or(r.id_number) || base.idNumber,
     instagram: or(r.instagram) || base.instagram,
     tiktok: or(r.tiktok) || base.tiktok,
+    accent: r.accent === 'cyan' || r.accent === 'amber' || r.accent === 'lime' ? r.accent : (base.accent ?? 'lime'),
     bio: or(r.bio) || base.bio,
   }
 }
@@ -210,6 +211,7 @@ export function profileToRow(p: Profile, id: string): Row {
     id_number: p.idNumber ?? null,
     instagram: p.instagram ?? null,
     tiktok: p.tiktok ?? null,
+    accent: p.accent ?? 'lime',
     membership: p.membership ?? 'free',
     verified: Boolean(p.verified),
     role: p.role ?? 'trainer',
@@ -532,6 +534,7 @@ export interface PublicTrainer {
   username: string
   gym: string
   verified: boolean
+  accent: string
   clients: number
   routines: number
   sessionsMonth: number

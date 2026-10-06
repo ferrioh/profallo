@@ -1,7 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Icon } from '../components/Icon'
 import { cloudPublicProfile, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
 import { socialHandle, socialUrl } from '../lib/social'
+
+const ACCENT: Record<string, string> = {
+  lime: '#d2ff62',
+  cyan: '#5ff2e0',
+  amber: '#ffb454',
+}
+
+const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n))
+
+/** Mide la eficiencia de entrenamiento (porcentaje) y la anima al entrar. */
+function EfficiencyMeter({ value }: { value: number }) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const start = performance.now()
+    const dur = 1500
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setN(Math.round(value * eased))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return (
+    <div className="pt-metric">
+      <div className="pt-metric-head">
+        <span>Eficiencia de entrenamiento</span>
+        <b>{n}%</b>
+      </div>
+      <div className="pt-metric-track">
+        <i style={{ width: `${n}%` }} />
+      </div>
+      <small>En crecimiento constante</small>
+    </div>
+  )
+}
 
 export function PublicTrainer({ username }: { username: string }) {
   const [t, setT] = useState<PublicTrainerData | null>(null)
@@ -41,6 +79,8 @@ export function PublicTrainer({ username }: { username: string }) {
     )
   }
 
+  const accent = ACCENT[t.accent] ?? ACCENT.lime
+  const efficiency = Math.round(clamp(58 + t.clients * 3 + t.routines * 1.2 + t.sessionsMonth * 0.8, 55, 98))
   const wa = t.phone
     ? `https://wa.me/${t.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${t.name}, quiero unirme a tu equipo 💪`)}`
     : ''
@@ -48,7 +88,7 @@ export function PublicTrainer({ username }: { username: string }) {
   const tiktok = socialUrl('tiktok', t.tiktok)
 
   return (
-    <div className="public-trainer">
+    <div className="public-trainer" style={{ '--pt-accent': accent } as CSSProperties}>
       {photos.length ? (
         <div className="pt-bg" aria-hidden="true">
           {photos.map((src, i) => (
@@ -66,13 +106,14 @@ export function PublicTrainer({ username }: { username: string }) {
           {t.verified ? <span className="verified" title="Entrenador verificado"><Icon name="check" /></span> : null}
         </h1>
         {t.bio ? <p className="pt-bio">{t.bio}</p> : null}
-        {t.gym ? <span className="pt-gym"><Icon name="dumbbell" /> {t.gym}</span> : null}
 
-        <div className="pt-stats">
+        <div className="pt-stats pt-glass-block">
           <div><b>{t.routines}</b><span>Rutinas</span></div>
           <div><b>{t.clients}</b><span>Clientes</span></div>
           <div><b>{t.sessionsMonth}</b><span>Sesiones/mes</span></div>
         </div>
+
+        <EfficiencyMeter value={efficiency} />
 
         {insta || tiktok ? (
           <div className="pt-social">

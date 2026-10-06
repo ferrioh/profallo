@@ -821,3 +821,34 @@ dialog.app-sheet{max-width:none}
 .pc-contact svg{width:21px;height:21px}
 .pc-foot{display:flex;justify-content:space-between;align-items:center;color:#8a9096;font-size:11px;margin-top:6px}
 .pc-brand{color:#d2ff62;font-weight:800;letter-spacing:.14em}
+/* Ficha pública: acento configurable + info en glass + métrica animada */
+.public-trainer .pt-photo{border-color:var(--pt-accent,#d2ff62)}
+.public-trainer .verified{background:var(--pt-accent,#d2ff62)}
+.public-trainer .pt-brand{color:var(--pt-accent,#d2ff62)}
+.public-trainer .pt-join{background:var(--pt-accent,#d2ff62)}
+.public-trainer .pt-social-link svg{color:var(--pt-accent,#d2ff62)}
+.pt-glass-block{background:#ffffff12;backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);border:1px solid #ffffff26}
+.public-trainer .pt-stats>div{background:#ffffff10;border:1px solid #ffffff22;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.public-trainer .pt-stats b{color:var(--pt-accent,#d2ff62)}
+.pt-metric{width:100%;display:grid;gap:8px;margin:8px 0 2px;text-align:left}
+.pt-metric-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pt-metric-head span{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#c9ccc2}
+.pt-metric-head b{font-size:26px;font-weight:700;letter-spacing:-.5px;color:var(--pt-accent,#d2ff62)}
+.pt-metric-track{height:7px;border-radius:99px;background:#ffffff1a;overflow:hidden}
+.pt-metric-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffffff55,var(--pt-accent,#d2ff62));box-shadow:0 0 14px var(--pt-accent,#d2ff62)}
+.pt-metric small{font-size:11.5px;color:#a9b09a}
+/* Selector de color de la ficha */
+.accent-picker{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
+.accent-picker>span{font-size:12px;color:#c8cad0}
+.accent-swatches{display:flex;gap:10px}
+.accent-swatch{width:34px;height:34px;border-radius:50%;border:2px solid #ffffff22;padding:0;min-height:0;cursor:pointer;position:relative}
+.accent-swatch.active{border-color:#fff;box-shadow:0 0 0 2px #ffffff33}
+.accent-swatch svg{width:16px;height:16px;color:#15171b}
+/* Tercera tarjeta glass en la portada (Rutinas) */
+.coach-stage{min-height:445px}
+.stage-orbit.orbit-c{top:338px}
+.full-profile{min-height:540px}
+.full-profile .orbit-c{top:400px}
+@media(max-width:1150px){.coach-stage{min-height:440px}}
+@media(max-width:800px){.coach-stage{min-height:465px}.stage-orbit.orbit-c{top:358px}}
+@media(max-width:560px){.coach-stage{min-height:425px}.stage-orbit.orbit-c{top:324px}.full-profile .orbit-c{top:380px}}

@@ -115,6 +115,7 @@ export interface Profile {
   bio?: string
   role?: 'trainer' | 'admin'
   membership?: 'free' | 'premium'
+  accent?: 'lime' | 'cyan' | 'amber'
   trialStart?: string
   verified?: boolean
   reviews?: Array<{ id: string; client: string; rating: number; text: string; date: string }>

@@ -17,6 +17,12 @@ import {
   TODAY,
 } from '../lib/utils'
 
+const ACCENTS: Array<{ id: 'lime' | 'cyan' | 'amber'; color: string; label: string }> = [
+  { id: 'lime', color: '#d2ff62', label: 'Lima' },
+  { id: 'cyan', color: '#5ff2e0', label: 'Cian' },
+  { id: 'amber', color: '#ffb454', label: 'Ámbar' },
+]
+
 export function CoachStage({ full = false }: { full?: boolean }) {
   const { data, stats, go } = useApp()
   const totalSessions = data.sessions.filter((s) => s.status !== 'Cancelada').length
@@ -77,6 +83,16 @@ export function CoachStage({ full = false }: { full?: boolean }) {
         <strong>{totalSessions}</strong>
         <span>Sesiones</span>
       </button>
+      <button
+        className="stage-orbit orbit-c glass-button"
+        onClick={() => go('rutinas')}
+      >
+        <span className="orbit-icon">
+          <Icon name="dumbbell" />
+        </span>
+        <strong>{data.routines.length}</strong>
+        <span>Rutinas</span>
+      </button>
       <div className="stage-caption">
         <i /> COACH BETTER. EVERY DAY.
       </div>
@@ -125,6 +141,11 @@ export function Dashboard() {
     toast('Descripción guardada.')
   }
 
+  function setAccent(id: 'lime' | 'cyan' | 'amber') {
+    commit((d) => { d.profile.accent = id })
+    toast('Color de tu ficha actualizado.')
+  }
+
   return (
     <div className="dashboard-home">
       <PageHead
@@ -170,6 +191,22 @@ export function Dashboard() {
               <span className="eyebrow">DESCRIPCIÓN DE TU FICHA</span>
               <textarea value={bioDraft} onChange={(e) => setBioDraft(e.target.value)} maxLength={240} placeholder="Una pequeña descripción para tus clientes" />
               <button className="button light" type="button" onClick={saveBio}><Icon name="check" /> Guardar descripción</button>
+            </div>
+            <div className="accent-picker">
+              <span>Color de tu ficha:</span>
+              <div className="accent-swatches">
+                {ACCENTS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    title={a.label}
+                    aria-label={`Color ${a.label}`}
+                    className={`accent-swatch ${(data.profile.accent ?? 'lime') === a.id ? 'active' : ''}`}
+                    style={{ background: a.color }}
+                    onClick={() => setAccent(a.id)}
+                  />
+                ))}
+              </div>
             </div>
             <div className="share-preview">
               <span className="share-preview-photo">{data.profile.photo ? <img src={data.profile.photo} alt={data.profile.name} /> : <Icon name="user" />}</span>

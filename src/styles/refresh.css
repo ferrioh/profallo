@@ -884,6 +884,8 @@ dialog.app-sheet{max-width:none}
 .rev-stars-input button{background:transparent;color:#5b5e66;font-size:21px;line-height:1;padding:1px;min-width:0}
 .rev-stars-input button.on{color:#ffd23f;text-shadow:0 0 8px #ffd23f66}
 .rev-form textarea{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+.pay-backup-toggle{display:flex;align-items:center;gap:10px}
+.pay-backup-toggle input{width:auto;min-height:0}
 /* Reseñas en la ficha pública */
 .pt-reviews{width:100%;margin:10px 0 2px;text-align:left}
 .pt-reviews-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}

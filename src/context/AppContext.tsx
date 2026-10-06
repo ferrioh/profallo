@@ -19,7 +19,9 @@ import { clone, loadData, persist } from '../lib/storage'
 import { computeStats, money as fmtMoney, month, TODAY, type Stats } from '../lib/utils'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
+  cloudBackupNow,
   cloudEnsureProfile,
+  cloudGetAppSettings,
   cloudGetSessionUserId,
   cloudOnAuth,
   loadCloudData,
@@ -110,11 +112,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   cloudUserRef.current = cloudUser
   const dirtyRef = useRef(false)
   const cloudLoadedRef = useRef(false)
+  const backupEnabledRef = useRef(true)
+  const lastBackupRef = useRef(0)
   const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const pushCloud = useCallback(async (uid: string, snapshot: AppData) => {
     const ok = await saveCloudData(uid, snapshot)
-    if (ok) dirtyRef.current = false
+    if (ok) {
+      dirtyRef.current = false
+      // Respaldo automático (salvavidas): como máximo cada 2 minutos.
+      if (backupEnabledRef.current && Date.now() - lastBackupRef.current > 120000) {
+        lastBackupRef.current = Date.now()
+        void cloudBackupNow(uid, snapshot)
+      }
+    }
     return ok
   }, [])
 
@@ -206,6 +217,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dataRef.current = next
     setData(next)
     setStorageAvailable(persist(next))
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseEnabled) return
+    cloudGetAppSettings().then((s) => { if (s) backupEnabledRef.current = s.backup_enabled })
   }, [])
 
   useEffect(() => {

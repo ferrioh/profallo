@@ -489,4 +489,22 @@ exception when others then
 end; $$;
 grant execute on function public.admin_delete_account(text) to authenticated;
 
+-- ------------------------------------------------------------
+-- Respaldos automáticos (salvavidas). Se conservan los 5 más recientes por entrenador.
+-- ------------------------------------------------------------
+create table if not exists public.data_backups (
+  id         uuid primary key default gen_random_uuid(),
+  trainer_id text not null references public.profiles(id) on delete cascade,
+  data       jsonb not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists data_backups_trainer_idx on public.data_backups (trainer_id, created_at desc);
+alter table public.data_backups enable row level security;
+drop policy if exists data_backups_owner on public.data_backups;
+create policy data_backups_owner on public.data_backups
+  for all using (public.is_admin() or trainer_id = auth.uid()::text)
+  with check (public.is_admin() or trainer_id = auth.uid()::text);
+
+alter table public.app_settings add column if not exists backup_enabled boolean not null default true;
+
 commit;

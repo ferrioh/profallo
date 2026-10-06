@@ -8,14 +8,14 @@ import { ImageEditor } from '../components/ImageEditor'
 import { fileToDataUrl } from '../lib/image'
 import { planOf, trialDaysLeft } from '../lib/plans'
 import { logout } from '../lib/auth'
-import { cloudSignOut, cloudChangePassword } from '../lib/cloud'
+import { cloudSignOut, cloudChangePassword, cloudLatestBackup } from '../lib/cloud'
 import { PasswordInput } from '../components/PasswordInput'
 import { socialUrl } from '../lib/social'
 
 const CURRENCIES = ['USD', 'EUR', 'VES']
 
 export function ProfilePage() {
-  const { data, stats, commit, toast, openModal, leave, cloudEnabled } = useApp()
+  const { data, stats, commit, toast, openModal, leave, cloudEnabled, cloudUser, replaceData } = useApp()
   const photoInput = useRef<HTMLInputElement>(null)
   const [openOpt, setOpenOpt] = useState<string | null>(null)
   const [editSrc, setEditSrc] = useState<string | null>(null)
@@ -67,6 +67,15 @@ export function ProfilePage() {
     if (!res.ok) { toast(res.error ?? 'No se pudo cambiar la contraseña.'); return }
     toast('Contraseña actualizada.')
     form.reset()
+  }
+
+  async function restoreBackup() {
+    if (!cloudEnabled || !cloudUser) { toast('Disponible con tu cuenta en la nube.'); return }
+    if (!window.confirm('¿Restaurar el último respaldo? Reemplazará tus datos actuales.')) return
+    const backup = await cloudLatestBackup(cloudUser)
+    if (!backup) { toast('No hay respaldos disponibles.'); return }
+    replaceData(backup)
+    toast('Respaldo restaurado.')
   }
 
   const SUPPORT_NUMBER = '584221126199'
@@ -195,6 +204,13 @@ export function ProfilePage() {
             <div><b>{data.routines.length}</b><span>rutinas creadas</span></div>
             <div><b>{totalExercises}</b><span>ejercicios en total</span></div>
             <div><b>{categories}</b><span>enfoques distintos</span></div>
+          </div>
+        </Option>
+
+        <Option id="respaldo" icon="download" label="Respaldo y restauración" meta="Salvavidas">
+          <div className="legal-text">
+            <p>Tus datos se respaldan automáticamente en la nube (se guardan los 5 más recientes). Si algo se borra, puedes restaurar el último respaldo.</p>
+            <button className="button primary" type="button" onClick={restoreBackup}><Icon name="up" /> Restaurar último respaldo</button>
           </div>
         </Option>
 

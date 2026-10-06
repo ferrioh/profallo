@@ -53,7 +53,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>('resumen')
   const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
-  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '' })
+  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true })
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
@@ -230,7 +230,7 @@ export function AdminPage() {
   function savePaySettings(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
-    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '' }
+    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on' }
     cloudSaveAppSettings(s).then((ok) => {
       if (ok) { setPaySettings(s); toast('Datos de pago guardados.') }
       else toast('No se pudieron guardar los datos de pago.')
@@ -488,6 +488,12 @@ export function AdminPage() {
               <div className="full"><label>Pago Móvil</label><textarea name="pay_pagomovil" defaultValue={paySettings.pay_pagomovil} rows={2} placeholder="Banco, teléfono y cédula del titular" /></div>
               <div className="full"><label>Binance</label><textarea name="pay_binance" defaultValue={paySettings.pay_binance} rows={2} placeholder="Email / Wallet y red (BEP20, etc.)" /></div>
               <div className="full"><label>Zelle</label><textarea name="pay_zelle" defaultValue={paySettings.pay_zelle} rows={2} placeholder="Email y nombre del titular" /></div>
+              <div className="full">
+                <label className="pay-backup-toggle">
+                  <input type="checkbox" name="backup_enabled" defaultChecked={paySettings.backup_enabled} />
+                  <span>Respaldo automático de datos (salvavidas) activado</span>
+                </label>
+              </div>
             </div>
             <div className="form-foot"><button className="button primary" type="submit">Guardar datos de pago <Icon name="check" /></button></div>
           </form>

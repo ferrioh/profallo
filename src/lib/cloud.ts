@@ -460,6 +460,7 @@ export interface AppSettings {
   pay_pagomovil: string
   pay_binance: string
   pay_zelle: string
+  backup_enabled: boolean
 }
 
 export type PremiumMethod = 'pagomovil' | 'binance' | 'zelle'
@@ -488,6 +489,7 @@ export async function cloudGetAppSettings(): Promise<AppSettings | null> {
     pay_pagomovil: or(row.pay_pagomovil),
     pay_binance: or(row.pay_binance),
     pay_zelle: or(row.pay_zelle),
+    backup_enabled: row.backup_enabled !== false,
   }
 }
 
@@ -497,6 +499,39 @@ export async function cloudSaveAppSettings(s: AppSettings): Promise<boolean> {
     .from('app_settings')
     .upsert({ id: 'global', ...s, updated_at: new Date().toISOString() })
   return !error
+}
+
+/* ------------------- Respaldos (salvavidas) ------------------- */
+
+/** Guarda un respaldo del entrenador y conserva solo los 5 más recientes. */
+export async function cloudBackupNow(userId: string, data: AppData): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase.from('data_backups').insert({ trainer_id: userId, data })
+  if (error) return false
+  const { data: rows } = await supabase
+    .from('data_backups')
+    .select('id')
+    .eq('trainer_id', userId)
+    .order('created_at', { ascending: false })
+    .range(5, 200)
+  if (rows && rows.length) {
+    await supabase.from('data_backups').delete().in('id', (rows as Row[]).map((r) => r.id as string))
+  }
+  return true
+}
+
+/** Devuelve el respaldo más reciente del entrenador. */
+export async function cloudLatestBackup(userId: string): Promise<AppData | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('data_backups')
+    .select('data')
+    .eq('trainer_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error || !data) return null
+  return ((data as Row).data as AppData) ?? null
 }
 
 export async function cloudCreatePremiumRequest(req: {

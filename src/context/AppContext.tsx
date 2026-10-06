@@ -153,6 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
   const leave = useCallback(() => {
     try { sessionStorage.removeItem('protrainer.entered') } catch { /* Temporary browser session */ }
+    try { localStorage.removeItem('protrainer.local.v1') } catch { /* ignore */ }
     setEntered(false)
     location.hash = 'bienvenida'
     window.scrollTo(0, 0)

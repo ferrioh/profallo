@@ -22,6 +22,7 @@ export function PublicHome() {
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [robot, setRobot] = useState(false)
   const [remember, setRemember] = useState(true)
+  const [signingUp, setSigningUp] = useState(false)
   const savedEmail = (() => { try { return localStorage.getItem('profallo.email') || '' } catch { return '' } })()
 
   function persistEmail(email: string) {
@@ -87,16 +88,21 @@ export function PublicHome() {
       if (!robot || Number(captchaAnswer) !== captcha.a + captcha.b) { setError('Confirma el captcha.'); refreshCaptcha(); return }
       if ((x.password ?? '').length < PASS_MIN) { setError(`La contraseña debe tener al menos ${PASS_MIN} caracteres.`); return }
       if (x.password !== x.confirm) { setError('Las contraseñas no coinciden.'); return }
+      setSigningUp(true)
       const res = await cloudSignUp((x.email ?? '').trim().toLowerCase(), x.password ?? '', {
         name: x.name ?? '', phone: x.phone ?? '', idNumber, gym: '', instagram: x.instagram ?? '',
       })
+      setSigningUp(false)
       if (!res.ok) { setError(res.error ?? 'No se pudo crear la cuenta.'); refreshCaptcha(); return }
       if (res.needsConfirmation) {
         toast('Revisa tu correo para confirmar la cuenta y luego inicia sesión.')
         setMode('login')
         return
       }
-      setMode('waiting')
+      // Sesión creada directamente (email auto‑confirmado).
+      toast('Cuenta creada.')
+      enter()
+      go('inicio')
       return
     }
     const res = doSignup({
@@ -196,7 +202,7 @@ export function PublicHome() {
                 <label className="entry-math">¿Cuánto es {captcha.a} + {captcha.b}?<input value={captchaAnswer} onChange={(e) => setCaptchaAnswer(e.target.value)} inputMode="numeric" placeholder="Respuesta" /></label>
               </div>
               {error ? <p className="entry-error">{error}</p> : null}
-              <button className="simple-access-primary" type="submit">Crear cuenta <Icon name="arrow" /></button>
+              <button className="simple-access-primary" type="submit" disabled={signingUp}>{signingUp ? 'Creando cuenta…' : 'Crear cuenta'} <Icon name="arrow" /></button>
             </form>
             <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('login') }}>Ya tengo cuenta, iniciar sesión</button>
             <button className="entry-back" type="button" onClick={() => { setError(''); setMode('menu') }}>‹ Volver</button>

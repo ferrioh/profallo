@@ -52,40 +52,56 @@ export function Sidebar() {
   const activeView = view === 'cliente-perfil' ? 'clientes' : view
   const navRef = useRef<HTMLElement>(null)
   const [pill, setPill] = useState({ left: 0, width: 0, ready: false })
-  const dragRef = useRef<{ startX: number; dx: number } | null>(null)
+  const dragRef = useRef<{ startX: number; target: number } | null>(null)
   const [dragDx, setDragDx] = useState(0)
   const [dragging, setDragging] = useState(false)
 
   function navIndex() {
     return NAV.findIndex(([v]) => v === activeView)
   }
-  function switchBy(dir: number) {
-    const i = navIndex()
-    const next = NAV[i + dir]
-    if (next && next[0] !== activeView) {
-      playTick()
-      go(next[0])
-    }
+  function navButtons() {
+    const nav = navRef.current
+    return nav ? Array.from(nav.querySelectorAll<HTMLElement>('.nav-button')) : []
+  }
+  function nearestIndex(clientX: number) {
+    const btns = navButtons()
+    let best = 0
+    let bestD = Infinity
+    btns.forEach((el, i) => {
+      const r = el.getBoundingClientRect()
+      const d = Math.abs(clientX - (r.left + r.width / 2))
+      if (d < bestD) { bestD = d; best = i }
+    })
+    return best
+  }
+  function centerOf(i: number) {
+    const el = navButtons()[i]
+    return el ? el.offsetLeft + el.offsetWidth / 2 : 0
   }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
-    dragRef.current = { startX: e.clientX, dx: 0 }
+    dragRef.current = { startX: e.clientX, target: navIndex() }
     setDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   function onNavMove(e: ReactPointerEvent<HTMLElement>) {
     if (!dragRef.current) return
-    const d = e.clientX - dragRef.current.startX
-    dragRef.current.dx = d
-    const w = navRef.current?.clientWidth ?? 320
-    setDragDx(Math.max(-w, Math.min(w, d)))
+    const idx = nearestIndex(e.clientX)
+    dragRef.current.target = idx
+    const activeCenter = pill.left + pill.width / 2
+    setDragDx(centerOf(idx) - activeCenter)
   }
   function onNavUp() {
-    const d = dragRef.current?.dx ?? 0
+    const target = dragRef.current?.target
     dragRef.current = null
     setDragging(false)
     setDragDx(0)
-    if (d < -30) switchBy(1)
-    else if (d > 30) switchBy(-1)
+    if (target != null) {
+      const v = NAV[target]?.[0]
+      if (v && v !== activeView) {
+        playTick()
+        go(v)
+      }
+    }
   }
 
   useEffect(() => {

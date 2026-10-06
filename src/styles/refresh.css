@@ -690,7 +690,7 @@ dialog.app-sheet{max-width:none}
 @keyframes barIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .wide-track i{transform-origin:left;animation:barIn .8s cubic-bezier(.22,1,.36,1) both}
 @media(max-width:560px){
-  #nav{position:relative}
+  #nav{position:relative;touch-action:pan-y}
   #nav .nav-pill{display:block;position:absolute;top:50%;transform:translateY(-50%);height:50px;border-radius:999px;background:var(--lime);box-shadow:0 10px 22px #d2ff6240;transition:left .42s cubic-bezier(.34,1.28,.5,1),width .42s cubic-bezier(.34,1.28,.5,1),opacity .25s ease,transform .25s ease;z-index:0;pointer-events:none}
   #nav .nav-button{position:relative;z-index:1}
   #nav .nav-button span{display:none}

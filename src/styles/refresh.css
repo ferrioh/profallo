@@ -681,6 +681,7 @@ dialog.app-sheet{max-width:none}
 .profile-dark-card.tone-smoke .eyebrow,.profile-dark-card.tone-smoke small{color:#cdd5c8}
 .profile-dark-card.tone-smoke .profile-row{border-color:#4d5645}
 .routine-meta{font-size:13px;opacity:.85;margin-top:2px}
+.routine-note-text{font-size:12.5px;color:#c5c9c0;margin:6px 0 2px;line-height:1.5}
 .client-since{display:inline-flex;align-items:center;gap:6px;font-size:12px}
 .client-since svg{width:14px;height:14px}
 .client-overview{grid-template-columns:repeat(2,minmax(0,1fr))}

@@ -475,6 +475,7 @@ begin
     'clientName', v_client.name,
     'clientPhoto', v_client.photo,
     'clientGoal', v_client.goal,
+    'clientGender', v_client.gender,
     'weekStart', v_week,
     'sessions', v_sessions,
     'measurements', v_measures

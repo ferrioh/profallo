@@ -93,10 +93,10 @@ export function PublicClient({ code }: { code: string }) {
                       <div className="pc-ex-row">
                         <ul className="pc-exercises">
                           {s.exercises.map((ex, j) => (
-                            <li key={j}><span>{ex.name}</span><small>{ex.sets}×{ex.reps}{ex.rest ? ` · ${ex.rest}s` : ''}</small></li>
+                            <li key={j}><span>{ex.name}</span><small>{ex.sets}×{ex.reps}{ex.rest ? ` · ${ex.rest}s descanso` : ''}</small></li>
                           ))}
                         </ul>
-                        {(() => { const zones = getRoutineZones({ name: s.routineName ?? '', category: s.category ?? '', exercises: s.exercises, focusZones: [] }); return zones.length ? <MuscleGuide zones={zones} compact /> : null })()}
+                        {(() => { const zones = getRoutineZones({ name: s.routineName ?? '', category: s.category ?? '', exercises: s.exercises, focusZones: [] }); return zones.length ? <MuscleGuide zones={zones} sex={w.clientGender === 'hombre' ? 'male' : 'female'} compact /> : null })()}
                       </div>
                     ) : null}
                     {s.notes ? <p className="pc-notes">{s.notes}</p> : null}

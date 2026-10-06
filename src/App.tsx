@@ -1,6 +1,6 @@
+import { Suspense, lazy } from 'react'
 import { useApp } from './context/AppContext'
 import { Sidebar, Shell } from './components/Layout'
-import { ModalHost } from './components/Modals'
 import { Toast } from './components/Toast'
 import { Paywall } from './components/Paywall'
 import { membershipLocked } from './lib/plans'
@@ -14,13 +14,16 @@ import { ProfilePage } from './pages/Profile'
 import { ClientProfilePage } from './pages/ClientProfile'
 import { PublicFicha } from './pages/PublicFicha'
 import { NotificationsPage } from './pages/Notifications'
-import { AdminPage } from './pages/Admin'
 import { PublicHome } from './pages/PublicHome'
-import { AdminLogin } from './pages/AdminLogin'
 import { PublicTrainer } from './pages/PublicTrainer'
 import { PublicClient } from './pages/PublicClient'
 import { currentAccount, useAuthVersion } from './lib/auth'
 import { EntryLoader } from './components/EntryLoader'
+
+// Chunks diferidos: el panel de admin y los modales solo se descargan si se usan.
+const AdminPage = lazy(() => import('./pages/Admin').then((m) => ({ default: m.AdminPage })))
+const AdminLogin = lazy(() => import('./pages/AdminLogin').then((m) => ({ default: m.AdminLogin })))
+const ModalHost = lazy(() => import('./components/Modals').then((m) => ({ default: m.ModalHost })))
 
 function AppLoader() {
   return <EntryLoader />
@@ -54,7 +57,9 @@ export default function App() {
     const adminSession = cloudEnabled
       ? cloudProfile?.role === 'admin'
       : (currentAccount()?.role ?? data.profile.role) === 'admin'
-    return adminSession ? <AdminPage /> : <AdminLogin signedIn={cloudEnabled ? !!cloudUser : false} />
+    return adminSession
+      ? <Suspense fallback={<AppLoader />}><AdminPage /></Suspense>
+      : <Suspense fallback={<AppLoader />}><AdminLogin signedIn={cloudEnabled ? !!cloudUser : false} /></Suspense>
   }
 
   if (!isIn) return <PublicHome />
@@ -101,7 +106,9 @@ export default function App() {
           {page}
         </div>
       </Shell>
-      <ModalHost />
+      <Suspense fallback={null}>
+        <ModalHost />
+      </Suspense>
       <Toast />
     </>
   )

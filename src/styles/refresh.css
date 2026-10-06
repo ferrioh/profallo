@@ -817,6 +817,13 @@ dialog.app-sheet{max-width:none}
 .pc-exercises li small{color:#a9b09a;white-space:nowrap}
 .pc-notes{font-size:12.5px;color:#b9bfae;line-height:1.5;background:#1b1f14;border-radius:12px;padding:9px 11px}
 .pc-rest{color:#7f8574;font-size:13px;font-style:italic}
+.pc-metric-tabs{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}
+.pc-metric-tabs button{background:#22271a;border:1px solid #2f3520;color:#c8cdc0;border-radius:99px;padding:7px 13px;font-size:12.5px;font-weight:600;min-height:0}
+.pc-metric-tabs button.active{background:#d2ff62;color:#182a0c;border-color:#d2ff62}
+.pc-chart{height:148px;margin-top:6px}
+.pc-chart path{stroke:#ffffff70}
+.pc-chart circle{fill:#d2ff62}
+.pc-chart text,.pc-chart .metric-labels{color:#c9ccc2}
 .pc-empty{display:grid;place-items:center;gap:12px;text-align:center;color:#b9bfae;background:#14170f;border:1px dashed #3a4029;border-radius:24px;padding:48px 22px;font-size:14px;line-height:1.6}
 .pc-empty svg{width:38px;height:38px;color:#d2ff62}
 .pc-contact{display:flex;align-items:center;justify-content:center;gap:9px;min-height:56px;border-radius:18px;background:#d2ff62;color:#182a0c;font-size:16px;font-weight:800;text-decoration:none}

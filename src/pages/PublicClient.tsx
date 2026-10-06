@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { LineChart } from '../components/ui'
+import { EntryLoader } from '../components/EntryLoader'
 import { cloudPublicClientWeek, type ClientWeek } from '../lib/cloud'
 import { addDays, longDate, shortWeekday, TODAY } from '../lib/utils'
+
+const METS: Array<{ key: 'weight' | 'waist' | 'fat'; label: string; unit: string }> = [
+  { key: 'weight', label: 'Peso', unit: 'kg' },
+  { key: 'waist', label: 'Cintura', unit: 'cm' },
+  { key: 'fat', label: 'Grasa', unit: '%' },
+]
 
 export function PublicClient({ code }: { code: string }) {
   const [w, setW] = useState<ClientWeek | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pm, setPm] = useState<'weight' | 'waist' | 'fat'>('weight')
 
   useEffect(() => {
     cloudPublicClientWeek(code)
@@ -14,12 +23,7 @@ export function PublicClient({ code }: { code: string }) {
   }, [code])
 
   if (loading) {
-    return (
-      <div className="entry-loader" aria-hidden="true">
-        <span className="entry-loader-logo">p</span>
-        <span className="entry-loader-line" />
-      </div>
-    )
+    return <EntryLoader />
   }
 
   if (!w) {
@@ -42,6 +46,9 @@ export function PublicClient({ code }: { code: string }) {
   const lastW = measures[measures.length - 1]?.weight ?? null
   const delta = firstW != null && lastW != null ? Number((Number(lastW) - Number(firstW)).toFixed(1)) : null
   const lastM = measures[measures.length - 1]
+  const allMeas = w.measurements ?? []
+  const mUnit = METS.find((m) => m.key === pm)?.unit ?? ''
+  const series = allMeas.filter((m) => m[pm] != null).map((m) => Number(m[pm]))
   const wa = w.trainerPhone
     ? `https://wa.me/${w.trainerPhone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${w.trainerName}, vi mi semana de entrenamiento 💪`)}`
     : ''
@@ -117,6 +124,12 @@ export function PublicClient({ code }: { code: string }) {
           <header className="pc-day-head">
             <span className="pc-day-name">Progreso</span>
           </header>
+          <div className="pc-metric-tabs">
+            {METS.map((mt) => (
+              <button key={mt.key} type="button" className={pm === mt.key ? 'active' : ''} onClick={() => setPm(mt.key)}>{mt.label}</button>
+            ))}
+          </div>
+          <LineChart values={series} unit={mUnit} cls="metric-chart pc-chart" />
           <div className="pc-prog-grid">
             <div className="pc-prog-item">
               <span>Peso actual</span>

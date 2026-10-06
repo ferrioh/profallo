@@ -156,9 +156,9 @@ export function NotificationsPage() {
       <div className="notif-list">
         {visibleMsgs.map((m) => (
           <div className="notif-item admin-msg-item" key={m.id}>
-            <span className="notif-mark violet"><Verified /></span>
+            <span className="notif-mark violet"><Icon name="bell" /></span>
             <div className="notif-copy">
-              <span className="admin-msg-tag">PROFALLO</span>
+              <span className="admin-msg-tag">PROFALLO <Verified /></span>
               {m.title ? <b className="admin-msg-title">{m.title}</b> : null}
               <p>{m.text}</p>
               {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}

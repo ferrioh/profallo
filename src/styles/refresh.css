@@ -913,7 +913,9 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .notif-item.admin-msg-item{background:linear-gradient(135deg,#2a1745,#1c1130);border-color:#8b5cf666}
 .notif-item.admin-msg-item .notif-copy{min-width:0}
 .notif-item.admin-msg-item .notif-copy p{color:#e9d5ff;white-space:normal;overflow:visible;text-overflow:clip}
-.admin-msg-tag{display:inline-block;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;border-radius:99px;padding:3px 9px;margin-bottom:5px}
+.admin-msg-tag{display:inline-flex;align-items:center;gap:5px;background:#7c3aed;color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;border-radius:99px;padding:3px 9px;margin-bottom:5px}
+.admin-msg-tag .verified{width:14px;height:14px}
+.admin-msg-tag .verified svg{width:9px;height:9px}
 .admin-msg-form{display:grid;gap:14px;background:#292b32;border:1px solid #454750;border-radius:20px;padding:18px;max-width:560px}
 .admin-msg-form label{display:grid;gap:7px;font-size:13px;color:#c8cad0}
 .admin-msg-form select,.admin-msg-form textarea{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}

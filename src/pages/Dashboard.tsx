@@ -31,7 +31,7 @@ export function CoachStage({ full = false }: { full?: boolean }) {
     <section className={`coach-stage ${full ? 'full-profile' : ''}`}>
       <img
         className="coach-photo"
-        src={data.profile.photo || (full ? 'assets/coach.png' : 'assets/trainer-hero-v2.png')}
+        src={data.profile.photo || 'assets/coach.png'}
         alt={full ? 'Foto del entrenador' : 'Entrenador en un gimnasio'}
       />
       <div className="coach-scrim" />

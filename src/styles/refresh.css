@@ -817,9 +817,9 @@ dialog.app-sheet{max-width:none}
 .pc-exercises{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .pc-exercises li{display:flex;justify-content:space-between;gap:10px;background:#1b1f14;border:1px solid #2f3520;border-radius:13px;padding:10px 12px;font-size:14px}
 .pc-exercises li small{color:#a9b09a;white-space:nowrap}
-.pc-ex-row{display:flex;gap:14px;align-items:start}
-.pc-ex-row .muscle-guide{width:120px;margin:0}
-.pc-ex-row .muscle-guide svg{width:110px;height:110px}
+.pc-ex-row{display:block}
+.pc-ex-row .muscle-guide{width:110px;margin:8px auto;text-align:center;display:block}
+.pc-ex-row .muscle-guide svg{width:105px;height:105px}
 .pc-notes{font-size:12.5px;color:#b9bfae;line-height:1.5;background:#1b1f14;border-radius:12px;padding:9px 11px}
 .pc-rest{color:#7f8574;font-size:13px;font-style:italic}
 .pc-metric-tabs{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}

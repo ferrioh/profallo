@@ -118,10 +118,14 @@ export function ClientFormModal({ id }: { id?: string }) {
     if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${c.name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
     if (cloudEnabled && cloudUser) await cloudDeleteClient(c.id)
     commit((d) => {
+      const sessIds = d.sessions.filter((s) => s.client === c.id).map((s) => s.id)
+      const measIds = d.measurements.filter((m) => m.client === c.id).map((m) => m.id)
+      const payIds = d.payments.filter((p) => p.client === c.id).map((p) => p.id)
       d.clients = d.clients.filter((x) => x.id !== c.id)
       d.sessions = d.sessions.filter((s) => s.client !== c.id)
       d.measurements = d.measurements.filter((m) => m.client !== c.id)
       d.payments = d.payments.filter((p) => p.client !== c.id)
+      d.deleted = [...new Set([...(d.deleted ?? []), c.id, ...sessIds, ...measIds, ...payIds])]
     })
     closeModal()
     toast('Cliente eliminado.')
@@ -764,10 +768,14 @@ export function AssignRoutineModal({ id }: { id: string }) {
     if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
     if (cloudEnabled && cloudUser) await cloudDeleteClient(clientId)
     commit((d) => {
+      const sessIds = d.sessions.filter((s) => s.client === clientId).map((s) => s.id)
+      const measIds = d.measurements.filter((m) => m.client === clientId).map((m) => m.id)
+      const payIds = d.payments.filter((p) => p.client === clientId).map((p) => p.id)
       d.clients = d.clients.filter((c) => c.id !== clientId)
       d.sessions = d.sessions.filter((s) => s.client !== clientId)
       d.measurements = d.measurements.filter((m) => m.client !== clientId)
       d.payments = d.payments.filter((p) => p.client !== clientId)
+      d.deleted = [...new Set([...(d.deleted ?? []), clientId, ...sessIds, ...measIds, ...payIds])]
     })
     closeModal()
     toast('Cliente eliminado.')

@@ -148,6 +148,8 @@ export interface AppData {
     muted: string[]
     read: string[]
   }
+  /** IDs eliminados (tombstones) para que no vuelvan a aparecer al sincronizar. */
+  deleted?: string[]
   membershipPayments?: Array<{
     id: string
     amount: number

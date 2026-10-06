@@ -430,13 +430,23 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
     return false
   }
   // Orden seguro por claves foráneas: padres antes que hijos (upsert)
+  const tomb = new Set(data.deleted ?? [])
   const results = [
-    await syncTable('routines', userId, data.routines.map((r) => routineToRow(r, userId))),
-    await syncTable('clients', userId, data.clients.map((c) => clientToRow(c, userId))),
-    await syncTable('sessions', userId, data.sessions.map((s) => sessionToRow(s, userId))),
-    await syncTable('measurements', userId, data.measurements.map((m) => measurementToRow(m, userId))),
-    await syncTable('payments', userId, data.payments.map((p) => paymentToRow(p, userId))),
+    await syncTable('routines', userId, data.routines.filter((r) => !tomb.has(r.id)).map((r) => routineToRow(r, userId))),
+    await syncTable('clients', userId, data.clients.filter((c) => !tomb.has(c.id)).map((c) => clientToRow(c, userId))),
+    await syncTable('sessions', userId, data.sessions.filter((s) => !tomb.has(s.id)).map((s) => sessionToRow(s, userId))),
+    await syncTable('measurements', userId, data.measurements.filter((m) => !tomb.has(m.id)).map((m) => measurementToRow(m, userId))),
+    await syncTable('payments', userId, data.payments.filter((p) => !tomb.has(p.id)).map((p) => paymentToRow(p, userId))),
   ]
+  // Elimina de la nube lo marcado como borrado (para que no vuelva a aparecer).
+  if (tomb.size) {
+    const ids = [...tomb]
+    await supabase.from('routines').delete().in('id', ids)
+    await supabase.from('clients').delete().in('id', ids)
+    await supabase.from('sessions').delete().in('id', ids)
+    await supabase.from('measurements').delete().in('id', ids)
+    await supabase.from('payments').delete().in('id', ids)
+  }
   return results.every(Boolean)
 }
 
@@ -444,14 +454,16 @@ export const cloudToday = TODAY
 
 /** Combina los datos locales con los de la nube sin perder nada (unión por id; gana la nube). */
 export function mergeLocalCloud(local: AppData, cloud: AppData): AppData {
+  const tomb = new Set([...(local.deleted ?? []), ...(cloud.deleted ?? [])])
   const byId = <T extends { id: string }>(a: T[], b: T[]): T[] => {
     const m = new Map<string, T>()
-    a.forEach((x) => m.set(x.id, x))
-    b.forEach((x) => m.set(x.id, x))
+    a.forEach((x) => { if (!tomb.has(x.id)) m.set(x.id, x) })
+    b.forEach((x) => { if (!tomb.has(x.id)) m.set(x.id, x) })
     return [...m.values()]
   }
   return {
     ...cloud,
+    deleted: [...tomb],
     clients: byId(local.clients, cloud.clients),
     routines: byId(local.routines, cloud.routines),
     sessions: byId(local.sessions, cloud.sessions),

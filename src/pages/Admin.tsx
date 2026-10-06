@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
+import { fileToDataUrl } from '../lib/image'
 import {
   listMembershipPayments,
   listTrainers,
@@ -70,15 +71,20 @@ export function AdminPage() {
   const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
   const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true, shareholders: [] })
-  const [remote, setRemote] = useState<TrainerRow[] | null>(null)
-  const [backups, setBackups] = useState<BackupRow[] | null>(null)
-  const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
   const [analytics, setAnalytics] = useState<UserAnalyticsRow[] | null>(null)
+  const [shareName, setShareName] = useState('')
+  const [sharePercent, setSharePercent] = useState('')
+  const [editingShareId, setEditingShareId] = useState<string | null>(null)
+  const [remote, setRemote] = useState<TrainerRow[] | null>(null)
+const [backups, setBackups] = useState<BackupRow[] | null>(null)
+  const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
   const [msgTo, setMsgTo] = useState('')
   const [msgText, setMsgText] = useState('')
   const [msgTitle, setMsgTitle] = useState('')
   const [msgLink, setMsgLink] = useState('')
   const [editingMsgId, setEditingMsgId] = useState<string | null>(null)
+  const [pendingPhotoId, setPendingPhotoId] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -342,18 +348,26 @@ export function AdminPage() {
 
   function addShareholder(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const form = e.currentTarget
-    const x = Object.fromEntries(new FormData(form)) as Record<string, string>
-    const name = (x.name ?? '').trim()
-    const percent = Number(x.percent)
+    const name = shareName.trim()
+    const percent = Number(sharePercent)
     if (!name || !Number.isFinite(percent) || percent <= 0) { toast('Escribe nombre y porcentaje.'); return }
-    saveShareholders([...paySettings.shareholders, { id: `sh-${Date.now()}`, name, percent }])
-    form.reset()
-    toast('Accionista agregado.')
+    if (editingShareId) {
+      saveShareholders(paySettings.shareholders.map((s) => s.id === editingShareId ? { ...s, name, percent } : s))
+      setEditingShareId(null)
+    } else {
+      saveShareholders([...paySettings.shareholders, { id: `sh-${Date.now()}`, name, percent }])
+    }
+    setShareName(''); setSharePercent('')
+    toast('Accionista guardado.')
   }
 
   function removeShareholder(id: string) {
     saveShareholders(paySettings.shareholders.filter((s) => s.id !== id))
+  }
+
+  function changePhoto(id: string) {
+    setPendingPhotoId(id)
+    // The input will be triggered; onChange handles the result.
   }
 
   function saveSocial(e: FormEvent<HTMLFormElement>) {
@@ -720,25 +734,48 @@ export function AdminPage() {
             <span>Ganancia mensual: <b>{money(monthlyRevenue)}</b></span>
           </div>
           <form className="admin-msg-form" onSubmit={addShareholder} style={{ marginBottom: 20 }}>
-            <div className="form-grid">
-              <div><label>Nombre</label><input name="name" placeholder="Nombre y apellido" maxLength={60} /></div>
-              <div><label>Porcentaje (%)</label><input name="percent" type="number" min="0" max="100" step="0.1" placeholder="30" /></div>
-            </div>
-            <div className="form-foot"><button className="button primary" type="submit"><Icon name="plus" /> Agregar accionista</button></div>
-          </form>
+  <div className="form-grid">
+    <div><label>Nombre</label><input value={shareName} onChange={(e) => setShareName(e.target.value)} maxLength={60} required /></div>
+    <div><label>Porcentaje (%)</label><input value={sharePercent} onChange={(e) => setSharePercent(e.target.value)} type="number" step="0.1" min="0.1" max="100" placeholder="30" required /></div>
+  </div>
+  <div className="form-foot">
+    {editingShareId ? <button className="button light" type="button" onClick={() => { setEditingShareId(null); setShareName(''); setSharePercent('') }}>Cancelar</button> : null}
+    <button className="button primary" type="submit">{editingShareId ? 'Guardar cambios' : 'Agregar accionista'}</button>
+  </div>
+</form>
           <div className="admin-list">
             {paySettings.shareholders.map((s) => (
-              <article className="admin-message" key={s.id}>
-                <span className="admin-msg-tag">ACCIONISTA</span>
-                <p><b>{s.name}</b> · {s.percent}%</p>
-                <p>Le corresponde este mes: <b>{money((monthlyRevenue * s.percent) / 100)}</b></p>
-                <div className="admin-msg-actions"><button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button></div>
-              </article>
-            ))}
+  <article className="admin-message" key={s.id}>
+    <div className="admin-share-row">
+      <span className="admin-share-photo">
+        {s.photo ? <img src={s.photo} alt={s.name} /> : <span className="admin-share-initial">{s.name.slice(0,1).toUpperCase()}</span>}
+      </span>
+      <div className="admin-share-info">
+        <b>{s.name}</b>
+        <small>{s.percent}% · {money((monthlyRevenue * s.percent) / 100)} este mes</small>
+      </div>
+    </div>
+    <div className="admin-msg-actions">
+      <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)) }}><Icon name="edit" /> Editar</button>
+      <button className="button light" onClick={() => changePhoto(s.id)}><Icon name="edit" /> Foto</button>
+      <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
+    </div>
+  </article>
+))}
             {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : null}
           </div>
         </section>
       ) : null}
+
+      <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={(e) => {
+        const [file] = Array.from(e.target.files ?? [])
+        if (!file || !pendingPhotoId) return
+        fileToDataUrl(file).then((url) => {
+          if (url) saveShareholders(paySettings.shareholders.map((s) => s.id === pendingPhotoId ? { ...s, photo: url } : s))
+          setPendingPhotoId(null)
+          ;(e.currentTarget as HTMLInputElement).value = ''
+        }, () => toast('No se pudo cargar la imagen.'))
+      }} />
 
       {tab === 'analitica' ? (
         <section className="admin-trainers">

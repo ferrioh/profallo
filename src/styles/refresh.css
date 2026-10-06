@@ -925,6 +925,14 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .share-modal-body .public-client{min-height:auto;padding:14px 12px 18px}
 .share-modal-body .pc-bg,.share-modal-body .pc-bg-shade{position:absolute;z-index:0}
 .share-modal-body .public-client>*{position:relative;z-index:1}
+/* Avatar de accionistas */
+.admin-share-row{display:flex;align-items:center;gap:12px}
+.admin-share-photo{width:48px;height:48px;border-radius:50%;overflow:hidden;background:#3a3d45;display:grid;place-items:center;color:#c8cad0;flex:none}
+.admin-share-photo img{width:100%;height:100%;object-fit:cover}
+.admin-share-initial{font-size:22px;font-weight:800;border-radius:50%}
+.admin-share-info{flex:1;min-width:0;display:grid;gap:3px}
+.admin-share-info b{font-size:16px}
+.admin-share-info small{color:#c9b8ec;font-size:13px}
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */

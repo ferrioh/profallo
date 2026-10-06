@@ -480,7 +480,7 @@ export interface AppSettings {
   pay_binance: string
   pay_zelle: string
   backup_enabled: boolean
-  shareholders: Array<{ id: string; name: string; percent: number }>
+  shareholders: Array<{ id: string; name: string; percent: number; photo?: string }>
 }
 
 export type PremiumMethod = 'pagomovil' | 'binance' | 'zelle'

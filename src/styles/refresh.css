@@ -1006,7 +1006,29 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 /* Accionistas (tarjetas grandes y serias) */
 .adx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:16px}
 .adx-card{background:linear-gradient(160deg,#1e2024,#16181b);border:1px solid #2f3238;border-radius:22px;padding:20px;display:grid;gap:16px;color:#fff}
-.adx-top{display:flex;align-items:center;gap:14px}
+.adx-top{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:0;padding:0;text-align:left;cursor:pointer;color:inherit}
+.adx-add-toggle{display:inline-flex;align-items:center;gap:8px;background:#24262b;border:1px dashed #4a4e55;border-radius:14px;padding:12px 16px;color:#d2ff62;font-weight:700;font-size:14px;margin-bottom:16px}
+.adx-add-toggle:hover{background:#2a2d32}
+.adx-add-toggle svg{width:18px;height:18px}
+.adx-form{margin-bottom:18px}
+.adx-id{flex:1;min-width:0}
+.adx-pct{display:inline-flex;align-items:baseline;gap:1px;font-size:22px;font-weight:800;color:#d2ff62;flex:none}
+.adx-pct small{font-size:13px}
+.adx-chev{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#2a2d32;color:#c8ccbf;font-size:18px;font-weight:800;flex:none}
+.adx-card.open{border-color:#d2ff6255}
+.adx-body{display:grid;gap:14px;border-top:1px solid #2c2f33;padding-top:14px;animation:adxFade .35s ease both}
+@keyframes adxFade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.adx-earnings{margin-top:22px;display:grid;gap:12px}
+.adx-earn-list{display:grid;gap:10px}
+.adx-earn-row{display:grid;gap:6px}
+.adx-earn-top{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.adx-earn-top b{font-weight:650}
+.adx-earn-top span{color:#d2ff62;font-weight:700}
+.adx-earn-bar{height:12px;border-radius:99px;background:#2a2d32;overflow:hidden}
+.adx-earn-bar i{display:block;height:100%;border-radius:99px;transform-origin:left;animation:adxGrow .9s cubic-bezier(.22,1,.36,1) both}
+.adx-bar i{transform-origin:left;animation:adxGrow .9s cubic-bezier(.22,1,.36,1) both}
+@keyframes adxGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.adx-history{margin-top:8px}
 .adx-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#2a2d32;display:grid;place-items:center;font-size:26px;font-weight:800;color:#d2ff62;flex:none;border:2px solid #d2ff6240}
 .adx-avatar img{width:100%;height:100%;object-fit:cover}
 .adx-id b{font-size:20px;font-weight:750;letter-spacing:-.3px;display:block;line-height:1.15}

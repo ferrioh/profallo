@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
 import { LineChart } from '../components/ui'
 import { AnalyticsView } from '../components/Analytics'
+import { CountUp } from '../components/CountUp'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
@@ -76,6 +77,8 @@ export function AdminPage() {
   const [shareName, setShareName] = useState('')
   const [sharePercent, setSharePercent] = useState('')
   const [editingShareId, setEditingShareId] = useState<string | null>(null)
+  const [showShareForm, setShowShareForm] = useState(false)
+  const [expandedShare, setExpandedShare] = useState<string | null>(null)
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
 const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
@@ -735,59 +738,92 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
             <div><span className="eyebrow">REPARTO DE GANANCIAS</span><h2>Accionistas</h2></div>
             <span>Ganancia mensual: <b>{money(monthlyRevenue)}</b></span>
           </div>
-          <form className="admin-msg-form" onSubmit={addShareholder} style={{ marginBottom: 20 }}>
-  <div className="form-grid">
-    <div><label>Nombre</label><input value={shareName} onChange={(e) => setShareName(e.target.value)} maxLength={60} required /></div>
-    <div><label>Porcentaje (%)</label><input value={sharePercent} onChange={(e) => setSharePercent(e.target.value)} type="number" step="0.1" min="0.1" max="100" placeholder="30" required /></div>
-  </div>
-  <div className="form-foot">
-    {editingShareId ? <button className="button light" type="button" onClick={() => { setEditingShareId(null); setShareName(''); setSharePercent('') }}>Cancelar</button> : null}
-    <button className="button primary" type="submit">{editingShareId ? 'Guardar cambios' : 'Agregar accionista'}</button>
-  </div>
-</form>
-          <div className="adx-grid">
-            {paySettings.shareholders.map((s) => (
-              <article className="adx-card" key={s.id}>
-                <div className="adx-top">
-                  <span className="adx-avatar">
-                    {s.photo ? <img src={s.photo} alt={s.name} /> : <span>{s.name.slice(0, 1).toUpperCase()}</span>}
-                  </span>
-                  <div className="adx-id"><b>{s.name}</b><small>Accionista</small></div>
-                </div>
-                <div className="adx-stats">
-                  <div className="adx-stat"><strong>{s.percent}%</strong><span>Participación</span></div>
-                  <div className="adx-stat"><strong>{money((monthlyRevenue * s.percent) / 100)}</strong><span>Este mes</span></div>
-                </div>
-                <div className="adx-bar"><i style={{ width: `${Math.min(100, s.percent)}%` }} /></div>
-                <div className="adx-actions">
-                  <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)) }}><Icon name="edit" /> Editar</button>
-                  <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
-                </div>
-              </article>
-            ))}
-          </div>
-          {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : (
-            <div className="admin-stack-wrap">
-              <span className="eyebrow">Distribución de acciones</span>
-              <div className="admin-stack-bar">
-                {paySettings.shareholders.map((sh, i) => {
-                  const col = ['#d2ff62','#5ff2e0','#ffb454','#7c3aed','#ff8fb1','#85c4ff','#a0522d','#c4b5fd']
-                  return <span key={sh.id} style={{ flex: sh.percent, background: col[i % col.length], height: 24, borderRadius: i === 0 ? '8px 0 0 8px' : i === paySettings.shareholders.length-1 ? '0 8px 8px 0' : 0 }} />
+
+          <button
+            className="adx-add-toggle"
+            type="button"
+            onClick={() => {
+              if (editingShareId) { setEditingShareId(null); setShareName(''); setSharePercent('') }
+              setShowShareForm((v) => !v)
+            }}
+          >
+            <Icon name={(showShareForm || !!editingShareId) ? 'chevronUp' : 'plus'} />
+            {(showShareForm || editingShareId) ? 'Cerrar' : 'Agregar accionista'}
+          </button>
+
+          {(showShareForm || editingShareId) ? (
+            <form className="admin-msg-form adx-form" onSubmit={addShareholder}>
+              <div className="form-grid">
+                <div><label>Nombre</label><input value={shareName} onChange={(e) => setShareName(e.target.value)} maxLength={60} required /></div>
+                <div><label>Acciones / Porcentaje (%)</label><input value={sharePercent} onChange={(e) => setSharePercent(e.target.value)} type="number" step="0.1" min="0.1" max="100" placeholder="30" required /></div>
+              </div>
+              <div className="form-foot">
+                <button className="button light" type="button" onClick={() => { setEditingShareId(null); setShareName(''); setSharePercent(''); setShowShareForm(false) }}>Cancelar</button>
+                <button className="button primary" type="submit">{editingShareId ? 'Guardar cambios' : 'Agregar'}</button>
+              </div>
+            </form>
+          ) : null}
+
+          {!paySettings.shareholders.length ? (
+            <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div>
+          ) : (
+            <>
+              <div className="adx-grid">
+                {paySettings.shareholders.map((s) => {
+                  const open = expandedShare === s.id
+                  const earn = (monthlyRevenue * s.percent) / 100
+                  return (
+                    <article className={`adx-card ${open ? 'open' : ''}`} key={s.id}>
+                      <button className="adx-top" type="button" onClick={() => setExpandedShare(open ? null : s.id)} aria-expanded={open}>
+                        <span className="adx-avatar">
+                          {s.photo ? <img src={s.photo} alt={s.name} /> : <span>{s.name.slice(0, 1).toUpperCase()}</span>}
+                        </span>
+                        <span className="adx-id"><b>{s.name}</b><small>Accionista</small></span>
+                        <span className="adx-pct"><CountUp value={s.percent} /><small>%</small></span>
+                        <span className="adx-chev">{open ? '−' : '+'}</span>
+                      </button>
+                      {open ? (
+                        <div className="adx-body">
+                          <div className="adx-stats">
+                            <div className="adx-stat"><strong><CountUp value={s.percent} />%</strong><span>Acciones</span></div>
+                            <div className="adx-stat"><strong><CountUp value={earn} format={(n) => money(n)} /></strong><span>Este mes</span></div>
+                          </div>
+                          <div className="adx-bar"><i style={{ width: `${Math.min(100, s.percent)}%` }} /></div>
+                          <div className="adx-actions">
+                            <button className="button light" onClick={() => { setEditingShareId(s.id); setShareName(s.name); setSharePercent(String(s.percent)); setShowShareForm(true) }}><Icon name="edit" /> Editar</button>
+                            <button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </article>
+                  )
                 })}
               </div>
-              <div className="admin-stack-labels">
-                {paySettings.shareholders.map((sh, i) => {
-                  const col = ['#d2ff62','#5ff2e0','#ffb454','#7c3aed','#ff8fb1','#85c4ff','#a0522d','#c4b5fd']
-                  return <span key={sh.id}><i style={{ background: col[i % col.length], width: 12, height: 12, borderRadius: '50%', display: 'inline-block', marginRight: 6 }} /> {sh.name} {sh.percent}%</span>
-                })}
+
+              <div className="adx-earnings">
+                <span className="eyebrow">GANANCIAS MENSUALES POR ACCIONISTA</span>
+                <div className="adx-earn-list">
+                  {paySettings.shareholders.map((s, i) => {
+                    const earn = (monthlyRevenue * s.percent) / 100
+                    const max = Math.max(...paySettings.shareholders.map((x) => x.percent), 1)
+                    const pct = Math.round((s.percent / max) * 100)
+                    const col = ['#d2ff62','#5ff2e0','#ffb454','#7c3aed','#ff8fb1','#85c4ff','#a0522d','#c4b5fd']
+                    return (
+                      <div className="adx-earn-row" key={s.id}>
+                        <div className="adx-earn-top"><b>{s.name}</b><span>{money(earn)}</span></div>
+                        <div className="adx-earn-bar"><i style={{ width: `${Math.max(6, pct)}%`, background: `linear-gradient(90deg, ${col[i % col.length]}55, ${col[i % col.length]})` }} /></div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {monthlyVals.length > 1 ? (
+                  <div className="adx-history">
+                    <span className="eyebrow">HISTÓRICO MENSUAL</span>
+                    <LineChart values={monthlyVals} unit=" USD" cls="pc-chart" />
+                  </div>
+                ) : null}
               </div>
-              {monthlyVals.length > 1 ? (
-                <>
-                  <span className="eyebrow">Ganancia mensual</span>
-                  <LineChart values={monthlyVals} unit=" USD" cls="pc-chart" />
-                </>
-              ) : null}
-            </div>
+            </>
           )}
         </section>
       ) : null}

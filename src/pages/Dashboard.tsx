@@ -94,10 +94,15 @@ export function Dashboard() {
     const el = mosaicRef.current
     if (!el) return
     let raf = 0
+    let pos = el.scrollLeft
     const step = () => {
-      if (!pausedRef.current && el.scrollWidth > el.clientWidth + 4) {
-        el.scrollLeft += 0.3
-        if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) el.scrollLeft = 0
+      const max = el.scrollWidth - el.clientWidth
+      if (pausedRef.current) {
+        pos = el.scrollLeft
+      } else if (max > 4) {
+        pos += 0.4
+        if (pos >= max) pos = 0
+        el.scrollLeft = pos
       }
       raf = requestAnimationFrame(step)
     }

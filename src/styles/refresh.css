@@ -847,6 +847,7 @@ dialog.app-sheet{max-width:none}
 .accent-swatch svg{width:16px;height:16px;color:#15171b}
 /* Tercera tarjeta glass en la portada (Rutinas) */
 .coach-stage{min-height:445px}
+.coach-stage .stage-orbit{z-index:3}
 .stage-orbit.orbit-c{top:338px}
 .full-profile{min-height:540px}
 .full-profile .orbit-c{top:400px}

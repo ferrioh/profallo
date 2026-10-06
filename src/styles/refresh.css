@@ -908,6 +908,16 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-msg-title{display:block;font-size:16px;font-weight:800;color:#fff;margin:6px 0 4px}
 .admin-msg-link{display:inline-block;color:#c4b5fd;text-decoration:underline;font-size:13px;margin-top:4px;word-break:break-all}
 .admin-msg-form input{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+/* Vista previa al compartir la semana del cliente */
+.share-modal-backdrop{position:fixed;inset:0;z-index:300;background:#000000b3;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:14px}
+.share-modal{width:min(520px,100%);max-height:92dvh;background:#141518;border:1px solid #2c2f33;border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.share-modal-head{padding:14px 16px;font-weight:800;font-size:15px;color:#fff;border-bottom:1px solid #2c2f33;background:#1a1c1f;text-align:center}
+.share-modal-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative}
+.share-modal-foot{display:flex;gap:10px;padding:12px 14px;border-top:1px solid #2c2f33;background:#1a1c1f}
+.share-modal-foot .button{flex:1;justify-content:center}
+.share-modal-body .public-client{min-height:auto;padding:14px 12px 18px}
+.share-modal-body .pc-bg,.share-modal-body .pc-bg-shade{position:absolute;z-index:0}
+.share-modal-body .public-client>*{position:relative;z-index:1}
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */

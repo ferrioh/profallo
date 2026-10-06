@@ -6,6 +6,7 @@ import { Avatar } from '../components/Avatar'
 import { Icon } from '../components/Icon'
 import { LineChart } from '../components/ui'
 import { MuscleGuide, getRoutineZones } from '../components/MuscleGuide'
+import { PublicClient } from './PublicClient'
 import { cloudCreateClientLink } from '../lib/cloud'
 import {
   buildClientShareLink,
@@ -40,6 +41,7 @@ export function ClientProfilePage() {
   const actions = useActions()
   const [metric, setMetric] = useState<MetricKey>('weight')
   const [openSession, setOpenSession] = useState<string | null>(ui.focusSession || null)
+  const [shareCode, setShareCode] = useState<string | null>(null)
   useReveal(ui.selectedClient)
   useEffect(() => {
     if (ui.focusSession) setOpenSession(ui.focusSession)
@@ -78,24 +80,26 @@ export function ClientProfilePage() {
     toast(routineId ? 'Entrenamiento actualizado.' : 'Entrenamiento eliminado.')
   }
 
-  async function shareFicha() {
-    // Link corto (profallo.vercel.app/c/xxxxxxx). Si no hay nube, se usa el link largo de respaldo.
-    let url = ''
-    if (cloudEnabled) {
-      const code = await cloudCreateClientLink(activeClient.id)
-      if (code) url = `${location.origin}/c/${code}`
-    }
-    if (!url) url = buildClientShareLink(activeClient, data)
+  async function doShare(url: string) {
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     if (nav.share) {
       try { await nav.share({ title: `Semana de ${activeClient.name}`, text: 'Tus entrenamientos de esta semana', url }); return } catch { /* cancelado */ }
     }
     try {
       await navigator.clipboard.writeText(url)
-      toast('Link corto copiado: ' + url)
+      toast('Link copiado: ' + url)
     } catch {
       toast(`Comparte este link: ${url}`)
     }
+  }
+
+  async function shareFicha() {
+    // Abre la vista previa (lo que verá el cliente) y desde ahí se comparte.
+    if (cloudEnabled) {
+      const code = await cloudCreateClientLink(activeClient.id)
+      if (code) { setShareCode(code); return }
+    }
+    await doShare(buildClientShareLink(activeClient, data))
   }
   return <div className="client-profile">
     <div className="client-back-row">
@@ -124,5 +128,22 @@ export function ClientProfilePage() {
       <section className="profile-dark-card tone-white reveal"><div className="section-line"><div><span className="eyebrow">EVOLUCIÓN</span><h2>Mediciones</h2></div><button className="button small" onClick={() => { patchUi({ progressClient: client.id }); actions.newMeasurement() }}>Añadir medición</button></div>{measurements.slice(0,4).map(m => <div className="profile-row" key={m.id}><span>{longDate(m.date)}</span><b>{m.weight} kg</b><button onClick={() => actions.editMeasurement(m.id)}>Editar</button></div>)}{!measurements.length && <p>El progreso aparecerá después de la primera medición.</p>}</section>
     </div>
     <section className="profile-dark-card reveal"><span className="eyebrow">INFORMACIÓN Y NOTAS</span><p>{client.notes || 'Sin observaciones.'}</p><div className="client-contact"><span>{client.idNumber ? `Cédula ${client.idNumber}` : 'Sin cédula'}</span><span>{client.email || 'Sin correo'}</span><span>{client.phone || 'Sin teléfono'}</span><span>Plan {client.plan} · {money(client.fee)} {client.frequency === 'quincenal' ? 'quincenal' : 'al mes'}</span>{client.joined ? <span className="client-since"><Icon name="calendar" /> Desde {longDate(client.joined, { day: 'numeric', month: 'short', year: 'numeric' })}</span> : null}</div></section>
+
+    {shareCode ? (
+      <div className="share-modal-backdrop" onClick={() => setShareCode(null)}>
+        <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="share-modal-head">Esto verá tu cliente</div>
+          <div className="share-modal-body">
+            <PublicClient code={shareCode} />
+          </div>
+          <div className="share-modal-foot">
+            <button className="button light" type="button" onClick={() => setShareCode(null)}>Cerrar</button>
+            <button className="button primary" type="button" onClick={() => doShare(`${location.origin}/c/${shareCode}`)}>
+              <Icon name="share" /> Compartir
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
   </div>
 }

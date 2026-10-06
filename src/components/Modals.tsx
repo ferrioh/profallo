@@ -100,6 +100,7 @@ function useForm() {
 
 export function ClientFormModal({ id }: { id?: string }) {
   const { data, commit, closeModal, toast, ui, patchUi, error, fail } = useForm()
+  const { cloudEnabled, cloudUser } = useApp()
   const c = data.clients.find((x) => x.id === id)
   const newId = id || uid()
   const [photo, setPhoto] = useState(c?.photo ?? '')
@@ -110,6 +111,20 @@ export function ClientFormModal({ id }: { id?: string }) {
     if (!file) return
     if (!file.type.startsWith('image/')) { toast('Sube una imagen.'); return }
     try { setPhotoSrc(await fileToDataUrl(file)) } catch { toast('No se pudo abrir la imagen.') }
+  }
+
+  async function deleteClient() {
+    if (!c) return
+    if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${c.name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
+    if (cloudEnabled && cloudUser) await cloudDeleteClient(c.id)
+    commit((d) => {
+      d.clients = d.clients.filter((x) => x.id !== c.id)
+      d.sessions = d.sessions.filter((s) => s.client !== c.id)
+      d.measurements = d.measurements.filter((m) => m.client !== c.id)
+      d.payments = d.payments.filter((p) => p.client !== c.id)
+    })
+    closeModal()
+    toast('Cliente eliminado.')
   }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -167,7 +182,13 @@ export function ClientFormModal({ id }: { id?: string }) {
   }
 
   return (
-    <FormWrap kind="client" id={id} error={error} onSubmit={onSubmit}>
+    <FormWrap
+      kind="client"
+      id={id}
+      error={error}
+      onSubmit={onSubmit}
+      extra={c ? <button className="button danger" type="button" onClick={deleteClient}><Icon name="trash" /> Eliminar</button> : null}
+    >
       <div className="full client-photo-field">
         <label>Foto del cliente</label>
         <div className="client-photo-row">

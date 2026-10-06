@@ -933,6 +933,11 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-share-info{flex:1;min-width:0;display:grid;gap:3px}
 .admin-share-info b{font-size:16px}
 .admin-share-info small{color:#c9b8ec;font-size:13px}
+.admin-stack-wrap{display:grid;gap:10px;margin:12px 0}
+.admin-stack-bar{display:flex;overflow:hidden;border-radius:8px}
+.admin-stack-bar>span{height:26px;min-width:2px}
+.admin-stack-labels{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:#c8cad0}
+.admin-stack-labels i{width:12px;height:12px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:5px;flex:none}
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */

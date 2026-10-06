@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { PageHead } from '../components/ui'
+import { LineChart } from '../components/ui'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
@@ -139,6 +140,14 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const expiredCount = trainers.filter((t) => trainerStatus(t) === 'expired').length
   const totalClients = trainers.reduce((n, t) => n + Number(t.activeClients || 0), 0)
   const monthlyRevenue = premiumCount * PREMIUM_PRICE
+
+  const monthMap = new Map<string, number>()
+  membershipPays.forEach((p) => {
+    const cur = monthMap.get(p.period ?? '') ?? 0
+    monthMap.set(p.period ?? '', cur + Number(p.amount))
+  })
+  const sortedMonths = [...monthMap.keys()].sort()
+  const monthlyVals = sortedMonths.map((m) => monthMap.get(m) ?? 0)
 
   /* ---------- Calendario de pagos Premium ---------- */
   const lastPay = new Map<string, string>()
@@ -753,7 +762,29 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     </div>
   </article>
 ))}
-            {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : null}
+            {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : (
+            <div className="admin-stack-wrap">
+              <span className="eyebrow">Distribución de acciones</span>
+              <div className="admin-stack-bar">
+                {paySettings.shareholders.map((sh, i) => {
+                  const col = ['#d2ff62','#5ff2e0','#ffb454','#7c3aed','#ff8fb1','#85c4ff','#a0522d','#c4b5fd']
+                  return <span key={sh.id} style={{ flex: sh.percent, background: col[i % col.length], height: 24, borderRadius: i === 0 ? '8px 0 0 8px' : i === paySettings.shareholders.length-1 ? '0 8px 8px 0' : 0 }} />
+                })}
+              </div>
+              <div className="admin-stack-labels">
+                {paySettings.shareholders.map((sh, i) => {
+                  const col = ['#d2ff62','#5ff2e0','#ffb454','#7c3aed','#ff8fb1','#85c4ff','#a0522d','#c4b5fd']
+                  return <span key={sh.id}><i style={{ background: col[i % col.length], width: 12, height: 12, borderRadius: '50%', display: 'inline-block', marginRight: 6 }} /> {sh.name} {sh.percent}%</span>
+                })}
+              </div>
+              {monthlyVals.length > 1 ? (
+                <>
+                  <span className="eyebrow">Ganancia mensual</span>
+                  <LineChart values={monthlyVals} unit=" USD" cls="pc-chart" />
+                </>
+              ) : null}
+            </div>
+          )}
           </div>
         </section>
       ) : null}

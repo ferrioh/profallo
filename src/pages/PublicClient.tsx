@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { Verified } from '../components/Layout'
 import { LineChart } from '../components/ui'
 import { EntryLoader } from '../components/EntryLoader'
 import { cloudPublicClientWeek, type ClientWeek } from '../lib/cloud'
@@ -53,8 +54,10 @@ export function PublicClient({ code }: { code: string }) {
       {w.clientPhoto ? <div className="pc-bg" style={{ backgroundImage: `url(${w.clientPhoto})` }} aria-hidden="true" /> : null}
       <div className="pc-bg-shade" aria-hidden="true" />
       <header className="pc-head">
+        <span className="pc-coach">TU ENTRENADOR</span>
+        <span className="pc-trainer-name">{w.trainerName}{w.trainerVerified ? <Verified /> : null}</span>
+        {w.trainerGym ? <span className="pc-gym"><Icon name="dumbbell" /> {w.trainerGym}</span> : null}
         {w.clientPhoto ? <div className="pc-photo"><img src={w.clientPhoto} alt={w.clientName} /></div> : null}
-        <span className="pc-coach">Entrenador: <b>{w.trainerName}</b></span>
         <h1>{w.clientName}</h1>
         {w.clientGoal ? <p className="pc-goal">{w.clientGoal}</p> : null}
         <span className="pc-week">

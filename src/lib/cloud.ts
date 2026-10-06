@@ -836,6 +836,8 @@ export interface ClientWeek {
   trainerName: string
   trainerPhone: string | null
   trainerUsername: string | null
+  trainerGym?: string | null
+  trainerVerified?: boolean
   clientName: string
   clientPhoto: string | null
   clientGoal: string | null

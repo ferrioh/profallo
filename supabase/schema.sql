@@ -472,6 +472,8 @@ begin
     'trainerName', v_trainer.name,
     'trainerPhone', v_trainer.phone,
     'trainerUsername', v_trainer.username,
+    'trainerGym', v_trainer.gym,
+    'trainerVerified', v_trainer.verified,
     'clientName', v_client.name,
     'clientPhoto', v_client.photo,
     'clientGoal', v_client.goal,

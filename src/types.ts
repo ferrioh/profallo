@@ -129,6 +129,7 @@ export interface Trainer {
   membership: 'free' | 'premium'
   verified: boolean
   role: 'trainer' | 'admin'
+  referral?: boolean
   activeClients: number
   joined: string
   trialStart?: string

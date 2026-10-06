@@ -10,6 +10,7 @@ export interface TrainerRow {
   membership: PlanId
   verified: boolean
   role: 'trainer' | 'admin'
+  referral?: boolean
   created_at?: string
   trial_start?: string | null
   clients?: number
@@ -19,10 +20,16 @@ export async function listTrainers(): Promise<TrainerRow[] | null> {
   if (!isSupabaseEnabled || !supabase) return null
   const { data, error } = await supabase
     .from('profiles')
-    .select('id,email,name,specialty,membership,verified,role,created_at,trial_start')
+    .select('id,email,name,specialty,membership,verified,role,referral,created_at,trial_start')
     .order('created_at', { ascending: true })
   if (error || !data) return null
   return data as TrainerRow[]
+}
+
+export async function setTrainerReferral(id: string, referral: boolean): Promise<boolean> {
+  if (!isSupabaseEnabled || !supabase) return false
+  const { error } = await supabase.from('profiles').update({ referral }).eq('id', id)
+  return !error
 }
 
 export async function setTrainerTrial(id: string, date: string): Promise<boolean> {

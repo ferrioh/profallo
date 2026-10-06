@@ -9,6 +9,7 @@ import {
   listTrainers,
   recordMembershipPayment,
   setTrainerMembership,
+  setTrainerReferral,
   setTrainerRole,
   setTrainerTrial,
   type MembershipPaymentRow,
@@ -40,7 +41,7 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'respaldo' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'accionistas' | 'respaldo' | 'redes'
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
@@ -49,6 +50,7 @@ const TABS: Array<[Tab, string, string]> = [
   ['premium', 'Pagos', 'wallet'],
   ['pagos', 'Datos de pago', 'wallet'],
   ['mensajes', 'Mensaje', 'bell'],
+  ['accionistas', 'Accionistas', 'users'],
   ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
 ]
@@ -64,7 +66,7 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>('resumen')
   const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
-  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true })
+  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true, shareholders: [] })
   const [remote, setRemote] = useState<TrainerRow[] | null>(null)
   const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const [sentMsgs, setSentMsgs] = useState<AdminMessage[] | null>(null)
@@ -117,13 +119,14 @@ export function AdminPage() {
         membership: r.membership,
         verified: r.verified,
         role: r.role,
+        referral: r.referral ?? false,
         activeClients: 0,
         joined: (r.created_at ?? '').slice(0, 10),
         trialStart: r.trial_start ?? undefined,
       }))
     : data.trainers ?? []
 
-  const premiumCount = trainers.filter((t) => t.membership === 'premium').length
+  const premiumCount = trainers.filter((t) => t.membership === 'premium' && !t.referral).length
   const trialCount = trainers.filter((t) => trainerStatus(t) === 'trial').length
   const expiredCount = trainers.filter((t) => trainerStatus(t) === 'expired').length
   const totalClients = trainers.reduce((n, t) => n + Number(t.activeClients || 0), 0)
@@ -182,6 +185,28 @@ export function AdminPage() {
       if (target) { target.membership = next; target.verified = next === 'premium' }
     })
     toast(next === 'premium' ? `Premium activado · ${money(PREMIUM_PRICE)}/mes.` : 'Cambiado a plan Normal.')
+  }
+
+  function toggleReferral(t: Trainer) {
+    const next = !t.referral
+    if (remote) {
+      void (async () => {
+        if (next && t.membership !== 'premium') {
+          const ok = await setTrainerMembership(t.id, 'premium')
+          if (!ok) { toast('No se pudo actualizar.'); return }
+        }
+        const ok2 = await setTrainerReferral(t.id, next)
+        if (!ok2) { toast('No se pudo actualizar.'); return }
+        setRemote((prev) => prev?.map((r) => (r.id === t.id ? { ...r, membership: next ? 'premium' : r.membership, referral: next } : r)) ?? null)
+        toast(next ? 'Premium referencial (no cuenta en ganancias).' : 'Referencial quitado.')
+      })()
+      return
+    }
+    commit((d) => {
+      const target = (d.trainers ?? []).find((x) => x.id === t.id)
+      if (target) { target.referral = next; if (next) target.membership = 'premium' }
+    })
+    toast(next ? 'Premium referencial.' : 'Referencial quitado.')
   }
 
   function toggleRole(t: Trainer) {
@@ -297,11 +322,33 @@ export function AdminPage() {
   function savePaySettings(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
-    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on' }
+    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on', shareholders: paySettings.shareholders }
     cloudSaveAppSettings(s).then((ok) => {
       if (ok) { setPaySettings(s); toast('Datos de pago guardados.') }
       else toast('No se pudieron guardar los datos de pago.')
     })
+  }
+
+  function saveShareholders(list: AppSettings['shareholders']) {
+    const next = { ...paySettings, shareholders: list }
+    setPaySettings(next)
+    cloudSaveAppSettings(next).then((ok) => { if (!ok) toast('No se pudieron guardar los accionistas.') })
+  }
+
+  function addShareholder(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const form = e.currentTarget
+    const x = Object.fromEntries(new FormData(form)) as Record<string, string>
+    const name = (x.name ?? '').trim()
+    const percent = Number(x.percent)
+    if (!name || !Number.isFinite(percent) || percent <= 0) { toast('Escribe nombre y porcentaje.'); return }
+    saveShareholders([...paySettings.shareholders, { id: `sh-${Date.now()}`, name, percent }])
+    form.reset()
+    toast('Accionista agregado.')
+  }
+
+  function removeShareholder(id: string) {
+    saveShareholders(paySettings.shareholders.filter((s) => s.id !== id))
   }
 
   function saveSocial(e: FormEvent<HTMLFormElement>) {
@@ -457,7 +504,10 @@ export function AdminPage() {
                     </div>
                     <div className="admin-trainer-actions">
                       <button className={t.membership === 'premium' ? 'button light' : 'button primary'} onClick={() => togglePlan(t)}>
-                        {t.membership === 'premium' ? 'Pasar a Normal' : `Hacer Premium $${PREMIUM_PRICE}`}
+                        {t.membership === 'premium' ? 'Quitar Premium' : `Hacer Premium $${PREMIUM_PRICE}`}
+                      </button>
+                      <button className={t.referral ? 'button primary' : 'button light'} onClick={() => toggleReferral(t)}>
+                        {t.referral ? 'Referencial ✓' : 'Referencial'}
                       </button>
                       <button className="button light" onClick={() => resetTrial(t)}>Reiniciar prueba</button>
                       <button className="button light" onClick={() => toggleRole(t)}>{t.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}</button>
@@ -654,6 +704,33 @@ export function AdminPage() {
               )
             })}
             {!(sentMsgs ?? []).length ? <div className="admin-empty card white">Aún no has enviado mensajes.</div> : null}
+          </div>
+        </section>
+      ) : null}
+
+      {tab === 'accionistas' ? (
+        <section className="admin-trainers">
+          <div className="section-line">
+            <div><span className="eyebrow">REPARTO DE GANANCIAS</span><h2>Accionistas</h2></div>
+            <span>Ganancia mensual: <b>{money(monthlyRevenue)}</b></span>
+          </div>
+          <form className="admin-msg-form" onSubmit={addShareholder} style={{ marginBottom: 20 }}>
+            <div className="form-grid">
+              <div><label>Nombre</label><input name="name" placeholder="Nombre y apellido" maxLength={60} /></div>
+              <div><label>Porcentaje (%)</label><input name="percent" type="number" min="0" max="100" step="0.1" placeholder="30" /></div>
+            </div>
+            <div className="form-foot"><button className="button primary" type="submit"><Icon name="plus" /> Agregar accionista</button></div>
+          </form>
+          <div className="admin-list">
+            {paySettings.shareholders.map((s) => (
+              <article className="admin-message" key={s.id}>
+                <span className="admin-msg-tag">ACCIONISTA</span>
+                <p><b>{s.name}</b> · {s.percent}%</p>
+                <p>Le corresponde este mes: <b>{money((monthlyRevenue * s.percent) / 100)}</b></p>
+                <div className="admin-msg-actions"><button className="button light" onClick={() => removeShareholder(s.id)}><Icon name="trash" /> Eliminar</button></div>
+              </article>
+            ))}
+            {!paySettings.shareholders.length ? <div className="admin-empty card white">Aún no hay accionistas. Agrega uno con su porcentaje.</div> : null}
           </div>
         </section>
       ) : null}

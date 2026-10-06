@@ -51,6 +51,7 @@ alter table public.profiles add column if not exists username text;
 alter table public.profiles add column if not exists bio text;
 alter table public.profiles add column if not exists accent text default 'lime';
 alter table public.profiles add column if not exists reviews jsonb not null default '[]'::jsonb;
+alter table public.profiles add column if not exists referral boolean not null default false;
 alter table public.profiles add column if not exists notification_state jsonb not null default '{}'::jsonb;
 create unique index if not exists profiles_username_idx on public.profiles (lower(username));
 
@@ -514,6 +515,7 @@ create policy data_backups_owner on public.data_backups
   with check (public.is_admin() or trainer_id = auth.uid()::text);
 
 alter table public.app_settings add column if not exists backup_enabled boolean not null default true;
+alter table public.app_settings add column if not exists shareholders jsonb not null default '[]'::jsonb;
 
 -- ------------------------------------------------------------
 -- Mensajes del administrador (llegan a las notificaciones del usuario)

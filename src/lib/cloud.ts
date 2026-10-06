@@ -480,6 +480,7 @@ export interface AppSettings {
   pay_binance: string
   pay_zelle: string
   backup_enabled: boolean
+  shareholders: Array<{ id: string; name: string; percent: number }>
 }
 
 export type PremiumMethod = 'pagomovil' | 'binance' | 'zelle'
@@ -509,6 +510,7 @@ export async function cloudGetAppSettings(): Promise<AppSettings | null> {
     pay_binance: or(row.pay_binance),
     pay_zelle: or(row.pay_zelle),
     backup_enabled: row.backup_enabled !== false,
+    shareholders: Array.isArray(row.shareholders) ? (row.shareholders as AppSettings['shareholders']) : [],
   }
 }
 

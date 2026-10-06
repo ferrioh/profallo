@@ -21,15 +21,11 @@ export function PublicHome() {
   const [captcha, setCaptcha] = useState(() => ({ a: 2 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) }))
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [robot, setRobot] = useState(false)
-  const [remember, setRemember] = useState(true)
   const [signingUp, setSigningUp] = useState(false)
   const savedEmail = (() => { try { return localStorage.getItem('profallo.email') || '' } catch { return '' } })()
 
   function persistEmail(email: string) {
-    try {
-      if (remember) localStorage.setItem('profallo.email', email.trim())
-      else localStorage.removeItem('profallo.email')
-    } catch { /* ignore */ }
+    try { localStorage.setItem('profallo.email', email.trim()) } catch { /* ignore */ }
   }
 
   useEffect(() => {
@@ -160,42 +156,34 @@ export function PublicHome() {
       <main className="simple-entry-main">
         {mode === 'menu' ? (
           <section className="simple-access" aria-labelledby="entry-title">
-            <span className="simple-access-kicker">PROFALLO</span>
             <h1 id="entry-title" className="shiny-text">Tu progreso, en tus manos<span>.</span></h1>
-            <p>Entrena, organiza y cobra. Todo en un solo lugar.</p>
             <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar sesión <Icon name="arrow" /></button>
             <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
           </section>
         ) : mode === 'login' ? (
           <section className="simple-access" aria-labelledby="login-title">
-            <span className="simple-access-kicker">INICIAR SESIÓN</span>
             <h1 id="login-title" className="shiny-text">Bienvenido de vuelta<span>.</span></h1>
             <form className="entry-form" onSubmit={onLogin}>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
               <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
-              <label className="entry-remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> <span>Recordar usuario</span></label>
               <button className="entry-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
               {error ? <p className="entry-error">{error}</p> : null}
               <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
             </form>
-            <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>No tengo cuenta, crear una</button>
-            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('menu') }}>‹ Volver</button>
+            <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
           </section>
         ) : mode === 'recover' ? (
           <section className="simple-access" aria-labelledby="recover-title">
-            <span className="simple-access-kicker">RECUPERAR CLAVE</span>
-            <h1 id="recover-title">Recupera tu cuenta<span>.</span></h1>
+            <h1 id="recover-title">Recuperar contraseña<span>.</span></h1>
             <form className="entry-form" onSubmit={onRecover}>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
-              <p className="entry-hint">Te enviaremos un correo para restablecer tu contraseña.</p>
               {error ? <p className="entry-error">{error}</p> : null}
               <button className="simple-access-primary" type="submit">Enviar enlace <Icon name="arrow" /></button>
             </form>
-            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('login') }}>‹ Volver a iniciar sesión</button>
+            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('login') }}>‹ Volver</button>
           </section>
         ) : mode === 'signup' ? (
           <section className="simple-access" aria-labelledby="signup-title">
-            <span className="simple-access-kicker">CREAR CUENTA</span>
             <h1 id="signup-title" className="shiny-text">Crea tu espacio<span>.</span></h1>
             <form className="entry-form" onSubmit={onSignup}>
               <label>Nombre completo<input name="name" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>

@@ -549,17 +549,21 @@ dialog.app-sheet{max-width:none}
 /* Marca: "p" centrada, sin flechita */
 .brand-mark{display:inline-grid;place-items:center;padding-left:0;font-weight:700}
 /* Loader de entrada (verde, logo P + linea) */
-.entry-loader{position:fixed;inset:0;z-index:200;background:#d2ff62;display:grid;place-items:center;gap:20px;transition:opacity .45s ease}
-.entry-loader.out{opacity:0;pointer-events:none}
-.entry-loader-tile{display:flex;align-items:center;justify-content:center;width:128px;height:128px;border-radius:34px;background:#131416;color:#d2ff62;font-size:118px;font-weight:800;line-height:1;padding:0 0 30px 14px}
-.entry-loader-word{font-size:15px;font-weight:800;letter-spacing:.28em;text-transform:lowercase;color:#17220a;padding-left:.28em}
-.entry-loader-line{width:132px;height:5px;border-radius:99px;background:#17220a26;overflow:hidden;position:relative}
+.entry-loader{position:fixed;inset:0;z-index:200;background:#d2ff62;display:grid;place-items:center;gap:20px;transition:opacity .5s ease,transform .55s cubic-bezier(.6,-.15,.7,.15)}
+.entry-loader.out{opacity:0;transform:rotate(140deg) scale(.3);pointer-events:none}
+.entry-loader-tile{display:flex;align-items:center;justify-content:center;width:128px;height:128px;border-radius:34px;background:#131416;color:#d2ff62;font-size:118px;font-weight:800;line-height:1;padding:0 0 30px 14px;animation:loaderIn .65s cubic-bezier(.22,1.35,.4,1) both}
+@keyframes loaderIn{from{opacity:0;transform:scale(.35) rotate(-30deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+.entry-loader-word{font-size:15px;font-weight:800;letter-spacing:.28em;text-transform:lowercase;color:#17220a;padding-left:.28em;animation:loaderFade .5s ease .25s both}
+.entry-loader-line{width:132px;height:5px;border-radius:99px;background:#17220a26;overflow:hidden;position:relative;animation:loaderFade .5s ease .35s both}
+@keyframes loaderFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .entry-loader-line::after{content:'';position:absolute;inset:0;background:#17220a;transform-origin:left;transform:scaleX(0);animation:loaderLine 1.5s cubic-bezier(.65,0,.35,1) forwards}
 @keyframes loaderLine{to{transform:scaleX(1)}}
-@media(prefers-reduced-motion:reduce){.entry-loader-line::after{animation:none;transform:scaleX(1)}}
+@media(prefers-reduced-motion:reduce){.entry-loader-line::after{animation:none;transform:scaleX(1)}.entry-loader-tile,.entry-loader-word,.entry-loader-line{animation:none}}
 /* Login abajo tipo hoja (hasta ~media pantalla) para ver mejor las fotos */
 .simple-entry-main{display:grid;place-items:end stretch;padding:0;overflow:hidden}
-.simple-access{width:100%;max-width:none;min-height:52vh;max-height:96dvh;overflow-y:auto;padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px));border:0;border-top:1px solid #ffffff24;border-radius:26px 26px 0 0;background:#0c0f0ab8;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);box-shadow:0 -20px 50px #00000066;display:flex;flex-direction:column;justify-content:center}
+.simple-access{width:100%;max-width:none;min-height:52vh;max-height:96dvh;overflow-y:auto;padding:26px 22px calc(26px + env(safe-area-inset-bottom,0px));border:0;border-top:1px solid #ffffff24;border-radius:26px 26px 0 0;background:#0c0f0ab8;backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);box-shadow:0 -20px 50px #00000066;display:flex;flex-direction:column;justify-content:center;animation:accessUp .55s cubic-bezier(.22,1,.36,1) both}
+@keyframes accessUp{from{opacity:0;transform:translateY(64px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.simple-access{animation:none}}
 .simple-access>*{width:100%;max-width:420px;margin-left:auto;margin-right:auto}
 .simple-access h1{font-size:clamp(22px,2.4vw,28px)}
 .simple-access p{font-size:13px;margin-top:10px}

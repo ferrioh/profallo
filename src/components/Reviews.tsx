@@ -77,13 +77,12 @@ export function ReviewsSection() {
       {reviews.length === 0 ? (
         <p className="reviews-home-empty">Agrega reseñas de tus clientes: aparecerán en tu ficha pública.</p>
       ) : (
-        <div className="rev-scroll" ref={scrollRef}>
-          {reviews.map((r) => {
-            const client = findClient(data, r.client)
-            const isOpen = expanded === r.id
-            return (
-              <div key={r.id} className={`rev-card ${isOpen ? 'open' : ''}`}>
-                <button className="rev-card-head" type="button" onClick={() => setExpanded(isOpen ? null : r.id)}>
+          <div className="rev-scroll" ref={scrollRef}>
+            {[...reviews, ...reviews].map((r, i) => {
+              const client = findClient(data, r.client)
+              const isOpen = expanded === r.id
+              return (
+                <div key={`${r.id}-${i}`} className={`rev-card ${isOpen ? 'open' : ''}`}>                <button className="rev-card-head" type="button" onClick={() => setExpanded(isOpen ? null : r.id)}>
                   <Avatar client={client} />
                   <span className="rev-card-name">{client.name}</span>
                   <span className="rev-card-note">{r.rating}</span>

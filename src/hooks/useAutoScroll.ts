@@ -2,10 +2,11 @@ import { useEffect, useRef } from 'react'
 
 /**
  * Auto-deslizamiento constante y lineal (px por milisegundo) con rAF.
- * Se pausa al tocar/arrastrar con el dedo y reanuda suave al soltar,
- * continuando en la misma dirección (loop).
+ * Se pausa al tocar/arrastrar con el dedo y reanuda suave al soltar.
+ * Si `loop` es true, el contenido debe estar DUPLICADO: envuelve en la mitad
+ * (scrollWidth/2) para un loop infinito sin corte.
  */
-export function useAutoScroll(speed = 0.03) {
+export function useAutoScroll(speed = 0.03, loop = true) {
   const ref = useRef<HTMLDivElement>(null)
   const paused = useRef(false)
 
@@ -24,7 +25,8 @@ export function useAutoScroll(speed = 0.03) {
         pos = el.scrollLeft
       } else if (max > 4) {
         pos += speed * dt
-        if (pos >= max) pos = 0
+        const wrapAt = loop ? el.scrollWidth / 2 : max
+        if (pos >= wrapAt) pos -= wrapAt
         el.scrollLeft = pos
       }
       raf = requestAnimationFrame(tick)

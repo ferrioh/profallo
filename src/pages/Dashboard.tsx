@@ -90,6 +90,11 @@ export function Dashboard() {
 
   // Auto-deslizamiento constante y lineal de la fila de clientes.
   const mosaicRef = useAutoScroll(0.03)
+  const mosaicItems = active
+    .map((c) => ({ c, photo: c.photo || clientPhotos[c.id] }))
+    .filter((x) => x.photo)
+    .concat(active.map((c) => ({ c, photo: c.photo || clientPhotos[c.id] })).filter((x) => !x.photo))
+    .slice(0, 12)
 
   async function shareProfile() {
     if (!data.profile.username) {
@@ -225,14 +230,9 @@ export function Dashboard() {
             <button onClick={() => go('clientes')}>Ver todos ↗</button>
           </div>
           <div className="team-mosaic" ref={mosaicRef}>
-            {active
-              .map((c) => ({ c, photo: c.photo || clientPhotos[c.id] }))
-              .filter((x) => x.photo)
-              .concat(active.map((c) => ({ c, photo: c.photo || clientPhotos[c.id] })).filter((x) => !x.photo))
-              .slice(0, 12)
-              .map(({ c, photo }) => (
+            {[...mosaicItems, ...mosaicItems].map(({ c, photo }, i) => (
                 <button
-                  key={c.id}
+                  key={`${c.id}-${i}`}
                   className={`team-tile ${photo ? 'photo-tile' : ''}`}
                   onClick={() => actions.clientDetail(c.id)}
                   aria-label={`Abrir perfil de ${c.name}`}

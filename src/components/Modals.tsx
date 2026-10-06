@@ -116,7 +116,7 @@ export function ClientFormModal({ id }: { id?: string }) {
   async function deleteClient() {
     if (!c) return
     if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${c.name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
-    if (cloudEnabled && cloudUser) await cloudDeleteClient(c.id)
+    if (cloudEnabled && cloudUser && !await cloudDeleteClient(c.id)) { toast('No se pudo eliminar el cliente de la nube.'); return }
     commit((d) => {
       const sessIds = d.sessions.filter((s) => s.client === c.id).map((s) => s.id)
       const measIds = d.measurements.filter((m) => m.client === c.id).map((m) => m.id)
@@ -766,7 +766,7 @@ export function AssignRoutineModal({ id }: { id: string }) {
     if (!clientId) { toast('Selecciona un cliente.'); return }
     const name = data.clients.find((c) => c.id === clientId)?.name ?? 'este cliente'
     if (!window.confirm(`¿Seguro que quieres ELIMINAR a ${name}? Se borrarán también sus sesiones, mediciones y pagos. No se puede deshacer.`)) return
-    if (cloudEnabled && cloudUser) await cloudDeleteClient(clientId)
+    if (cloudEnabled && cloudUser && !await cloudDeleteClient(clientId)) { toast('No se pudo eliminar el cliente de la nube.'); return }
     commit((d) => {
       const sessIds = d.sessions.filter((s) => s.client === clientId).map((s) => s.id)
       const measIds = d.measurements.filter((m) => m.client === clientId).map((m) => m.id)

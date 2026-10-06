@@ -908,6 +908,8 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-msg-title{display:block;font-size:16px;font-weight:800;color:#fff;margin:6px 0 4px}
 .admin-msg-link{display:inline-block;color:#c4b5fd;text-decoration:underline;font-size:13px;margin-top:4px;word-break:break-all}
 .admin-msg-form input{background:#22242a;color:#fff;border:1px solid #4a4c54;color-scheme:dark}
+.admin-msg-actions{display:flex;gap:8px;margin-top:10px}
+.admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */
 .toolbar-title{display:flex;align-items:center;font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1}
 .session-row{display:flex;gap:8px;margin-top:10px}

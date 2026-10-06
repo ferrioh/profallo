@@ -538,6 +538,9 @@ create policy admin_messages_write on public.admin_messages
 drop policy if exists admin_messages_delete on public.admin_messages;
 create policy admin_messages_delete on public.admin_messages
   for delete using (public.is_admin() or trainer_id = auth.uid()::text);
+drop policy if exists admin_messages_update on public.admin_messages;
+create policy admin_messages_update on public.admin_messages
+  for update using (public.is_admin()) with check (public.is_admin());
 
 -- Restaurar un respaldo a su entrenador (solo admin).
 create or replace function public.admin_restore_backup(p_id uuid)

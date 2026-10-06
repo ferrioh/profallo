@@ -606,6 +606,28 @@ export async function cloudSendAdminMessage(
   return !error
 }
 
+export async function cloudDeleteAdminMessage(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase.from('admin_messages').delete().eq('id', id)
+  return !error
+}
+
+export async function cloudUpdateAdminMessage(
+  id: string,
+  fields: { title?: string; text?: string; link?: string },
+): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('admin_messages')
+    .update({
+      title: fields.title?.trim() ? fields.title.trim() : null,
+      text: fields.text?.trim() ?? '',
+      link: fields.link?.trim() ? fields.link.trim() : null,
+    })
+    .eq('id', id)
+  return !error
+}
+
 export async function cloudListAdminMessages(): Promise<AdminMessage[] | null> {
   if (!supabase) return null
   const { data, error } = await supabase

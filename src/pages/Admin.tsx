@@ -20,11 +20,13 @@ import {
   cloudApprovePremium,
   cloudDeleteAccount,
   cloudGetAppSettings,
+  cloudDeleteAdminMessage,
   cloudListAdminMessages,
   cloudListBackups,
   cloudListPremiumRequests,
   cloudRestoreBackup,
   cloudSendAdminMessage,
+  cloudUpdateAdminMessage,
   type AdminMessage,
   type BackupRow,
   cloudListProfiles,
@@ -70,6 +72,7 @@ export function AdminPage() {
   const [msgText, setMsgText] = useState('')
   const [msgTitle, setMsgTitle] = useState('')
   const [msgLink, setMsgLink] = useState('')
+  const [editingMsgId, setEditingMsgId] = useState<string | null>(null)
   const [membershipPays, setMembershipPays] = useState<MembershipPaymentRow[]>([])
   const [premMonth, setPremMonth] = useState(month(TODAY))
   const nowMonth = month(TODAY)
@@ -244,11 +247,36 @@ export function AdminPage() {
     if (!msgTo) { toast('Selecciona un destinatario.'); return }
     if (!msgText.trim()) { toast('Escribe un mensaje.'); return }
     const target = msgTo === '__all__' ? null : msgTo
+    if (editingMsgId) {
+      const ok = await cloudUpdateAdminMessage(editingMsgId, { title: msgTitle, text: msgText, link: msgLink })
+      if (!ok) { toast('No se pudo actualizar el mensaje.'); return }
+      setEditingMsgId(null); setMsgText(''); setMsgTitle(''); setMsgLink('')
+      cloudListAdminMessages().then((rows) => { if (rows) setSentMsgs(rows) })
+      toast('Mensaje actualizado.')
+      return
+    }
     const ok = await cloudSendAdminMessage(target, msgText.trim(), msgTitle, msgLink)
     if (!ok) { toast('No se pudo enviar el mensaje.'); return }
-    setSentMsgs((prev) => [{ id: `local-${Date.now()}`, trainer_id: target, title: msgTitle.trim() || null, text: msgText.trim(), link: msgLink.trim() || null, created_at: new Date().toISOString() }, ...(prev ?? [])])
     setMsgText(''); setMsgTitle(''); setMsgLink('')
+    cloudListAdminMessages().then((rows) => { if (rows) setSentMsgs(rows) })
     toast('Mensaje enviado.')
+  }
+
+  function editMessage(m: AdminMessage) {
+    setEditingMsgId(m.id)
+    setMsgTo(m.trainer_id ?? '__all__')
+    setMsgTitle(m.title ?? '')
+    setMsgText(m.text)
+    setMsgLink(m.link ?? '')
+  }
+
+  function deleteMessage(id: string) {
+    if (!window.confirm('¿Eliminar este mensaje? Se quitará de las notificaciones.')) return
+    cloudDeleteAdminMessage(id).then((ok) => {
+      if (!ok) { toast('No se pudo eliminar el mensaje.'); return }
+      setSentMsgs((prev) => (prev ?? []).filter((m) => m.id !== id))
+      toast('Mensaje eliminado.')
+    })
   }
 
   function approvePremium(req: PremiumRequestRow) {
@@ -599,7 +627,8 @@ export function AdminPage() {
               <input value={msgLink} onChange={(e) => setMsgLink(e.target.value)} maxLength={300} placeholder="https://…" />
             </label>
             <div className="form-foot">
-              <button className="button primary" type="submit"><Icon name="bell" /> Enviar mensaje</button>
+              {editingMsgId ? <button className="button light" type="button" onClick={() => { setEditingMsgId(null); setMsgText(''); setMsgTitle(''); setMsgLink('') }}>Cancelar</button> : null}
+              <button className="button primary" type="submit"><Icon name="bell" /> {editingMsgId ? 'Guardar cambios' : 'Enviar mensaje'}</button>
             </div>
           </form>
 
@@ -617,6 +646,10 @@ export function AdminPage() {
                   <p>{m.text}</p>
                   {m.link ? <a className="admin-msg-link" href={m.link} target="_blank" rel="noopener noreferrer">{m.link}</a> : null}
                   <small>{m.trainer_id ? (acc?.name ?? m.trainer_id) : 'Todos'} · {new Date(m.created_at).toLocaleString('es')}</small>
+                  <div className="admin-msg-actions">
+                    {m.id.startsWith('local-') ? null : <button className="button light" onClick={() => editMessage(m)}><Icon name="edit" /> Editar</button>}
+                    <button className="button light" onClick={() => deleteMessage(m.id)}><Icon name="trash" /> Eliminar</button>
+                  </div>
                 </article>
               )
             })}

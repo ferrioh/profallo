@@ -911,7 +911,7 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .admin-msg-actions{display:flex;gap:8px;margin-top:10px}
 .admin-msg-actions .button{font-size:12px;min-height:36px;padding:8px 12px}
 /* Barra de clientes + fila de próximas sesiones */
-.toolbar-title{display:flex;align-items:center;font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1}
+.client-toolbar + .client-grid{margin-top:0}
 .session-row{display:flex;gap:8px;margin-top:10px}
 .session-mini{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:#f1f4ec;border:1px solid #e2e7da;border-radius:14px;padding:8px 10px;color:#20301a}
 .session-mini .avatar{width:30px;height:30px;font-size:11px}

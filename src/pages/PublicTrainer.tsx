@@ -37,7 +37,6 @@ function Count({ value }: { value: number }) {
   return <>{n}</>
 }
 
-/** Mide la eficiencia de entrenamiento (porcentaje) y la anima al entrar. */
 function EfficiencyMeter({ value }: { value: number }) {
   const [n, setN] = useState(0)
   useEffect(() => {
@@ -46,8 +45,7 @@ function EfficiencyMeter({ value }: { value: number }) {
     const dur = 1500
     const tick = (now: number) => {
       const p = Math.min(1, (now - start) / dur)
-      const eased = 1 - Math.pow(1 - p, 3)
-      setN(Math.round(value * eased))
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))))
       if (p < 1) raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
@@ -59,9 +57,7 @@ function EfficiencyMeter({ value }: { value: number }) {
         <span>Eficiencia de entrenamiento</span>
         <b>{n}%</b>
       </div>
-      <div className="pt-metric-track">
-        <i style={{ width: `${n}%` }} />
-      </div>
+      <div className="pt-metric-track"><i style={{ width: `${n}%` }} /></div>
       <small>En crecimiento constante</small>
     </div>
   )
@@ -117,20 +113,12 @@ function ReviewCarousel({ reviews }: { reviews: PublicReview[] }) {
 export function PublicTrainer({ username }: { username: string }) {
   const [t, setT] = useState<PublicTrainerData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [slide, setSlide] = useState(0)
 
   useEffect(() => {
     cloudPublicProfile(username)
       .then((x) => { setT(x); setLoading(false) })
       .catch(() => setLoading(false))
   }, [username])
-
-  const photos = [t?.photo, ...(t?.photos ?? [])].filter(Boolean) as string[]
-  useEffect(() => {
-    if (photos.length < 2) return
-    const timer = window.setInterval(() => setSlide((s) => (s + 1) % photos.length), 6000)
-    return () => window.clearInterval(timer)
-  }, [photos.length])
 
   if (loading) {
     return (
@@ -145,7 +133,7 @@ export function PublicTrainer({ username }: { username: string }) {
   if (!t) {
     return (
       <div className="public-trainer">
-        <div className="pt-card pt-glass">
+        <div className="pt-card">
           <h1>Entrenador no encontrado</h1>
           <p className="muted">El enlace <b>@{username}</b> no existe o no está disponible.</p>
         </div>
@@ -164,16 +152,7 @@ export function PublicTrainer({ username }: { username: string }) {
 
   return (
     <div className="public-trainer" style={{ '--pt-accent': accent } as CSSProperties}>
-      {photos.length ? (
-        <div className="pt-bg" aria-hidden="true">
-          {photos.map((src, i) => (
-            <div key={i} className={`pt-bg-slide ${i === slide ? 'active' : ''}`} style={{ backgroundImage: `url(${src})` }} />
-          ))}
-          <div className="pt-bg-shade" />
-        </div>
-      ) : null}
-
-      <div className="pt-card pt-glass">
+      <div className="pt-card">
         <div className="pt-photo">{t.photo ? <img src={t.photo} alt={t.name} /> : <Icon name="user" />}</div>
         <span className="pt-role">{t.specialty || 'Entrenador personal'}</span>
         <h1>
@@ -182,7 +161,7 @@ export function PublicTrainer({ username }: { username: string }) {
         </h1>
         {t.bio ? <p className="pt-bio">{t.bio}</p> : null}
 
-        <div className="pt-stats pt-glass-block">
+        <div className="pt-stats">
           <div>
             <span className="pt-stat-ic"><Icon name="dumbbell" /></span>
             <b><Count value={t.routines} /></b>
@@ -200,9 +179,9 @@ export function PublicTrainer({ username }: { username: string }) {
           </div>
         </div>
 
-        <EfficiencyMeter value={efficiency} />
-
         {reviews.length ? <ReviewCarousel reviews={reviews} /> : null}
+
+        <EfficiencyMeter value={efficiency} />
 
         {insta || tiktok ? (
           <div className="pt-social">

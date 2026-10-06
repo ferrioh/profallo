@@ -3,9 +3,13 @@ import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { findClient, TODAY, uid } from '../lib/utils'
+import { cloudSaveReviews } from '../lib/cloud'
+import type { Profile } from '../types'
+
+type Review = NonNullable<Profile['reviews']>[number]
 
 export function ReviewsSection() {
-  const { data, commit, toast } = useApp()
+  const { data, commit, toast, cloudEnabled, cloudUser } = useApp()
   const reviews = data.profile.reviews ?? []
   const scrollRef = useRef<HTMLDivElement>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -14,6 +18,15 @@ export function ReviewsSection() {
   const [clientId, setClientId] = useState('')
   const [rating, setRating] = useState(9)
   const [text, setText] = useState('')
+
+  function persist(next: Review[]) {
+    commit((d) => { d.profile.reviews = next })
+    if (cloudEnabled && cloudUser) {
+      void cloudSaveReviews(cloudUser, next).then((ok) => {
+        if (!ok) toast('No se pudieron guardar las reseñas en la nube.')
+      })
+    }
+  }
 
   function reset() {
     setFormOpen(false)
@@ -26,15 +39,11 @@ export function ReviewsSection() {
   function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!clientId) { toast('Selecciona un cliente.'); return }
-    commit((d) => {
-      const list = d.profile.reviews ?? (d.profile.reviews = [])
-      if (editingId) {
-        const r = list.find((x) => x.id === editingId)
-        if (r) { r.client = clientId; r.rating = rating; r.text = text.trim() }
-      } else {
-        list.unshift({ id: uid(), client: clientId, rating, text: text.trim(), date: TODAY })
-      }
-    })
+    const entry: Review = { id: uid(), client: clientId, rating, text: text.trim(), date: TODAY }
+    const next = editingId
+      ? reviews.map((r) => (r.id === editingId ? { ...r, client: clientId, rating, text: text.trim() } : r))
+      : [entry, ...reviews]
+    persist(next)
     toast(editingId ? 'Reseña actualizada.' : 'Reseña agregada.')
     reset()
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' }))
@@ -51,7 +60,7 @@ export function ReviewsSection() {
   }
 
   function remove(id: string) {
-    commit((d) => { d.profile.reviews = (d.profile.reviews ?? []).filter((r) => r.id !== id) })
+    persist(reviews.filter((r) => r.id !== id))
     toast('Reseña eliminada.')
   }
 

@@ -327,6 +327,13 @@ export async function cloudSetProfileRole(id: string, role: CloudProfileRow['rol
   return !error
 }
 
+/** Guarda las reseñas del entrenador directamente en su perfil (garantiza persistencia). */
+export async function cloudSaveReviews(userId: string, reviews: unknown): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase.from('profiles').update({ reviews: reviews ?? [] }).eq('id', userId)
+  return !error
+}
+
 /* ----------------------------- Datos ----------------------------- */
 
 export async function loadCloudData(userId: string, base: Profile): Promise<AppData | null> {

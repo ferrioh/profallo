@@ -914,3 +914,15 @@ dialog.app-sheet{max-width:none}
 .public-trainer .pt-stat-ic svg{width:18px;height:18px}
 .public-trainer .pt-stats b{font-size:30px;font-weight:700;letter-spacing:-.6px;color:var(--pt-accent,#d2ff62);line-height:1}
 .public-trainer .pt-stats span{font-size:11px;color:#c9ccc2;letter-spacing:.02em}
+/* Ficha pública: tema gris oscuro (dinámico) */
+.public-trainer{background:#0f1113;align-items:flex-start;padding:20px 14px calc(32px + env(safe-area-inset-bottom,0px))}
+.pt-card{background:#1a1c1f;border:1px solid #2c2f33;box-shadow:0 24px 60px #0009}
+.pt-role{color:#c7ccd0}
+.pt-bio{color:#c2c7cb}
+.public-trainer .pt-stats>div{background:#212428;border:1px solid #2f3338}
+.public-trainer .pt-stat-ic{background:#2b2f34}
+.pt-metric-track{background:#2b2f33}
+.pt-review{background:#212428;border:1px solid #2f3338}
+.pt-social-link{background:#212428;border-color:#33383d}
+.pt-reviews-avg{background:#212428}
+.pt-foot{color:#8a9096}

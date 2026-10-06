@@ -863,7 +863,8 @@ dialog.app-sheet{max-width:none}
 /* Reseñas en Inicio */
 .reviews-home{margin:22px 0 6px}
 .reviews-home-empty{color:#c2c6bd;font-size:14px;background:#2d2f36;border:1px dashed #4b4e55;border-radius:18px;padding:18px}
-.rev-scroll{display:flex;gap:10px;overflow-x:auto;padding:3px 1px 10px;scrollbar-width:thin;min-width:0;max-width:100%;-webkit-overflow-scrolling:touch}
+.rev-scroll{display:flex;gap:10px;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-x:contain;padding:3px 1px 10px;scrollbar-width:none;min-width:0;max-width:100%}
+.rev-scroll::-webkit-scrollbar{display:none}
 .rev-scroll::-webkit-scrollbar{height:6px}
 .rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
 .rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}
@@ -890,7 +891,7 @@ dialog.app-sheet{max-width:none}
 .pay-backup-toggle input{width:auto;min-height:0}
 /* Clientes de Inicio: deslizar con el dedo */
 @media(max-width:560px){
-  .team-mosaic{display:flex;overflow-x:auto;gap:10px;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
+  .team-mosaic{display:flex;overflow-x:hidden;touch-action:pan-y;overscroll-behavior-x:contain;gap:10px;padding-bottom:6px;scrollbar-width:none}
   .team-mosaic::-webkit-scrollbar{display:none}
   .team-mosaic>*{flex:0 0 82%}
 }

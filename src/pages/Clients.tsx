@@ -42,7 +42,6 @@ export function ClientsPage() {
         <div><span>Con rutina</span><strong>{data.clients.filter(c => !c.archived && c.routine).length}</strong><small>Plan asignado</small></div>
       </div>
       <div className="toolbar client-toolbar">
-        <span className="toolbar-title">Clientes</span>
         <div className="layout-toggle">
           <button type="button" className={layout === 'grid' ? 'active' : ''} onClick={() => setLayout('grid')} aria-label="Cuadrícula"><Icon name="grid" /></button>
           <button type="button" className={layout === 'list' ? 'active' : ''} onClick={() => setLayout('list')} aria-label="Lista"><Icon name="list" /></button>

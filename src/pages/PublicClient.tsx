@@ -37,12 +37,19 @@ export function PublicClient({ code }: { code: string }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i)).filter((d) => d >= TODAY)
   const byDate = (d: string) => w.sessions.filter((s) => s.date === d)
   const pending = w.sessions.filter((s) => s.date >= TODAY).length
+  const measures = (w.measurements ?? []).filter((m) => m.weight != null)
+  const firstW = measures[0]?.weight ?? null
+  const lastW = measures[measures.length - 1]?.weight ?? null
+  const delta = firstW != null && lastW != null ? Number((Number(lastW) - Number(firstW)).toFixed(1)) : null
+  const lastM = measures[measures.length - 1]
   const wa = w.trainerPhone
     ? `https://wa.me/${w.trainerPhone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${w.trainerName}, vi mi semana de entrenamiento 💪`)}`
     : ''
 
   return (
     <div className="public-client">
+      {w.clientPhoto ? <div className="pc-bg" style={{ backgroundImage: `url(${w.clientPhoto})` }} aria-hidden="true" /> : null}
+      <div className="pc-bg-shade" aria-hidden="true" />
       <header className="pc-head">
         {w.clientPhoto ? <div className="pc-photo"><img src={w.clientPhoto} alt={w.clientName} /></div> : null}
         <span className="pc-coach">Entrenador: <b>{w.trainerName}</b></span>
@@ -104,6 +111,24 @@ export function PublicClient({ code }: { code: string }) {
           })}
         </div>
       )}
+
+      {measures.length ? (
+        <section className="pc-day pc-progress">
+          <header className="pc-day-head">
+            <span className="pc-day-name">Progreso</span>
+          </header>
+          <div className="pc-prog-grid">
+            <div className="pc-prog-item">
+              <span>Peso actual</span>
+              <b>{lastW} kg</b>
+              {delta != null ? <small className={delta <= 0 ? 'down' : 'up'}>{delta > 0 ? '+' : ''}{delta} kg</small> : null}
+            </div>
+            {lastM?.waist != null ? <div className="pc-prog-item"><span>Cintura</span><b>{lastM.waist} cm</b></div> : null}
+            {lastM?.fat != null ? <div className="pc-prog-item"><span>Grasa</span><b>{lastM.fat}%</b></div> : null}
+            <div className="pc-prog-item"><span>Mediciones</span><b>{measures.length}</b></div>
+          </div>
+        </section>
+      ) : null}
 
       {wa ? (
         <a className="pc-contact" href={wa} target="_blank" rel="noopener noreferrer">

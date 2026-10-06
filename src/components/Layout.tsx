@@ -91,7 +91,8 @@ export function Sidebar() {
   function onNavUp() {
     const target = dragRef.current?.target
     dragRef.current = null
-    setDragging(false)
+    // Mantener la transición desactivada durante el cambio para que el pase sea
+    // instantáneo y no se vea el tirón (doble animación transform + left).
     setDragDx(0)
     if (target != null) {
       const v = NAV[target]?.[0]
@@ -100,6 +101,7 @@ export function Sidebar() {
         go(v)
       }
     }
+    requestAnimationFrame(() => requestAnimationFrame(() => setDragging(false)))
   }
 
   useEffect(() => {

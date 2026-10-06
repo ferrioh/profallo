@@ -5,16 +5,9 @@ import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { PageHead } from '../components/ui'
 import { clientPhotos, findRoutine, initials, progressFor } from '../lib/utils'
-import type { ClientFilter } from '../types'
-
-const FILTERS: Array<[ClientFilter, string]> = [
-  ['activos', 'Activos'],
-  ['todos', 'Todos'],
-  ['archivo', 'Archivo'],
-]
 
 export function ClientsPage() {
-  const { data, ui, patchUi, money } = useApp()
+  const { data, ui, money } = useApp()
   const actions = useActions()
   const [layout, setLayout] = useState<'grid' | 'list'>('grid')
 
@@ -49,17 +42,6 @@ export function ClientsPage() {
         <div><span>Con rutina</span><strong>{data.clients.filter(c => !c.archived && c.routine).length}</strong><small>Plan asignado</small></div>
       </div>
       <div className="toolbar client-toolbar">
-        <div className="filter-tabs">
-          {FILTERS.map(([v, t]) => (
-            <button
-              key={v}
-              onClick={() => patchUi({ clientFilter: v })}
-              className={ui.clientFilter === v ? 'active' : ''}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
         <div className="layout-toggle">
           <button type="button" className={layout === 'grid' ? 'active' : ''} onClick={() => setLayout('grid')} aria-label="Cuadrícula"><Icon name="grid" /></button>
           <button type="button" className={layout === 'list' ? 'active' : ''} onClick={() => setLayout('list')} aria-label="Lista"><Icon name="list" /></button>

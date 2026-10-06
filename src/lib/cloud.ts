@@ -705,6 +705,13 @@ export interface ClientWeekSession {
   exercises: ClientWeekExercise[]
 }
 
+export interface ClientMeasure {
+  date: string
+  weight: number | null
+  waist: number | null
+  fat: number | null
+}
+
 export interface ClientWeek {
   trainerName: string
   trainerPhone: string | null
@@ -714,6 +721,7 @@ export interface ClientWeek {
   clientGoal: string | null
   weekStart: string
   sessions: ClientWeekSession[]
+  measurements?: ClientMeasure[]
 }
 
 /** Crea (o reutiliza) un código corto para la semana del cliente. */

@@ -883,6 +883,11 @@ dialog.app-sheet{max-width:none}
 .cli-actions button{width:36px;min-height:36px;border-radius:50%;display:grid;place-items:center;background:#3a3d45;color:#fff;border:1px solid #575a62;padding:0}
 .cli-actions svg{width:15px;height:15px}
 @media(max-width:430px){.cli-meta{display:none}}
+/* Campos de fecha que se ajustan (no se salen de pantalla) */
+input[type="date"],input[type="datetime-local"],input[type="month"],input[type="time"]{width:100%;min-width:0;max-width:100%}
+.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+dialog .form-grid>div{min-width:0}
+@media(max-width:560px){.form-grid{grid-template-columns:minmax(0,1fr)}}
 .rev-scroll::-webkit-scrollbar{height:6px}
 .rev-scroll::-webkit-scrollbar-thumb{background:#4a4d55;border-radius:99px}
 .rev-card{flex:none;width:186px;scroll-snap-align:start;background:#2d2f36;border:1px solid #454750;border-radius:18px;overflow:hidden}

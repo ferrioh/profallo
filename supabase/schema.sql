@@ -425,6 +425,7 @@ declare
   v_monday  date;
   v_week    text;
   v_sessions jsonb;
+  v_measures jsonb;
 begin
   select * into v_link from public.client_links where code = p_code limit 1;
   if not found then return null; end if;
@@ -434,6 +435,12 @@ begin
 
   v_monday := date_trunc('week', current_date)::date;
   v_week := to_char(v_monday, 'YYYY-MM-DD');
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'date', m.date, 'weight', m.weight, 'waist', m.waist, 'fat', m.fat
+    ) order by m.date), '[]'::jsonb) into v_measures
+  from public.measurements m
+  where m.client_id = v_client.id;
 
   select coalesce(jsonb_agg(x.row order by x.row_date, x.row_time), '[]'::jsonb) into v_sessions
   from (
@@ -467,7 +474,8 @@ begin
     'clientPhoto', v_client.photo,
     'clientGoal', v_client.goal,
     'weekStart', v_week,
-    'sessions', v_sessions
+    'sessions', v_sessions,
+    'measurements', v_measures
   );
 end; $$;
 grant execute on function public.public_client_week(text) to anon, authenticated;

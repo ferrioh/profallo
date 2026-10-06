@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { Icon } from '../components/Icon'
+import { EntryLoader } from '../components/EntryLoader'
 import { cloudPublicProfile, type PublicReview, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
 import { socialHandle, socialUrl } from '../lib/social'
 
@@ -121,13 +122,7 @@ export function PublicTrainer({ username }: { username: string }) {
   }, [username])
 
   if (loading) {
-    return (
-      <div className="entry-loader" aria-hidden="true">
-        <span className="entry-loader-logo">p</span>
-        <span className="entry-loader-word">profallo</span>
-        <span className="entry-loader-line" />
-      </div>
-    )
+    return <EntryLoader />
   }
 
   if (!t) {

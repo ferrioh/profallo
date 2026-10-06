@@ -548,11 +548,12 @@ dialog.app-sheet{max-width:none}
 /* Marca: "p" centrada, sin flechita */
 .brand-mark{display:inline-grid;place-items:center;padding-left:0;font-weight:700}
 /* Loader de entrada (verde, logo P + linea) */
-.entry-loader{position:fixed;inset:0;z-index:200;background:#d2ff62;display:grid;place-items:center;gap:22px;transition:opacity .45s ease}
+.entry-loader{position:fixed;inset:0;z-index:200;background:#0f1113;display:grid;place-items:center;gap:20px;transition:opacity .45s ease}
 .entry-loader.out{opacity:0;pointer-events:none}
-.entry-loader-logo{font-size:132px;font-weight:800;color:#17220a;line-height:.8;font-family:inherit}
-.entry-loader-line{width:132px;height:5px;border-radius:99px;background:#17220a2e;overflow:hidden;position:relative}
-.entry-loader-line::after{content:'';position:absolute;inset:0;background:#17220a;transform-origin:left;transform:scaleX(0);animation:loaderLine 1.5s cubic-bezier(.65,0,.35,1) forwards}
+.entry-loader .brand-mark{box-shadow:0 18px 44px #d2ff6255}
+.entry-loader-word{font-size:15px;font-weight:800;letter-spacing:.28em;text-transform:lowercase;color:#eef1f2;padding-left:.28em}
+.entry-loader-line{width:132px;height:5px;border-radius:99px;background:#ffffff1f;overflow:hidden;position:relative}
+.entry-loader-line::after{content:'';position:absolute;inset:0;background:#d2ff62;transform-origin:left;transform:scaleX(0);animation:loaderLine 1.5s cubic-bezier(.65,0,.35,1) forwards}
 @keyframes loaderLine{to{transform:scaleX(1)}}
 @media(prefers-reduced-motion:reduce){.entry-loader-line::after{animation:none;transform:scaleX(1)}}
 /* Login abajo tipo hoja (hasta ~media pantalla) para ver mejor las fotos */
@@ -856,8 +857,7 @@ dialog.app-sheet{max-width:none}
 .entry-id{display:flex;gap:8px;margin-top:6px}
 .entry-id select{width:64px;flex:none;background:#1a1c22;color:#fff;border:1px solid #3a3d45;border-radius:12px;text-align:center;text-align-last:center;color-scheme:dark}
 .entry-id input{margin-top:0}
-/* Marca en el loader */
-.entry-loader-word{font-size:15px;font-weight:800;letter-spacing:.28em;text-transform:lowercase;color:#17220a;margin-top:-16px;padding-left:.28em}
+/* Marca en el loader (usa EntryLoader) */
 /* Reseñas en Inicio */
 .reviews-home{margin:22px 0 6px}
 .reviews-home-empty{color:#c2c6bd;font-size:14px;background:#2d2f36;border:1px dashed #4b4e55;border-radius:18px;padding:18px}

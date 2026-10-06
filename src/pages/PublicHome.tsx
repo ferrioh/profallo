@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
+import { EntryLoader } from '../components/EntryLoader'
 import { PasswordInput } from '../components/PasswordInput'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
 import { cloudSignIn, cloudSignUp } from '../lib/cloud'
@@ -116,10 +117,7 @@ export function PublicHome() {
   return (
     <div className="simple-entry">
       {phase !== 'done' ? (
-        <div className={`entry-loader ${phase === 'out' ? 'out' : ''}`} aria-hidden="true">
-          <span className="entry-loader-logo">p</span>
-          <span className="entry-loader-line" />
-        </div>
+        <EntryLoader out={phase === 'out'} />
       ) : null}
       <div className="entry-bg" aria-hidden="true">
         {SLIDES.map((src, i) => (

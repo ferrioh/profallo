@@ -20,15 +20,10 @@ import { AdminLogin } from './pages/AdminLogin'
 import { PublicTrainer } from './pages/PublicTrainer'
 import { PublicClient } from './pages/PublicClient'
 import { currentAccount, useAuthVersion } from './lib/auth'
+import { EntryLoader } from './components/EntryLoader'
 
 function AppLoader() {
-  return (
-    <div className="entry-loader" aria-hidden="true">
-      <span className="entry-loader-logo">p</span>
-      <span className="entry-loader-word">profallo</span>
-      <span className="entry-loader-line" />
-    </div>
-  )
+  return <EntryLoader />
 }
 
 export default function App() {

@@ -380,10 +380,12 @@ export async function saveCloudData(userId: string, data: AppData): Promise<bool
   row.notification_state = data.notificationState ?? {}
   let prof = await supabase.from('profiles').upsert(row)
   if (prof.error) {
-    // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/etc.).
+    // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/accent/reviews/etc.).
     const safe = { ...row }
     delete safe.tiktok
     delete safe.bio
+    delete safe.accent
+    delete safe.reviews
     delete safe.notification_state
     prof = await supabase.from('profiles').upsert(safe)
   }

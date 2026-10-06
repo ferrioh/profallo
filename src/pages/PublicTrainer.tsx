@@ -136,7 +136,7 @@ export function PublicTrainer({ username }: { username: string }) {
   }
 
   const accent = ACCENT[t.accent] ?? ACCENT.lime
-  const efficiency = Math.round(clamp(58 + t.clients * 3 + t.routines * 1.2 + t.sessionsMonth * 0.8, 55, 98))
+  const efficiency = 100
   const reviews = t.reviews ?? []
   const wa = t.phone
     ? `https://wa.me/${t.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hola ${t.name}, quiero unirme a tu equipo 💪`)}`

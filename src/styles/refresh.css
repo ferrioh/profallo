@@ -827,7 +827,7 @@ dialog.app-sheet{max-width:none}
 .public-trainer .pt-brand{color:var(--pt-accent,#d2ff62)}
 .public-trainer .pt-join{background:var(--pt-accent,#d2ff62)}
 .public-trainer .pt-social-link svg{color:var(--pt-accent,#d2ff62)}
-.pt-glass-block{background:#ffffff12;backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);border:1px solid #ffffff26}
+.pt-glass-block{background:linear-gradient(160deg,rgba(150,158,150,.18),rgba(80,86,80,.10));backdrop-filter:blur(14px) saturate(150%);-webkit-backdrop-filter:blur(14px) saturate(150%);border:1px solid #ffffff26}
 .public-trainer .pt-stats>div{background:#ffffff10;border:1px solid #ffffff22;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .public-trainer .pt-stats b{color:var(--pt-accent,#d2ff62)}
 .pt-metric{width:100%;display:grid;gap:8px;margin:8px 0 2px;text-align:left}
@@ -904,3 +904,5 @@ dialog.app-sheet{max-width:none}
 .pt-reviews-dots button.active{background:var(--pt-accent,#d2ff62)}
 .pt-brand{display:inline-flex;align-items:center;gap:6px;justify-content:center}
 .pt-brand-mark{width:20px!important;height:20px!important;font-size:19px!important;line-height:19px!important;border-radius:6px;padding-left:4px!important}
+/* Glass gris real en la ficha compartida */
+.pt-card.pt-glass{background:linear-gradient(160deg,rgba(150,158,150,.24),rgba(78,84,78,.13));backdrop-filter:blur(28px) saturate(140%);-webkit-backdrop-filter:blur(28px) saturate(140%);border:1px solid #ffffff33;box-shadow:0 30px 80px #0007,inset 0 1px 0 #ffffff22}

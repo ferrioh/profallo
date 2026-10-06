@@ -1060,12 +1060,6 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .shiny-text{background:linear-gradient(110deg,#6f8a3a 20%,#eaffb0 42%,#d2ff62 52%,#6f8a3a 78%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:shiny 3.4s linear infinite}
 @keyframes shiny{to{background-position:-220% 0}}
 @media(prefers-reduced-motion:reduce){.shiny-text{animation:none;-webkit-text-fill-color:#d2ff62;color:#d2ff62;background:none}}
-/* StarBorder (React Bits): borde con brillo giratorio en botones verdes */
-@property --sb-angle{syntax:'<angle>';inherits:false;initial-value:0deg}
-.button.primary,.simple-access-primary,.pt-join,.pc-contact{position:relative;z-index:0;overflow:visible}
-.button.primary::before,.simple-access-primary::before,.pt-join::before,.pc-contact::before{content:'';position:absolute;inset:-2px;border-radius:inherit;z-index:-1;pointer-events:none;background:conic-gradient(from var(--sb-angle),transparent 0 56%,#f2ffcc 72%,#d2ff62 80%,transparent 92%);animation:sbSpin 3.6s linear infinite}
-@keyframes sbSpin{to{--sb-angle:360deg}}
-@media(prefers-reduced-motion:reduce){.button.primary::before,.simple-access-primary::before,.pt-join::before,.pc-contact::before{animation:none}}
 .adx-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#2a2d32;display:grid;place-items:center;font-size:26px;font-weight:800;color:#d2ff62;flex:none;border:2px solid #d2ff6240}
 .adx-avatar img{width:100%;height:100%;object-fit:cover}
 .adx-id b{font-size:20px;font-weight:750;letter-spacing:-.3px;display:block;line-height:1.15}

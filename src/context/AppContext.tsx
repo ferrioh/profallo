@@ -108,6 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const cloudUserRef = useRef<string | null>(null)
   cloudUserRef.current = cloudUser
   const dirtyRef = useRef(false)
+  const cloudLoadedRef = useRef(false)
   const cloudPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const pushCloud = useCallback(async (uid: string, snapshot: AppData) => {
@@ -185,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!ok) {
         toast('No se pudo guardar: exporta un respaldo antes de cerrar.')
       }
-      if (isSupabaseEnabled && cloudUserRef.current) {
+      if (isSupabaseEnabled && cloudUserRef.current && cloudLoadedRef.current) {
         dirtyRef.current = true
         if (cloudPushTimer.current) clearTimeout(cloudPushTimer.current)
         cloudPushTimer.current = setTimeout(() => {
@@ -226,9 +227,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (dirtyRef.current) {
           // Hay cambios locales sin subir: no los pisamos, los empujamos.
           await pushCloud(uid, dataRef.current)
+          cloudLoadedRef.current = true
         } else {
           const fresh = await loadCloudData(uid, dataRef.current.profile)
-          if (alive && fresh) replaceData(fresh)
+          if (alive && fresh) { replaceData(fresh); cloudLoadedRef.current = true }
         }
       }
       setCloudReady(true)
@@ -246,7 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseEnabled) return
     const flush = () => {
       const uid = cloudUserRef.current
-      if (uid) void pushCloud(uid, dataRef.current)
+      if (uid && cloudLoadedRef.current) void pushCloud(uid, dataRef.current)
     }
     const onVis = () => { if (document.visibilityState === 'hidden') flush() }
     window.addEventListener('pagehide', flush)

@@ -371,13 +371,10 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
   }
 }
 
-async function syncTable(table: string, trainerId: string, rows: Row[]) {
+async function syncTable(table: string, _trainerId: string, rows: Row[]) {
   if (!supabase) return
-  const { data: existing } = await supabase.from(table).select('id').eq('trainer_id', trainerId)
-  const existingIds = new Set((existing ?? []).map((r) => (r as Row).id as string))
-  const newIds = new Set(rows.map((r) => r.id as string))
-  const toDelete = [...existingIds].filter((id) => !newIds.has(id))
-  if (toDelete.length) await supabase.from(table).delete().in('id', toDelete)
+  // Upsert únicamente: NUNCA borramos datos de la nube automáticamente
+  // (evita perder clientes/rutinas si el estado local llega incompleto).
   if (rows.length) await supabase.from(table).upsert(rows)
 }
 

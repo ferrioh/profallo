@@ -214,7 +214,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const uid = cloudUserRef.current
         // Guardado inmediato (no diferido): evita perder cambios si sales rápido.
         void pushCloud(uid, dataRef.current).then((err) => {
-          if (err) toast(`No se pudo guardar en la nube (${err}).`)
+          if (err === 'USERNAME') {
+            toast('Ese nombre de usuario ya está en uso. Elige otro.')
+            commit((d) => { d.profile.username = undefined })
+          } else if (err) {
+            toast(`No se pudo guardar en la nube (${err}).`)
+          }
         })
       }
     },

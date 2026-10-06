@@ -417,6 +417,12 @@ export async function saveCloudData(userId: string, data: AppData): Promise<stri
   row.notification_state = data.notificationState ?? {}
   row.data_updated_at = new Date().toISOString()
   let prof = await supabase.from('profiles').upsert(row)
+  if (prof.error && /username|profiles_.*idx/i.test(prof.error.message)) {
+    // Choque de nombre de usuario único: guarda el resto sin username y avisa.
+    const free = { ...row, username: null }
+    const r2 = await supabase.from('profiles').upsert(free)
+    if (!r2.error) return 'USERNAME'
+  }
   if (prof.error) {
     // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/accent/reviews/etc.).
     const safe = { ...row }

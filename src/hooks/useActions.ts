@@ -1,6 +1,5 @@
 import { useApp } from '../context/AppContext'
 import { month } from '../lib/utils'
-import { planOf, reachedClientLimit } from '../lib/plans'
 
 export function useActions() {
   const { data, openModal, toast, patchUi, ui, view, go } = useApp()
@@ -8,12 +7,6 @@ export function useActions() {
 
   return {
     newClient: () => {
-      if (reachedClientLimit(data.profile.membership, active.length)) {
-        const plan = planOf(data.profile.membership)
-        toast(`Tu plan ${plan.name} permite hasta ${plan.clientLimit} clientes. Activa Premium para clientes ilimitados.`)
-        openModal({ kind: 'membership' })
-        return
-      }
       openModal({ kind: 'client-form' })
     },
     openMembership: () => openModal({ kind: 'membership' }),

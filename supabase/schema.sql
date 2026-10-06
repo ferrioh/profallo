@@ -230,30 +230,9 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Bloquea más de 3 clientes activos en el plan gratuito
-create or replace function public.enforce_client_limit() returns trigger
-language plpgsql security definer set search_path = public as $$
-declare
-  v_plan text;
-  v_count int;
-begin
-  select membership into v_plan from public.profiles where id = new.trainer_id;
-  if v_plan = 'free' then
-    select count(*) into v_count
-    from public.clients
-    where trainer_id = new.trainer_id and archived = false;
-    if v_count >= 3 then
-      raise exception 'El plan gratuito permite máximo 3 clientes. Activa Premium (3 USD/mes) para clientes ilimitados.';
-    end if;
-  end if;
-  return new;
-end;
-$$;
-
+-- Límite de clientes eliminado: cualquier plan puede crear clientes ilimitados.
 drop trigger if exists clients_limit on public.clients;
-create trigger clients_limit
-  before insert on public.clients
-  for each row execute function public.enforce_client_limit();
+drop function if exists public.enforce_client_limit();
 
 -- Marca automáticamente verified = true cuando la membresía es premium
 create or replace function public.sync_verified() returns trigger

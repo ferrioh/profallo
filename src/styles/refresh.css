@@ -1052,6 +1052,10 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .entry-forgot{align-self:flex-start;background:transparent;border:0;color:#cdfb7a;font-size:13px;padding:2px 0;text-decoration:underline;cursor:pointer}
 .entry-forgot:hover{color:#e6ffb0}
 .entry-hint{font-size:13px;color:#c8ccbf;margin:2px 0 4px;line-height:1.5}
+/* ShinyText (estilo React Bits): brillo que recorre el texto */
+.shiny-text{background:linear-gradient(110deg,#6f8a3a 20%,#eaffb0 42%,#d2ff62 52%,#6f8a3a 78%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:shiny 3.4s linear infinite}
+@keyframes shiny{to{background-position:-220% 0}}
+@media(prefers-reduced-motion:reduce){.shiny-text{animation:none;-webkit-text-fill-color:#d2ff62;color:#d2ff62;background:none}}
 .adx-avatar{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#2a2d32;display:grid;place-items:center;font-size:26px;font-weight:800;color:#d2ff62;flex:none;border:2px solid #d2ff6240}
 .adx-avatar img{width:100%;height:100%;object-fit:cover}
 .adx-id b{font-size:20px;font-weight:750;letter-spacing:-.3px;display:block;line-height:1.15}

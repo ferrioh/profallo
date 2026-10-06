@@ -161,7 +161,7 @@ export function PublicHome() {
         {mode === 'menu' ? (
           <section className="simple-access" aria-labelledby="entry-title">
             <span className="simple-access-kicker">PROFALLO</span>
-            <h1 id="entry-title">Tu progreso, en tus manos<span>.</span></h1>
+            <h1 id="entry-title" className="shiny-text">Tu progreso, en tus manos<span>.</span></h1>
             <p>Entrena, organiza y cobra. Todo en un solo lugar.</p>
             <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar sesión <Icon name="arrow" /></button>
             <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
@@ -169,7 +169,7 @@ export function PublicHome() {
         ) : mode === 'login' ? (
           <section className="simple-access" aria-labelledby="login-title">
             <span className="simple-access-kicker">INICIAR SESIÓN</span>
-            <h1 id="login-title">Bienvenido de vuelta<span>.</span></h1>
+            <h1 id="login-title" className="shiny-text">Bienvenido de vuelta<span>.</span></h1>
             <form className="entry-form" onSubmit={onLogin}>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
               <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
@@ -196,7 +196,7 @@ export function PublicHome() {
         ) : mode === 'signup' ? (
           <section className="simple-access" aria-labelledby="signup-title">
             <span className="simple-access-kicker">CREAR CUENTA</span>
-            <h1 id="signup-title">Crea tu espacio<span>.</span></h1>
+            <h1 id="signup-title" className="shiny-text">Crea tu espacio<span>.</span></h1>
             <form className="entry-form" onSubmit={onSignup}>
               <label>Nombre completo<input name="name" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
               <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>

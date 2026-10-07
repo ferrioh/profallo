@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
+import { RotatingText } from '../components/RotatingText'
 import { PasswordInput } from '../components/PasswordInput'
 import GlassSurface from '../components/GlassSurface'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
@@ -11,6 +12,14 @@ const SLIDES = [
   'assets/trainer-hero-v2.png',
   'assets/home-athlete.png',
   'assets/coach.png',
+]
+
+const MOTTOS = [
+  'La constancia, no la motivación, es lo que transforma.',
+  'Cada serie cuenta. Cada cliente importa.',
+  'Sé el entrenador que te habría cambiado la vida.',
+  'El progreso se entrena todos los días.',
+  'Grandes resultados nacen de pequeños hábitos.',
 ]
 
 export function PublicHome() {
@@ -179,6 +188,7 @@ export function PublicHome() {
       <main className="simple-entry-main">
         {mode === 'menu' ? (
           <section className="entry-intro">
+            <p className="entry-motto"><RotatingText phrases={MOTTOS} interval={20000} /></p>
             <div className="entry-start-wrap">
               <button className="entry-start" type="button" aria-label="Iniciar sesión" onClick={() => { setError(''); setMode('login') }}>
                 Iniciar <Icon name="arrow" />

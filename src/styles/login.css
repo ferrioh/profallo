@@ -61,14 +61,21 @@
   .auth-form-anim .login-head,.auth-form-anim .entry-form>*{animation:none!important}
 }
 
-/* Pantalla inicial: solo el boton "Iniciar" sobre las imagenes */
-.entry-intro{width:100%;align-self:end;display:flex;align-items:flex-end;justify-content:center;
-  padding:0 20px calc(48px + env(safe-area-inset-bottom,0px));min-height:0}
+/* Pantalla inicial: mensaje motivacional + boton glass "Iniciar" (arriba) */
+.entry-intro{width:100%;align-self:start;display:flex;flex-direction:column;align-items:center;gap:26px;
+  padding:clamp(26px,8vh,90px) 22px 20px;text-align:center}
+.entry-motto{max-width:540px;font-size:clamp(21px,4.6vw,31px);font-weight:300;line-height:1.28;color:#eef2ef;margin:0;text-wrap:balance}
 .entry-start-wrap{display:inline-flex;animation:startUp .8s cubic-bezier(.22,1,.36,1) both}
-.entry-start{display:inline-flex;align-items:center;gap:14px;padding:17px 26px 17px 34px;border-radius:999px;
-  background:linear-gradient(150deg,#eaffb0,#d2ff62 55%,#b6ec4d);color:#17280a;font-size:18px;font-weight:800;
-  letter-spacing:.01em;box-shadow:0 18px 44px #d2ff625c,inset 0 1px 0 #ffffffb0!important}
-.entry-start svg{width:22px;height:22px;animation:startArrow 1.5s ease-in-out infinite!important;translate:0 0}
+.entry-start{display:inline-flex;align-items:center;gap:14px;padding:16px 26px 16px 34px;border-radius:999px;
+  background:rgba(255,255,255,.08)!important;backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);
+  border:1px solid rgba(255,255,255,.24);color:#d2ff62!important;font-size:18px;font-weight:800;letter-spacing:.01em;
+  box-shadow:0 14px 40px #00000066,inset 0 1px 0 #ffffff30!important}
+.entry-start svg{width:22px;height:22px;color:#d2ff62!important;animation:startArrow 1.5s ease-in-out infinite!important;translate:0 0}
 @keyframes startUp{from{opacity:0;transform:translateY(90px)}to{opacity:1;transform:translateY(0)}}
 @keyframes startArrow{0%,100%{translate:0 0}50%{translate:7px 0}}
-@media(prefers-reduced-motion:reduce){.entry-start-wrap{animation:none}.entry-start svg{animation:none!important}}
+
+/* Texto motivacional que rota (animación tipo BlurText de React Bits) */
+.rotating-text{display:inline}
+.rt-word{display:inline-block;opacity:0;animation:rtBlurIn .72s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rtBlurIn{from{opacity:0;filter:blur(12px);transform:translateY(14px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.entry-start-wrap{animation:none}.entry-start svg{animation:none!important}.rt-word{animation:none;opacity:1}}

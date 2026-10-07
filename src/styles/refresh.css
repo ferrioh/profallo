@@ -1103,7 +1103,7 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .rev-card-head{display:flex;align-items:center;gap:9px;width:100%;padding:11px 12px;background:transparent;text-align:left}
 .rev-card-head .avatar{width:34px;height:34px}
 .rev-card-name{flex:1;min-width:0;font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
-.rev-card-note{background:#d2ff62;color:#182a0c;font-weight:800;font-size:12px;border-radius:9px;padding:4px 8px}
+.rev-card-note{background:transparent;padding:0;flex:none;line-height:1}
 .rev-card-body{border-top:1px solid #454750;padding:11px 13px;display:grid;gap:10px}
 .rev-card-body p{font-size:12.5px;color:#c6c9cc;line-height:1.5}
 .rev-card-actions{display:flex;gap:8px}
@@ -1172,3 +1172,20 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .page-anim{animation:pageIn .42s cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity}
 @keyframes pageIn{from{opacity:0;transform:translateX(46px)}to{opacity:1;transform:translateX(0)}}
 @media(prefers-reduced-motion:reduce){.page-anim{animation:none}}
+/* Toast "sweep" (estilo React Bits) */
+#toast{display:flex;align-items:center;gap:10px;padding:15px 22px 15px 14px;overflow:hidden}
+#toast .toast-ic{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#182a0c;color:#d2ff62;flex:none}
+#toast .toast-ic svg{width:13px;height:13px;stroke-width:3}
+#toast .toast-txt{white-space:normal;line-height:1.35}
+#toast .toast-bar{position:absolute;left:0;bottom:0;height:3px;background:#2b3d12;border-radius:0 3px 3px 0;animation:toastBar 3.5s linear forwards}
+@keyframes toastBar{from{width:100%}to{width:0}}
+#toast::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 32%,#ffffffa0 50%,transparent 68%);transform:translateX(-120%)}
+#toast.show::after{animation:toastSweep .7s ease .05s}
+@keyframes toastSweep{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+@media(prefers-reduced-motion:reduce){#toast .toast-bar,#toast.show::after{animation:none}}
+/* Estrellas de reseña (Peak Rating) */
+.star-rating{display:inline-flex;gap:1px;line-height:1;letter-spacing:1px}
+.sr-star{position:relative;display:inline-block;color:#4a4d55;animation:starPop .42s cubic-bezier(.2,1.4,.4,1) both}
+.sr-star::before{content:'★';position:absolute;left:0;top:0;color:#ffd23f;width:var(--fill,0%);overflow:hidden;text-shadow:0 0 6px #ffd23f66}
+@keyframes starPop{from{opacity:0;transform:scale(.4) rotate(-18deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@media(prefers-reduced-motion:reduce){.sr-star{animation:none}}

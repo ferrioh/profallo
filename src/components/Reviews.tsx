@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
+import { StarRating } from '../components/StarRating'
 import { findClient, TODAY, uid } from '../lib/utils'
 import { cloudSaveReviews } from '../lib/cloud'
 import { useAutoScroll } from '../hooks/useAutoScroll'
@@ -87,7 +88,7 @@ export function ReviewsSection() {
                   <button className="rev-card-head" type="button" onClick={() => setExpanded(isOpen ? null : rid)}>
                   <Avatar client={client} />
                   <span className="rev-card-name">{client.name}</span>
-                  <span className="rev-card-note">{r.rating}</span>
+                  <span className="rev-card-note"><StarRating value={r.rating} size={13} /></span>
                 </button>
                 {isOpen ? (
                   <div className="rev-card-body">

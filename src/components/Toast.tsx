@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { useApp } from '../context/AppContext'
 
 export function Toast() {
@@ -7,11 +8,11 @@ export function Toast() {
       id="toast"
       role="status"
       aria-live="polite"
-      className={`pointer-events-none select-none ${
-        toastMessage ? 'show' : ''
-      }`}
+      className={`pointer-events-none select-none ${toastMessage ? 'show' : ''}`}
     >
-      <span className="block">{toastMessage ?? ''}</span>
+      <span className="toast-ic"><Icon name="check" /></span>
+      <span className="toast-txt" key={toastMessage ?? ''}>{toastMessage ?? ''}</span>
+      {toastMessage ? <span className="toast-bar" key={`b-${toastMessage}`} /> : null}
     </div>
   )
 }

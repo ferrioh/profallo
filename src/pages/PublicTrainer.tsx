@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
+import { StarRating } from '../components/StarRating'
 import { cloudPublicProfile, type PublicReview, type PublicTrainer as PublicTrainerData } from '../lib/cloud'
 import { socialHandle, socialUrl } from '../lib/social'
 
@@ -88,6 +89,7 @@ function ReviewCarousel({ reviews }: { reviews: PublicReview[] }) {
           {avg.toFixed(1)}<small>/10</small>
         </span>
       </div>
+      <StarRating value={avg} size={17} />
       <div className="pt-reviews-viewport" onPointerDown={down} onPointerUp={up}>
         {current.map((r) => (
           <div key={r.id} className="pt-review">
@@ -96,6 +98,7 @@ function ReviewCarousel({ reviews }: { reviews: PublicReview[] }) {
               <b>{r.clientName || 'Cliente'}</b>
               <span className="pt-review-note" style={{ color: ratingColor(r.rating) }}>{r.rating}</span>
             </div>
+            <StarRating value={r.rating} size={14} />
             {r.text ? <p>{r.text}</p> : null}
           </div>
         ))}

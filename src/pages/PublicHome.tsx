@@ -170,10 +170,12 @@ export function PublicHome() {
       </header>
       <main className="simple-entry-main">
         {mode === 'menu' ? (
-          <section className="simple-access" aria-labelledby="entry-title">
-            <h1 id="entry-title" className="shiny-text">Tu progreso, en tus manos<span>.</span></h1>
-            <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar <Icon name="arrow" /></button>
-            <button className="simple-access-secondary" type="button" onClick={goSignup}>Crear cuenta</button>
+          <section className="entry-intro">
+            <div className="entry-start-wrap">
+              <button className="entry-start" type="button" aria-label="Iniciar sesión" onClick={() => { setError(''); setMode('login') }}>
+                Iniciar <Icon name="arrow" />
+              </button>
+            </div>
           </section>
         ) : mode === 'login' || mode === 'signup' ? (
           <GlassSurface className="auth-glass" width="100%" height="auto" borderRadius={26} backgroundOpacity={0.05} brightness={42} opacity={0.9} displace={0.7} distortionScale={-140}>

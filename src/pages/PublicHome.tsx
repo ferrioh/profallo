@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
 import { RotatingText } from '../components/RotatingText'
+import { APP_VERSION } from '../version.generated'
 import { PasswordInput } from '../components/PasswordInput'
 import GlassSurface from '../components/GlassSurface'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
@@ -194,6 +195,7 @@ export function PublicHome() {
                 Iniciar <Icon name="arrow" />
               </button>
             </div>
+            <span className="entry-version">PROFALLO v{APP_VERSION}</span>
           </section>
         ) : mode === 'login' || mode === 'signup' ? (
           <GlassSurface className="auth-glass" width="100%" height="auto" borderRadius={26} backgroundOpacity={0.05} brightness={42} opacity={0.9} displace={0.7} distortionScale={-140}>

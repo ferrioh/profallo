@@ -71,6 +71,7 @@
   border:1px solid rgba(255,255,255,.24);color:#d2ff62!important;font-size:18px;font-weight:800;letter-spacing:.01em;
   box-shadow:0 14px 40px #00000066,inset 0 1px 0 #ffffff30!important}
 .entry-start svg{width:22px;height:22px;color:#d2ff62!important;animation:startArrow 1.5s ease-in-out infinite!important;translate:0 0}
+.entry-version{font-size:12px;letter-spacing:.14em;font-weight:700;color:#9aa0a6}
 @keyframes startUp{from{opacity:0;transform:translateY(90px)}to{opacity:1;transform:translateY(0)}}
 @keyframes startArrow{0%,100%{translate:0 0}50%{translate:7px 0}}
 

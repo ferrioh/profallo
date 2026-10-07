@@ -6,9 +6,12 @@
   "description": "Espacio local para entrenadores personales — React + TypeScript + Tailwind",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/version.mjs",
     "build": "tsc --noEmit && vite build",
+    "prebuild": "node scripts/version.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "pretypecheck": "node scripts/version.mjs",
     "test": "vitest",
     "test:run": "vitest run",
     "ci": "npm run typecheck && npm run test:run && npm run build"

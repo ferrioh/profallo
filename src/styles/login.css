@@ -61,17 +61,21 @@
   .auth-form-anim .login-head,.auth-form-anim .entry-form>*{animation:none!important}
 }
 
-/* Pantalla inicial: mensaje motivacional + boton glass "Iniciar" (arriba) */
-.entry-intro{width:100%;align-self:end;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:22px;
-  padding:20px 22px calc(48px + env(safe-area-inset-bottom,0px));text-align:center}
-.entry-motto{max-width:540px;font-size:clamp(21px,4.6vw,31px);font-weight:300;line-height:1.28;color:#eef2ef;margin:0;text-wrap:balance}
+/* Pantalla inicial: mensaje motivacional + boton glass "Iniciar" (abajo) */
+.entry-intro{width:100%;align-self:end;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:20px;
+  padding:20px 22px calc(44px + env(safe-area-inset-bottom,0px));text-align:center;border:0;margin:0}
+/* Scrim para que el texto se lea sobre cualquier imagen (evita que "desaparezca" en slides claros) */
+.entry-intro::before{content:'';position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100vw;height:72%;z-index:-1;pointer-events:none;
+  background:linear-gradient(0deg,#04050ae6 0%,#04050a99 42%,#04050a00 100%)}
+.entry-intro .entry-motto{max-width:540px;font-size:clamp(20px,4.2vw,28px);font-weight:400;line-height:1.3;color:#f4f7f4;margin:0;text-wrap:balance;
+  text-shadow:0 2px 16px #000000d0,0 1px 3px #000000a0}
 .entry-start-wrap{display:inline-flex;animation:startUp .8s cubic-bezier(.22,1,.36,1) both}
-.entry-start{display:inline-flex;align-items:center;gap:14px;padding:16px 26px 16px 34px;border-radius:999px;
+.entry-start{display:inline-flex;align-items:center;gap:11px;padding:12px 20px 12px 26px;border-radius:999px;
   background:rgba(255,255,255,.08)!important;backdrop-filter:blur(16px) saturate(1.5);-webkit-backdrop-filter:blur(16px) saturate(1.5);
-  border:1px solid rgba(255,255,255,.24);color:#d2ff62!important;font-size:18px;font-weight:800;letter-spacing:.01em;
-  box-shadow:0 14px 40px #00000066,inset 0 1px 0 #ffffff30!important}
-.entry-start svg{width:22px;height:22px;color:#d2ff62!important;animation:startArrow 1.5s ease-in-out infinite!important;translate:0 0}
-.entry-version{font-size:12px;letter-spacing:.14em;font-weight:700;color:#9aa0a6}
+  border:1px solid rgba(255,255,255,.24);color:#d2ff62!important;font-size:16px;font-weight:800;letter-spacing:.01em;
+  box-shadow:0 12px 34px #00000066,inset 0 1px 0 #ffffff30!important}
+.entry-start svg{width:19px;height:19px;color:#d2ff62!important;animation:startArrow 1.5s ease-in-out infinite!important;translate:0 0}
+.entry-intro .entry-version{font-size:11.5px;letter-spacing:.14em;font-weight:700;color:#d3d7da;text-shadow:0 1px 8px #000000b3}
 @keyframes startUp{from{opacity:0;transform:translateY(90px)}to{opacity:1;transform:translateY(0)}}
 @keyframes startArrow{0%,100%{translate:0 0}50%{translate:7px 0}}
 

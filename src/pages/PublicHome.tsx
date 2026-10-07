@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { memo, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
@@ -23,6 +23,21 @@ const MOTTOS = [
   'Grandes resultados nacen de pequeños hábitos.',
 ]
 
+/** Aislado en memo: los cambios de imagen de fondo no re-renderizan el texto. */
+const EntryIntro = memo(function EntryIntro({ onStart }: { onStart: () => void }) {
+  return (
+    <section className="entry-intro">
+      <p className="entry-motto"><RotatingText phrases={MOTTOS} interval={6000} /></p>
+      <div className="entry-start-wrap">
+        <button className="entry-start" type="button" aria-label="Iniciar sesión" onClick={onStart}>
+          Iniciar <Icon name="arrow" />
+        </button>
+      </div>
+      <span className="entry-version">PROFALLO v{APP_VERSION}</span>
+    </section>
+  )
+})
+
 export function PublicHome() {
   const { enter, go, toast, cloudEnabled } = useApp()
   const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting' | 'recover'>('menu')
@@ -37,6 +52,7 @@ export function PublicHome() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState({ name: '', email: '', password: '', confirm: '' })
   const savedEmail = (() => { try { return localStorage.getItem('profallo.email') || '' } catch { return '' } })()
+  const startLogin = useCallback(() => { setError(''); setMode('login') }, [])
 
   function goSignup() { setError(''); setStep(0); setMode('signup') }
 
@@ -188,15 +204,7 @@ export function PublicHome() {
       </header>
       <main className="simple-entry-main">
         {mode === 'menu' ? (
-          <section className="entry-intro">
-            <p className="entry-motto"><RotatingText phrases={MOTTOS} interval={20000} /></p>
-            <div className="entry-start-wrap">
-              <button className="entry-start" type="button" aria-label="Iniciar sesión" onClick={() => { setError(''); setMode('login') }}>
-                Iniciar <Icon name="arrow" />
-              </button>
-            </div>
-            <span className="entry-version">PROFALLO v{APP_VERSION}</span>
-          </section>
+          <EntryIntro onStart={startLogin} />
         ) : mode === 'login' || mode === 'signup' ? (
           <GlassSurface className="auth-glass" width="100%" height="auto" borderRadius={26} backgroundOpacity={0.05} brightness={42} opacity={0.9} displace={0.7} distortionScale={-140}>
             <section className="simple-access auth-sheet">

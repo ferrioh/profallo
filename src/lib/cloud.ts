@@ -434,6 +434,12 @@ export async function saveCloudData(userId: string, data: AppData): Promise<stri
     const r2 = await supabase.from('profiles').upsert(free)
     if (!r2.error) return 'USERNAME'
   }
+  if (prof.error && /email/i.test(prof.error.message)) {
+    // Choque de correo único: reintenta sin tocar el email (no bloquea la foto, etc.).
+    const noEmail = { ...row }
+    delete noEmail.email
+    prof = await supabase.from('profiles').upsert(noEmail)
+  }
   if (prof.error) {
     // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/accent/reviews/etc.).
     const safe = { ...row }
@@ -496,6 +502,8 @@ export function mergeLocalCloud(local: AppData, cloud: AppData): AppData {
     measurements: merge(local.measurements, cloud.measurements),
     payments: merge(local.payments, cloud.payments),
     notificationState: localNewer ? (local.notificationState ?? cloud.notificationState) : (cloud.notificationState ?? local.notificationState),
+    // La foto es del usuario: si lo local es más reciente, no la pisamos con la nube.
+    profile: localNewer ? { ...cloud.profile, photo: local.profile.photo } : cloud.profile,
   }
 }
 

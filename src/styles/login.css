@@ -75,8 +75,12 @@
 @keyframes startUp{from{opacity:0;transform:translateY(90px)}to{opacity:1;transform:translateY(0)}}
 @keyframes startArrow{0%,100%{translate:0 0}50%{translate:7px 0}}
 
-/* Texto motivacional que rota (animación tipo BlurText de React Bits) */
-.rotating-text{display:inline}
-.rt-word{display:inline-block;opacity:0;animation:rtBlurIn .72s cubic-bezier(.2,.8,.2,1) both}
-@keyframes rtBlurIn{from{opacity:0;filter:blur(12px);transform:translateY(14px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.entry-start-wrap{animation:none}.entry-start svg{animation:none!important}.rt-word{animation:none;opacity:1}}
+/* Texto motivacional que rota (efecto "3D Letter Swap" de React Bits) */
+.rotating-text{display:inline-block;perspective:700px}
+.rt-word{display:inline-block;white-space:nowrap}
+.rt-space{display:inline-block}
+.rt-char{display:inline-block;transform-origin:center;backface-visibility:hidden;opacity:0;
+  animation:rt3dSwap .62s cubic-bezier(.22,1,.36,1) both}
+@keyframes rt3dSwap{from{opacity:0;transform:rotateX(-90deg) translateY(-.18em);filter:blur(4px)}
+  to{opacity:1;transform:rotateX(0) translateY(0);filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.entry-start-wrap{animation:none}.entry-start svg{animation:none!important}.rt-char{animation:none;opacity:1}}

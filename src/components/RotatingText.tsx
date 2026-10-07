@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-/** Texto que rota por frases con una animación de entrada tipo "BlurText" (React Bits).
- *  Cada cambio revela palabra por palabra con desenfoque + desplazamiento escalonado. */
+/** Texto que rota por frases con un efecto "3D Letter Swap" (React Bits):
+ *  al cambiar, cada letra gira en 3D (rotateX + blur) con retardo escalonado. */
 export function RotatingText({ phrases, interval = 20000 }: { phrases: string[]; interval?: number }) {
   const [index, setIndex] = useState(0)
   useEffect(() => {
@@ -10,11 +10,17 @@ export function RotatingText({ phrases, interval = 20000 }: { phrases: string[];
     return () => window.clearInterval(timer)
   }, [phrases.length, interval])
   const phrase = phrases[index] ?? ''
+  let c = 0
   return (
     <span className="rotating-text" key={index} aria-live="polite">
-      {phrase.split(' ').map((word, i) => (
-        <span className="rt-word" key={`${index}-${i}`} style={{ animationDelay: `${i * 0.075}s` }}>
-          {word}{'\u00a0'}
+      {phrase.split(' ').map((word, w) => (
+        <span className="rt-word" key={`w${w}`}>
+          {Array.from(word).map((ch) => (
+            <span className="rt-char" key={`c${c}`} style={{ animationDelay: `${(c++) * 0.03}s` }}>
+              {ch}
+            </span>
+          ))}
+          <span className="rt-space">{'\u00a0'}</span>
         </span>
       ))}
     </span>

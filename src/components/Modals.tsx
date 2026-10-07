@@ -292,6 +292,7 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
       const conflict = data.sessions.some(
         (session) =>
           session.id !== id &&
+          session.client === x.client &&
           session.date === x.date &&
           session.status !== 'Cancelada' &&
           x.status !== 'Cancelada' &&
@@ -301,7 +302,7 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
           })(),
       )
       if (conflict)
-        throw new Error('Ese horario coincide con otra sesión. Ajusta la hora o la duración.')
+        throw new Error('Ese cliente ya tiene una sesión en ese horario.')
       commit((d) => {
         const session: Session = {
           id: id || uid(),

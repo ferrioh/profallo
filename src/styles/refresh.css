@@ -706,7 +706,7 @@ dialog.app-sheet{max-width:none}
 @keyframes barIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .wide-track i{transform-origin:left;animation:barIn .8s cubic-bezier(.22,1,.36,1) both}
 /* Dock: magnificación por proximidad al puntero (móvil y escritorio) */
-#nav .nav-button{transform:scale(var(--s,1))!important;transform-origin:center;transition:transform .22s cubic-bezier(.34,1.56,.64,1)!important;will-change:transform;overflow:visible!important}
+#nav .nav-button{overflow:visible!important}
 /* Etiqueta flotante tipo Dock (aparece encima del ícono) */
 #nav .nav-button::before{content:attr(data-label);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(6px) scale(.9);transform-origin:bottom center;padding:5px 9px;border-radius:8px;background:#2a2d33;color:#eef1f3;border:1px solid #ffffff1f;box-shadow:0 8px 20px #0008;font-size:11px;line-height:1;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .16s ease,transform .22s cubic-bezier(.34,1.56,.64,1);z-index:5}
 #nav .nav-button:hover::before,#nav .nav-button:focus-visible::before{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}

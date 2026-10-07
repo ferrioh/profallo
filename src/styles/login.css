@@ -103,3 +103,10 @@
   border:1px solid rgba(255,255,255,.28);color:#f3f6f3!important;box-shadow:0 8px 22px #00000066,inset 0 1px 0 #ffffff26!important}
 .auth-close svg{width:18px;height:18px}
 .auth-close:hover{border-color:#ffffff55!important;color:#d2ff62!important}
+
+/* Escritorio: login como UNA sola tarjeta centrada */
+@media(min-width:561px){
+  .simple-entry-main{place-items:center!important}
+  .simple-access.auth-sheet{width:min(440px,100%)!important;max-width:440px!important;min-height:auto!important;border:1px solid #ffffff1f!important;border-radius:26px!important}
+  .auth-glass{width:min(440px,100%)!important;max-width:440px!important;border-radius:26px!important;align-self:center!important}
+}

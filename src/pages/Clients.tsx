@@ -168,7 +168,6 @@ export function ClientsPage() {
                   <span>{initials(c.name)}</span>
                 )}
                 <div className="client-cover-shade" />
-                {handle(c.id)}
                 <span className={`pill ${c.archived ? 'orange' : 'green'}`}>
                   {c.archived ? 'Archivado' : c.plan}
                 </span>

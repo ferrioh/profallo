@@ -75,6 +75,14 @@ export function Sidebar() {
     })
     return best
   }
+  function dockBump(clientX: number | null) {
+    navButtons().forEach((el) => {
+      if (clientX == null) { el.style.setProperty('--s', '1'); return }
+      const r = el.getBoundingClientRect()
+      const d = Math.abs(clientX - (r.left + r.width / 2))
+      el.style.setProperty('--s', Math.max(1, 1.22 - d / 240).toFixed(3))
+    })
+  }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
     dragRef.current = { startX: e.clientX, target: navIndex() }
     setDragging(true)
@@ -88,10 +96,12 @@ export function Sidebar() {
     setDragDx(Math.max(-w, Math.min(w, d)))
     // Tracker: recuerda el botón más cercano para dejarlo ahí al soltar.
     dragRef.current.target = nearestIndex(e.clientX)
+    dockBump(e.clientX)
   }
   function onNavUp() {
     const target = dragRef.current?.target
     dragRef.current = null
+    dockBump(null)
     // Pasar directo a la posición destino (mismo frame): evita el "flash" en la
     // posición anterior. Se mantiene la transición desactivada durante el pase.
     setDragDx(0)

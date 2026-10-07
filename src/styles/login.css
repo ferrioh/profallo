@@ -1,0 +1,58 @@
+/* Login adaptado del componente de referencia:
+   tarjeta con titulo, inputs tipo pill, separador "o" y botones-opcion con flecha. */
+.login-head{text-align:center;margin:2px 0 16px}
+.login-head h1{font-size:clamp(23px,2.7vw,29px);font-weight:300;line-height:1.12;color:#f3f5f4;letter-spacing:0}
+.login-head h1 span{color:#d2ff62;font-weight:300}
+.login-head p{font-size:13px;color:#a6abaf;line-height:1.45;margin-top:6px}
+
+.entry-form .login-field{font-size:12px;gap:6px;color:#c3c7cb}
+.entry-form .login-field>input,
+.entry-form .login-field .pw-wrap input,
+.entry-form .login-field .entry-id input,
+.entry-form .login-field .entry-id select{
+  width:100%;min-height:50px;border-radius:99px;border:1px solid #ffffff2b;background:#181a1e;
+  color:#fff;padding:12px 18px;font-size:14px;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease
+}
+.entry-form .login-field .pw-wrap input{padding-right:48px}
+.entry-form .login-field>input:focus,
+.entry-form .login-field .pw-wrap input:focus,
+.entry-form .login-field .entry-id input:focus{
+  outline:0;border-color:#d2ff6299;background:#1c1f23;box-shadow:0 0 0 3px #d2ff621f
+}
+.entry-form .login-field>input::placeholder,
+.entry-form .login-field .pw-wrap input::placeholder{color:#6d7176}
+.entry-form .login-field .entry-id{gap:8px}
+.entry-form .login-field .entry-id select{width:72px;flex:none;border-radius:99px;padding:0 14px;text-align:center}
+
+.login-or{display:flex;align-items:center;gap:12px;color:#8b9096;font-size:12px;margin:4px 0}
+.login-or::before,.login-or::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,transparent,#ffffff26,transparent)}
+
+.entry-form .login-option{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;min-height:52px;
+  padding:0 18px;border-radius:99px;background:#181a1e;border:1px solid #ffffff2b;color:#eceef0;
+  font-size:14px;font-weight:600;text-align:left
+}
+.entry-form .login-option-l{display:inline-flex;align-items:center;gap:10px}
+.entry-form .login-option .login-option-l svg{width:18px;height:18px;color:#d2ff62}
+.entry-form .login-option>svg{width:18px;height:18px;color:#aab0b5;transition:transform .2s ease!important}
+.entry-form .login-option:hover{border-color:#ffffff55;background:#1f2126}
+.entry-form .login-option:hover>svg{transform:translateX(4px)!important}
+
+/* Boton primario: mantener pill completo */
+.simple-access .entry-form .simple-access-primary{border-radius:99px!important;min-height:52px!important}
+
+/* Animacion de entrada escalonada (opacity + slide), estilo del componente */
+@keyframes loginItemIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.auth-form-anim .login-head,
+.auth-form-anim .entry-form>*{animation:loginItemIn .55s cubic-bezier(.22,1,.36,1) both!important}
+.auth-form-anim .entry-form>*:nth-child(1){animation-delay:.04s}
+.auth-form-anim .entry-form>*:nth-child(2){animation-delay:.10s}
+.auth-form-anim .entry-form>*:nth-child(3){animation-delay:.16s}
+.auth-form-anim .entry-form>*:nth-child(4){animation-delay:.22s}
+.auth-form-anim .entry-form>*:nth-child(5){animation-delay:.28s}
+.auth-form-anim .entry-form>*:nth-child(6){animation-delay:.34s}
+.auth-form-anim .entry-form>*:nth-child(7){animation-delay:.40s}
+.auth-form-anim .entry-form>*:nth-child(8){animation-delay:.46s}
+@media(prefers-reduced-motion:reduce){
+  .auth-form-anim .login-head,.auth-form-anim .entry-form>*{animation:none!important}
+}

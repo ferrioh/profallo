@@ -181,29 +181,49 @@ export function PublicHome() {
             <div key={mode} className="auth-form-anim">
               {mode === 'login' ? (
                 <form className="entry-form" onSubmit={onLogin}>
-                  <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
-                  <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
-                  <button className="entry-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
+                  <header className="login-head">
+                    <h1>Bienvenido de nuevo<span>.</span></h1>
+                    <p>Inicia sesión para continuar tu evolución.</p>
+                  </header>
+                  <label className="login-field">Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
+                  <label className="login-field">Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
                   {error ? <p className="entry-error">{error}</p> : null}
                   <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
+                  <div className="login-or"><span>o</span></div>
+                  <button className="login-option" type="button" onClick={goSignup}>
+                    <span className="login-option-l"><Icon name="user" />Crear cuenta</span><Icon name="arrow" />
+                  </button>
+                  <button className="login-option" type="button" onClick={() => { setError(''); setMode('recover') }}>
+                    <span className="login-option-l"><Icon name="check" />Recuperar contraseña</span><Icon name="arrow" />
+                  </button>
                 </form>
               ) : step === 0 ? (
                 <form className="entry-form" onSubmit={step1Next}>
-                  <p className="step-label">Paso 1 de 2 · Tu cuenta</p>
-                  <label>Nombre completo<input name="sName" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
-                  <label>Correo electrónico<input name="sEmail" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
+                  <header className="login-head">
+                    <h1>Crea tu cuenta<span>.</span></h1>
+                    <p>Paso 1 de 2 · Tus datos de acceso.</p>
+                  </header>
+                  <label className="login-field">Nombre completo<input name="sName" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
+                  <label className="login-field">Correo electrónico<input name="sEmail" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
                   <div className="entry-row">
-                    <label>Contraseña<PasswordInput name="sPass" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
-                    <label>Repetir contraseña<PasswordInput name="sConfirm" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
+                    <label className="login-field">Contraseña<PasswordInput name="sPass" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
+                    <label className="login-field">Repetir contraseña<PasswordInput name="sConfirm" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
                   </div>
                   <button className="simple-access-primary" type="submit">Continuar <Icon name="arrow" /></button>
+                  <div className="login-or"><span>o</span></div>
+                  <button className="login-option" type="button" onClick={() => { setError(''); setMode('login') }}>
+                    <span className="login-option-l"><Icon name="user" />Ya tengo cuenta</span><Icon name="arrow" />
+                  </button>
                 </form>
               ) : (
                 <form className="entry-form" onSubmit={onSignup}>
-                  <p className="step-label">Paso 2 de 2 · Tus datos</p>
+                  <header className="login-head">
+                    <h1>Tus datos<span>.</span></h1>
+                    <p>Paso 2 de 2 · Completa tu perfil.</p>
+                  </header>
                   <div className="entry-row">
-                    <label>Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>
-                    <label>Cédula
+                    <label className="login-field">Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>
+                    <label className="login-field">Cédula
                       <div className="entry-id">
                         <select name="idType" defaultValue="V" aria-label="Tipo de cédula">
                           <option value="V">V</option>
@@ -214,7 +234,7 @@ export function PublicHome() {
                       </div>
                     </label>
                   </div>
-                  <label>Instagram<input name="instagram" placeholder="@tuusuario" maxLength={60} /></label>
+                  <label className="login-field">Instagram<input name="instagram" placeholder="@tuusuario" maxLength={60} /></label>
                   <div className="entry-captcha">
                     <label className="entry-robot">
                       <input type="checkbox" checked={robot} onChange={(e) => setRobot(e.target.checked)} />
@@ -228,22 +248,25 @@ export function PublicHome() {
                 </form>
               )}
             </div>
-            <div className="auth-switch" role="tablist" aria-label="Acceso">
-              <span className={`auth-switch-pill ${mode === 'signup' ? 'right' : ''}`} aria-hidden="true" />
-              <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setError(''); setMode('login') }}>Iniciar sesión</button>
-              <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={goSignup}>Crear cuenta</button>
-            </div>
             </section>
           </GlassSurface>
         ) : mode === 'recover' ? (
-          <section className="simple-access" aria-labelledby="recover-title">
-            <h1 id="recover-title">Recuperar contraseña<span>.</span></h1>
-            <form className="entry-form" onSubmit={onRecover}>
-              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
-              {error ? <p className="entry-error">{error}</p> : null}
-              <button className="simple-access-primary" type="submit">Enviar enlace <Icon name="arrow" /></button>
-            </form>
-            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('login') }}>‹ Volver</button>
+          <section className="simple-access auth-sheet" aria-labelledby="recover-title">
+            <div className="auth-form-anim">
+              <header className="login-head">
+                <h1 id="recover-title">Recuperar contraseña<span>.</span></h1>
+                <p>Te enviaremos un enlace a tu correo.</p>
+              </header>
+              <form className="entry-form" onSubmit={onRecover}>
+                <label className="login-field">Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
+                {error ? <p className="entry-error">{error}</p> : null}
+                <button className="simple-access-primary" type="submit">Enviar enlace <Icon name="arrow" /></button>
+                <div className="login-or"><span>o</span></div>
+                <button className="login-option" type="button" onClick={() => { setError(''); setMode('login') }}>
+                  <span className="login-option-l"><Icon name="user" />Iniciar sesión</span><Icon name="arrow" />
+                </button>
+              </form>
+            </div>
           </section>
         ) : (
           <section className="simple-access entry-waiting" role="status" aria-live="polite">

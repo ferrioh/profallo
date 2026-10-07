@@ -1211,3 +1211,11 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .sidebar-glass{position:absolute!important;inset:0;width:100%;height:100%;z-index:0;border-radius:inherit!important;pointer-events:none}
 .sidebar-glass.glass-surface--svg,.sidebar-glass.glass-surface--fallback{background:linear-gradient(150deg,rgba(40,43,49,.78),rgba(16,18,22,.66))!important;border:1px solid rgba(255,255,255,.14)!important;box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12)!important}
 .sidebar > *:not(.sidebar-glass){position:relative;z-index:1}
+
+/* Admin: Slide principal */
+.slide-slot-row{display:flex;gap:14px;align-items:stretch}
+.slide-thumb{width:120px;height:74px;border-radius:10px;flex:none;background:#1b1e22 center/cover no-repeat;border:1px solid #33363c;display:grid;place-items:center;color:#5d6268;font-size:22px;font-weight:700}
+.slide-slot-fields{display:grid;gap:8px;flex:1;min-width:0}
+.slide-slot-actions{display:flex;gap:8px;flex-wrap:wrap}
+.slide-slot-actions .button{min-height:40px}
+@media(max-width:560px){.slide-thumb{width:92px;height:60px}}

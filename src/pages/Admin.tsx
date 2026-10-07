@@ -5,6 +5,7 @@ import { PageHead } from '../components/ui'
 import { LineChart } from '../components/ui'
 import { AnalyticsView } from '../components/Analytics'
 import { CountUp } from '../components/CountUp'
+import { fileToDataUrl, fitImage, loadImage } from '../lib/image'
 import { PLANS, PREMIUM_PRICE, TRIAL_DAYS, planOf, trainerStatus, trialDaysLeft } from '../lib/plans'
 import { isSupabaseEnabled } from '../lib/supabase'
 import {
@@ -46,7 +47,9 @@ import {
 } from '../lib/cloud'
 import type { Trainer } from '../types'
 
-type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'accionistas' | 'analitica' | 'respaldo' | 'redes'
+type Tab = 'resumen' | 'cuentas' | 'socios' | 'premium' | 'pagos' | 'mensajes' | 'accionistas' | 'analitica' | 'slide' | 'respaldo' | 'redes'
+
+const DEFAULT_SLIDES = ['assets/trainer-hero-v2.png', 'assets/home-athlete.png', 'assets/coach.png']
 
 const TABS: Array<[Tab, string, string]> = [
   ['resumen', 'Resumen', 'grid'],
@@ -56,6 +59,7 @@ const TABS: Array<[Tab, string, string]> = [
   ['pagos', 'Datos de pago', 'wallet'],
   ['mensajes', 'Mensaje', 'bell'],
   ['accionistas', 'Accionistas', 'users'],
+  ['slide', 'Slide principal', 'crop'],
   ['analitica', 'Analítica', 'chart'],
   ['respaldo', 'Respaldos', 'download'],
   ['redes', 'Redes', 'share'],
@@ -72,7 +76,8 @@ export function AdminPage() {
   const [tab, setTab] = useState<Tab>('resumen')
   const [cloudAccounts, setCloudAccounts] = useState<CloudProfileRow[] | null>(null)
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
-  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true, shareholders: [] })
+  const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true, shareholders: [], slides: DEFAULT_SLIDES })
+  const [slides, setSlides] = useState<string[]>(DEFAULT_SLIDES)
   const [analytics, setAnalytics] = useState<UserAnalyticsRow[] | null>(null)
   const [shareName, setShareName] = useState('')
   const [sharePercent, setSharePercent] = useState('')
@@ -99,7 +104,7 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     let alive = true
     cloudListProfiles().then((rows) => { if (alive) setCloudAccounts(rows) })
     cloudListPremiumRequests().then((rows) => { if (alive) setPremiumReqs(rows) })
-    cloudGetAppSettings().then((s) => { if (alive && s) setPaySettings(s) })
+    cloudGetAppSettings().then((s) => { if (alive && s) { setPaySettings(s); setSlides(s.slides.length ? s.slides : DEFAULT_SLIDES) } })
     cloudListBackups().then((rows) => { if (alive) setBackups(rows) })
     cloudListAdminMessages().then((rows) => { if (alive) setSentMsgs(rows) })
     cloudUserAnalytics().then((rows) => { if (alive) setAnalytics(rows) })
@@ -343,7 +348,7 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
   function savePaySettings(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
-    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on', shareholders: paySettings.shareholders }
+    const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on', shareholders: paySettings.shareholders, slides: paySettings.slides }
     cloudSaveAppSettings(s).then((ok) => {
       if (ok) { setPaySettings(s); toast('Datos de pago guardados.') }
       else toast('No se pudieron guardar los datos de pago.')
@@ -383,6 +388,37 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
       d.profile.tiktok = (x.tiktok ?? '').trim()
     })
     toast('Enlaces de la empresa guardados.')
+  }
+
+  function setSlideUrl(index: number, url: string) {
+    setSlides((prev) => prev.map((s, i) => (i === index ? url : s)))
+  }
+
+  async function pickSlide(index: number) {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = async () => {
+      const file = input.files?.[0]
+      if (!file) return
+      try {
+        const dataUrl = await fileToDataUrl(file)
+        const img = await loadImage(dataUrl)
+        const resized = fitImage(img, 1600, 0.72)
+        setSlides((prev) => prev.map((s, i) => (i === index ? resized : s)))
+      } catch { toast('No se pudo cargar la imagen.') }
+    }
+    input.click()
+  }
+
+  function saveSlides() {
+    const clean = slides.map((s) => s.trim()).filter(Boolean)
+    const next = { ...paySettings, slides: clean }
+    setPaySettings(next)
+    cloudSaveAppSettings(next).then((ok) => {
+      if (ok) toast('Slides de la portada guardadas.')
+      else toast('No se pudieron guardar las slides.')
+    })
   }
 
   return (
@@ -882,6 +918,32 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
             })}
             {!(backups ?? []).length ? <div className="admin-empty card white">Aún no hay respaldos registrados.</div> : null}
           </div>
+        </section>
+      ) : null}
+
+      {tab === 'slide' ? (
+        <section className="admin-social">
+          <div className="section-line"><div><span className="eyebrow">PORTADA (LOGIN)</span><h2>Slide principal</h2></div></div>
+          <div className="form-grid">
+            {[0, 1, 2].map((i) => (
+              <div className="full slide-slot" key={i}>
+                <label>Imagen {i + 1}</label>
+                <div className="slide-slot-row">
+                  <div className="slide-thumb" style={slides[i] ? { backgroundImage: `url(${slides[i]})` } : undefined}>
+                    {slides[i] ? null : <span>{i + 1}</span>}
+                  </div>
+                  <div className="slide-slot-fields">
+                    <input value={slides[i] ?? ''} onChange={(e) => setSlideUrl(i, e.target.value)} placeholder="URL o ruta (assets/…)" maxLength={2000} />
+                    <div className="slide-slot-actions">
+                      <button className="button light" type="button" onClick={() => pickSlide(i)}>Subir imagen</button>
+                      <button className="button light" type="button" onClick={() => setSlideUrl(i, '')}>Quitar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="form-foot"><button className="button primary" type="button" onClick={saveSlides}>Guardar slides <Icon name="check" /></button></div>
         </section>
       ) : null}
 

@@ -506,6 +506,7 @@ export interface AppSettings {
   pay_zelle: string
   backup_enabled: boolean
   shareholders: Array<{ id: string; name: string; percent: number; photo?: string }>
+  slides: string[]
 }
 
 export type PremiumMethod = 'pagomovil' | 'binance' | 'zelle'
@@ -536,7 +537,17 @@ export async function cloudGetAppSettings(): Promise<AppSettings | null> {
     pay_zelle: or(row.pay_zelle),
     backup_enabled: row.backup_enabled !== false,
     shareholders: Array.isArray(row.shareholders) ? (row.shareholders as AppSettings['shareholders']) : [],
+    slides: Array.isArray(row.slides) ? (row.slides as unknown[]).filter((x): x is string => typeof x === 'string' && x.length > 0) : [],
   }
+}
+
+/** Slides de la portada (login). Público, sin autenticación. */
+export async function cloudGetPublicSlides(): Promise<string[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.rpc('public_slides')
+  if (error || data == null) return []
+  const arr = Array.isArray(data) ? data : (data as { slides?: unknown }).slides
+  return Array.isArray(arr) ? arr.filter((x): x is string => typeof x === 'string' && x.length > 0) : []
 }
 
 export async function cloudSaveAppSettings(s: AppSettings): Promise<boolean> {

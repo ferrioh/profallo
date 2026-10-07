@@ -5,7 +5,7 @@ import { EntryLoader } from '../components/EntryLoader'
 import { PasswordInput } from '../components/PasswordInput'
 import GlassSurface from '../components/GlassSurface'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
-import { cloudGetProfile, cloudResetPassword, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
+import { cloudGetProfile, cloudGetPublicSlides, cloudResetPassword, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
 
 const SLIDES = [
   'assets/trainer-hero-v2.png',
@@ -18,6 +18,7 @@ export function PublicHome() {
   const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting' | 'recover'>('menu')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
+  const [slides, setSlides] = useState<string[]>(SLIDES)
   const [phase, setPhase] = useState<'load' | 'out' | 'done'>('load')
   const [captcha, setCaptcha] = useState(() => ({ a: 2 + Math.floor(Math.random() * 8), b: 1 + Math.floor(Math.random() * 8) }))
   const [captchaAnswer, setCaptchaAnswer] = useState('')
@@ -34,9 +35,16 @@ export function PublicHome() {
   }
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSlide((s) => (s + 1) % SLIDES.length), 6000)
+    const timer = window.setInterval(() => setSlide((s) => (s + 1) % (slides.length || 1)), 6000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [slides.length])
+
+  useEffect(() => {
+    if (!cloudEnabled) return
+    let alive = true
+    cloudGetPublicSlides().then((s) => { if (alive && s.length) setSlides(s) })
+    return () => { alive = false }
+  }, [cloudEnabled])
 
   useEffect(() => {
     const t1 = window.setTimeout(() => setPhase('out'), 1500)
@@ -157,13 +165,13 @@ export function PublicHome() {
         <EntryLoader out={phase === 'out'} />
       ) : null}
       <div className="entry-bg" aria-hidden="true">
-        {SLIDES.map((src, i) => (
+        {slides.map((src, i) => (
           <div key={src} className={`entry-bg-slide ${i === slide ? 'active' : ''}`} style={{ backgroundImage: `url(${src})` }} />
         ))}
         <div className="entry-bg-shade" />
       </div>
       <div className="entry-slides" aria-hidden="true">
-        {SLIDES.map((src, i) => <span key={src} className={i === slide ? 'active' : ''} />)}
+        {slides.map((src, i) => <span key={src} className={i === slide ? 'active' : ''} />)}
       </div>
       <header className="simple-entry-header">
         <div className="public-brand"><span className="brand-mark">p</span>profallo<span className="brand-dot">.</span></div>

@@ -1,17 +1,35 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { Icon } from '../components/Icon'
 import { Avatar } from '../components/Avatar'
 import { PageHead } from '../components/ui'
 import { clientPhotos, findRoutine, initials, progressFor } from '../lib/utils'
+import type { Client } from '../types'
+
+function moveBefore(list: Client[], fromId: string, toId: string): Client[] {
+  if (fromId === toId) return list
+  const from = list.findIndex((c) => c.id === fromId)
+  if (from < 0) return list
+  const next = list.slice()
+  const [moved] = next.splice(from, 1)
+  const to = next.findIndex((c) => c.id === toId)
+  if (to < 0) return list
+  next.splice(to, 0, moved)
+  return next
+}
 
 export function ClientsPage() {
-  const { data, ui, money } = useApp()
+  const { data, ui, commit, money, toast } = useApp()
   const actions = useActions()
   const [layout, setLayout] = useState<'grid' | 'list'>('grid')
+  const [dragOrder, setDragOrder] = useState<Client[] | null>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const dragRef = useRef<string | null>(null)
+  const rectsRef = useRef<Map<string, DOMRect>>(new Map())
 
-  const clients = data.clients.filter((c) => {
+  const base = dragOrder ?? data.clients
+  const clients = base.filter((c) => {
     const inFilter =
       ui.clientFilter === 'todos' || ui.clientFilter === 'archivo'
         ? ui.clientFilter === 'todos' || c.archived
@@ -19,6 +37,77 @@ export function ClientsPage() {
     const haystack = `${c.name} ${c.goal} ${c.email}`.toLowerCase()
     return inFilter && haystack.includes(ui.query.toLowerCase())
   })
+
+  // FLIP: anima el movimiento de las fichas al reordenar/filtrar/cambiar de vista.
+  useLayoutEffect(() => {
+    const nodes = document.querySelectorAll<HTMLElement>('#clientGrid [data-client-id]')
+    nodes.forEach((el) => {
+      const id = el.dataset.clientId
+      if (!id) return
+      const next = el.getBoundingClientRect()
+      const prev = rectsRef.current.get(id)
+      if (prev && (Math.abs(prev.top - next.top) > 0.5 || Math.abs(prev.left - next.left) > 0.5)) {
+        const dx = prev.left - next.left
+        const dy = prev.top - next.top
+        el.animate(
+          [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0,0)' }],
+          { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' },
+        )
+      }
+      rectsRef.current.set(id, next)
+    })
+  })
+
+  function onHandleDown(id: string, e: ReactPointerEvent<HTMLElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+    dragRef.current = id
+    setDraggingId(id)
+    setDragOrder(data.clients.slice())
+  }
+
+  function onHandleMove(e: ReactPointerEvent<HTMLElement>) {
+    if (!dragRef.current) return
+    e.preventDefault()
+    const under = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-client-id]') as HTMLElement | null
+    const overId = under?.dataset.clientId
+    if (!overId || overId === dragRef.current) return
+    const fromId = dragRef.current
+    setDragOrder((prev) => moveBefore(prev ?? data.clients, fromId, overId))
+  }
+
+  function onHandleUp() {
+    const id = dragRef.current
+    if (!id) return
+    dragRef.current = null
+    setDraggingId(null)
+    const order = dragOrder
+    setDragOrder(null)
+    if (order) {
+      const withOrder = order.map((c, i) => ({ ...c, order: i }))
+      commit((d) => { d.clients = withOrder })
+      toast('Orden guardado.')
+    }
+  }
+
+  function handle(id: string) {
+    return (
+      <span
+        className="cli-drag"
+        role="button"
+        tabIndex={0}
+        aria-label="Arrastrar para reordenar"
+        title="Arrastra para reordenar"
+        onPointerDown={(e) => onHandleDown(id, e)}
+        onPointerMove={onHandleMove}
+        onPointerUp={onHandleUp}
+        onPointerCancel={onHandleUp}
+      >
+        <Icon name="grip" />
+      </span>
+    )
+  }
 
   return (
     <>
@@ -48,13 +137,15 @@ export function ClientsPage() {
         </div>
       </div>
       <div className={layout === 'grid' ? 'client-grid' : 'client-list'} id="clientGrid">
-        {clients.map((c) => {
+        {clients.map((c, i) => {
           const photo = c.photo || clientPhotos[c.id]
           const attendance = progressFor(data, c.id)
           const routine = findRoutine(data, c.routine)
+          const delay = { animationDelay: `${Math.min(i, 12) * 0.045}s` }
           if (layout === 'list') {
             return (
-              <article className="client-list-item" key={c.id}>
+              <article className={`client-list-item cli-anim${draggingId === c.id ? ' dragging' : ''}`} key={c.id} data-client-id={c.id} style={delay}>
+                {handle(c.id)}
                 <Avatar client={c} />
                 <div className="cli-main">
                   <b>{c.name}</b>
@@ -69,7 +160,7 @@ export function ClientsPage() {
             )
           }
           return (
-            <article className="client-card modern-client" key={c.id}>
+            <article className={`client-card modern-client cli-anim${draggingId === c.id ? ' dragging' : ''}`} key={c.id} data-client-id={c.id} style={delay}>
               <div className={`client-cover ${photo ? 'with-photo' : ''}`}>
                 {photo ? (
                   <img src={photo} alt={c.name} loading="lazy" />
@@ -77,6 +168,7 @@ export function ClientsPage() {
                   <span>{initials(c.name)}</span>
                 )}
                 <div className="client-cover-shade" />
+                {handle(c.id)}
                 <span className={`pill ${c.archived ? 'orange' : 'green'}`}>
                   {c.archived ? 'Archivado' : c.plan}
                 </span>

@@ -1223,3 +1223,14 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .slide-slot-actions .slide-move{width:40px;min-width:40px;padding:0;justify-content:center}
 .slide-slot-actions .slide-move:disabled{opacity:.4}
 .slide-slot-actions .slide-move svg{width:16px;height:16px}
+
+/* Reordenar clientes (arrastrar) + animaciones de entrada/movimiento */
+.cli-anim{animation:cliCardIn .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes cliCardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.client-cover{position:relative}
+.cli-drag{position:absolute;top:10px;left:10px;z-index:4;width:34px;height:34px;display:grid;place-items:center;border-radius:999px;background:rgba(10,12,14,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22);color:#fff;cursor:grab;touch-action:none;user-select:none}
+.cli-drag svg{width:16px;height:16px}
+.cli-drag:active{cursor:grabbing;background:rgba(210,255,98,.22);border-color:#d2ff6288}
+.client-list-item{position:relative}
+.client-list-item .cli-drag{position:relative;top:auto;left:auto;flex:none;width:30px;height:30px;background:#00000038;color:#a8adb0}
+.client-card.dragging,.client-list-item.dragging{opacity:.92;box-shadow:0 24px 60px #000000a6,0 0 0 2px #d2ff6266;z-index:6}

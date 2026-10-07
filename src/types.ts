@@ -64,6 +64,7 @@ export interface Client {
   joined: string
   frequency?: 'mensual' | 'quincenal'
   gender?: 'mujer' | 'hombre'
+  order?: number
 }
 
 export interface Payment {

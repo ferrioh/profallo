@@ -1,2 +1,2 @@
 // Archivo generado por scripts/version.mjs (no editar a mano).
-export const APP_VERSION = '2.0'
+export const APP_VERSION = '2.01'

@@ -41,6 +41,7 @@ export function rowToClient(r: Row): Client {
     archived: Boolean(r.archived),
     joined: or(r.joined),
     frequency: r.frequency === 'quincenal' ? 'quincenal' : 'mensual',
+    order: typeof r.sort_order === 'number' ? r.sort_order : undefined,
   }
 }
 
@@ -67,6 +68,7 @@ export function clientToRow(c: Client, trainerId: string): Row {
     tone: c.tone,
     archived: c.archived,
     joined: nz(c.joined),
+    sort_order: c.order ?? 0,
   }
 }
 
@@ -400,7 +402,7 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
   return {
     version: 1,
     profile: prof.data ? rowToProfile(prof.data as Row, base) : base,
-    clients: (clients.data ?? []).map(rowToClient),
+    clients: (clients.data ?? []).map(rowToClient).sort((a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER)),
     routines: (routines.data ?? []).map(rowToRoutine),
     sessions: (sessions.data ?? []).map(rowToSession),
     measurements: (measurements.data ?? []).map(rowToMeasurement),
@@ -489,7 +491,7 @@ export function mergeLocalCloud(local: AppData, cloud: AppData): AppData {
     ...cloud,
     deleted: [...tomb],
     updatedAt: Math.max(local.updatedAt ?? 0, cloud.updatedAt ?? 0),
-    clients: merge(local.clients, cloud.clients),
+    clients: merge(local.clients, cloud.clients).sort((a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER)),
     routines: merge(local.routines, cloud.routines),
     sessions: merge(local.sessions, cloud.sessions),
     measurements: merge(local.measurements, cloud.measurements),

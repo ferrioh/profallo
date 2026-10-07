@@ -76,15 +76,21 @@ export function Sidebar() {
     })
     return best
   }
-  function dockBump(clientX: number | null) {
+  function dockBump(px: number | null, py: number | null) {
     const nav = navRef.current
-    const navLeft = nav ? nav.getBoundingClientRect().left : 0
+    if (!nav) return
+    const navRect = nav.getBoundingClientRect()
+    const horizontal = navRect.width >= navRect.height
     navButtons().forEach((el) => {
-      if (clientX == null) { el.style.setProperty('--s', '1'); return }
-      // Usa offsetLeft/offsetWidth (no afectados por el scale) para evitar jitter.
-      const center = navLeft + el.offsetLeft + el.offsetWidth / 2
-      const d = Math.abs(clientX - center)
-      el.style.setProperty('--s', Math.max(1, 1.5 - d / 170).toFixed(3))
+      if (px == null || py == null) { el.style.setProperty('--s', '1'); return }
+      // Usa offsetLeft/Top (no afectados por el scale) para evitar jitter.
+      if (horizontal) {
+        const center = navRect.left + el.offsetLeft + el.offsetWidth / 2
+        el.style.setProperty('--s', Math.max(1, 1.5 - Math.abs(px - center) / 170).toFixed(3))
+      } else {
+        const center = navRect.top + el.offsetTop + el.offsetHeight / 2
+        el.style.setProperty('--s', Math.max(1, 1.45 - Math.abs(py - center) / 150).toFixed(3))
+      }
     })
   }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
@@ -94,7 +100,7 @@ export function Sidebar() {
   }
   function onNavMove(e: ReactPointerEvent<HTMLElement>) {
     // Magnificación tipo Dock (también al pasar el mouse, sin arrastrar).
-    dockBump(e.clientX)
+    dockBump(e.clientX, e.clientY)
     if (!dragRef.current) return
     // Movilidad libre: el píldora sigue el dedo sin saltos.
     const d = e.clientX - dragRef.current.startX
@@ -104,12 +110,12 @@ export function Sidebar() {
     dragRef.current.target = nearestIndex(e.clientX)
   }
   function onNavLeave() {
-    dockBump(null)
+    dockBump(null, null)
   }
   function onNavUp() {
     const target = dragRef.current?.target
     dragRef.current = null
-    dockBump(null)
+    dockBump(null, null)
     // Pasar directo a la posición destino (mismo frame): evita el "flash" en la
     // posición anterior. Se mantiene la transición desactivada durante el pase.
     setDragDx(0)

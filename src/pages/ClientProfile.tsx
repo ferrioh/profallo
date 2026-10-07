@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useApp } from '../context/AppContext'
 import { useActions } from '../hooks/useActions'
 import { useReveal } from '../hooks/useReveal'
@@ -135,7 +136,7 @@ export function ClientProfilePage() {
     </div>
     <section className="profile-dark-card reveal"><span className="eyebrow">INFORMACIÓN Y NOTAS</span><p>{client.notes || 'Sin observaciones.'}</p><div className="client-contact"><span>{client.idNumber ? `Cédula ${client.idNumber}` : 'Sin cédula'}</span><span>{client.email || 'Sin correo'}</span><span>{client.phone || 'Sin teléfono'}</span><span>Plan {client.plan} · {money(client.fee)} {client.frequency === 'quincenal' ? 'quincenal' : 'al mes'}</span>{client.joined ? <span className="client-since"><Icon name="calendar" /> Desde {longDate(client.joined, { day: 'numeric', month: 'short', year: 'numeric' })}</span> : null}</div></section>
 
-    {shareCode ? (
+    {shareCode ? createPortal(
       <div className="share-modal-backdrop" onClick={() => setShareCode(null)}>
         <div className="share-modal" onClick={(e) => e.stopPropagation()}>
           <div className="share-modal-head">Esto verá tu cliente</div>
@@ -149,7 +150,8 @@ export function ClientProfilePage() {
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body,
     ) : null}
   </div>
 }

@@ -187,14 +187,12 @@ export function PublicHome() {
                   </header>
                   <label className="login-field">Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
                   <label className="login-field">Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
+                  <button className="login-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
                   {error ? <p className="entry-error">{error}</p> : null}
                   <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
                   <div className="login-or"><span>o</span></div>
                   <button className="login-option" type="button" onClick={goSignup}>
                     <span className="login-option-l"><Icon name="user" />Crear cuenta</span><Icon name="arrow" />
-                  </button>
-                  <button className="login-option" type="button" onClick={() => { setError(''); setMode('recover') }}>
-                    <span className="login-option-l"><Icon name="check" />Recuperar contraseña</span><Icon name="arrow" />
                   </button>
                 </form>
               ) : step === 0 ? (

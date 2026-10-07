@@ -24,6 +24,10 @@
 .entry-form .login-field .entry-id{gap:8px}
 .entry-form .login-field .entry-id select{width:72px;flex:none;border-radius:99px;padding:0 14px;text-align:center}
 
+/* Link pequeño "recuperar contraseña" debajo del campo de contraseña */
+.login-forgot{justify-self:flex-end;background:transparent;border:0;color:#cdfb7a;font-size:12px;font-weight:600;margin-top:-4px;padding:2px 4px}
+.login-forgot:hover{color:#e6ffb0;text-decoration:underline}
+
 .login-or{display:flex;align-items:center;gap:12px;color:#8b9096;font-size:12px;margin:4px 0}
 .login-or::before,.login-or::after{content:'';height:1px;flex:1;background:linear-gradient(90deg,transparent,#ffffff26,transparent)}
 

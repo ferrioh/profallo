@@ -208,6 +208,9 @@ export function PublicHome() {
         ) : mode === 'login' || mode === 'signup' ? (
           <GlassSurface className="auth-glass" width="100%" height="auto" borderRadius={26} backgroundOpacity={0.05} brightness={42} opacity={0.9} displace={0.7} distortionScale={-140}>
             <section className="simple-access auth-sheet">
+            <button className="auth-close" type="button" aria-label="Cerrar" onClick={() => { setError(''); setStep(0); setMode('menu') }}>
+              <Icon name="close" />
+            </button>
             <div key={mode} className="auth-form-anim">
               {mode === 'login' ? (
                 <form className="entry-form" onSubmit={onLogin}>
@@ -280,6 +283,9 @@ export function PublicHome() {
           </GlassSurface>
         ) : mode === 'recover' ? (
           <section className="simple-access auth-sheet" aria-labelledby="recover-title">
+            <button className="auth-close" type="button" aria-label="Cerrar" onClick={() => { setError(''); setMode('menu') }}>
+              <Icon name="close" />
+            </button>
             <div className="auth-form-anim">
               <header className="login-head">
                 <h1 id="recover-title">Recuperar contraseña<span>.</span></h1>

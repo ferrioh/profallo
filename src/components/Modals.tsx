@@ -279,7 +279,6 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
   const activeClients = data.clients.filter((c) => !c.archived)
   const [sessionTime, setSessionTime] = useState(s?.time ?? '09:00')
   const [sessionDuration, setSessionDuration] = useState(s?.duration ?? 60)
-  const [timePicker, setTimePicker] = useState<'clock' | 'duration' | null>(null)
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -349,7 +348,7 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
         required
       />
       <div><label>Hora</label><input type="time" name="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)} required /></div>
-      <div><label>Duración</label><input type="hidden" name="duration" value={sessionDuration} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker('duration')}><Icon name="clock" />{sessionDuration} min<Icon name="chevron" /></button></div>
+      <div><label>Duración</label><input type="number" name="duration" min={10} max={600} step={5} inputMode="numeric" value={sessionDuration} onChange={(e) => setSessionDuration(Number(e.target.value))} required /></div>
       <SelectField name="status" label="Estado" value={s?.status ?? 'Programada'}>
         {SESSION_STATUSES.map((x) => (
           <option key={x} value={x}>
@@ -371,7 +370,6 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
         value={s?.notes}
       />
     </FormWrap>
-    {timePicker && <TimeWheelPicker mode={timePicker} value={timePicker === 'clock' ? sessionTime : sessionDuration} onSave={value => { if (timePicker === 'clock') setSessionTime(String(value)); else setSessionDuration(Number(value)); setTimePicker(null) }} onClose={() => setTimePicker(null)} />}
     </>
   )
 }
@@ -603,7 +601,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
           </option>
         ))}
       </SelectField>
-      <div><label>Duración del plan</label><select name="duration" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{[...new Set([20, 30, 40, 45, 50, 60, 75, 90, duration])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{m} min</option>)}</select></div>
+      <div><label>Duración del plan (min)</label><input type="number" name="duration" min={10} max={600} step={5} inputMode="numeric" value={duration} onChange={(e) => setDuration(Number(e.target.value))} required /></div>
       <div className="full editor-intro">
         <span className="editor-step">02</span>
         <div>

@@ -62,8 +62,8 @@
 }
 
 /* Pantalla inicial: mensaje motivacional + boton glass "Iniciar" (arriba) */
-.entry-intro{width:100%;align-self:start;display:flex;flex-direction:column;align-items:center;gap:26px;
-  padding:clamp(26px,8vh,90px) 22px 20px;text-align:center}
+.entry-intro{width:100%;align-self:end;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:22px;
+  padding:20px 22px calc(48px + env(safe-area-inset-bottom,0px));text-align:center}
 .entry-motto{max-width:540px;font-size:clamp(21px,4.6vw,31px);font-weight:300;line-height:1.28;color:#eef2ef;margin:0;text-wrap:balance}
 .entry-start-wrap{display:inline-flex;animation:startUp .8s cubic-bezier(.22,1,.36,1) both}
 .entry-start{display:inline-flex;align-items:center;gap:14px;padding:16px 26px 16px 34px;border-radius:999px;

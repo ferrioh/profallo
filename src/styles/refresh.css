@@ -714,7 +714,7 @@ dialog.app-sheet{max-width:none}
   /* Dock: los iconos se agrandan cerca de la bolita */
   #nav .nav-button{transform:scale(var(--s,1));transition:transform .18s cubic-bezier(.34,1.4,.5,1)}
   /* Bolita en "fluid glass" */
-  #nav .nav-pill{background:linear-gradient(150deg,#eaffb0,#d2ff62 55%,#a9d84a);box-shadow:0 8px 22px #d2ff6255,inset 0 1px 0 #ffffff99;backdrop-filter:blur(8px) saturate(160%);-webkit-backdrop-filter:blur(8px) saturate(160%);border:1px solid #ffffff4d}
+  #nav .nav-pill{background:linear-gradient(150deg,rgba(234,255,176,.42),rgba(210,255,98,.24) 60%,rgba(210,255,98,.12));box-shadow:0 8px 22px #d2ff6233,inset 0 1px 0 #ffffff8c,inset 0 -1px 0 #ffffff1f;backdrop-filter:blur(12px) saturate(1.8);-webkit-backdrop-filter:blur(12px) saturate(1.8);border:1px solid #d2ff6288}
   @media(prefers-reduced-motion:reduce){#nav .nav-button{transition:none}}
 }
 /* Notificaciones */
@@ -1202,6 +1202,6 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .simple-access .simple-access-primary{margin-top:14px;min-height:46px;border-radius:99px;justify-content:space-between;padding:0 16px 0 20px;font-weight:700}
 .simple-access .simple-access-primary svg{width:18px;height:18px}
 /* Barra del navegador con GlassSurface (vidrio liquido real) */
-.sidebar{background:transparent!important}
+.sidebar{background:transparent!important;border:0!important;box-shadow:none!important}
 .sidebar-glass{position:absolute!important;inset:0;width:100%;height:100%;z-index:0;border-radius:inherit!important;pointer-events:none}
 .sidebar > *:not(.sidebar-glass){position:relative;z-index:1}

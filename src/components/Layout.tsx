@@ -326,14 +326,6 @@ export function Topbar() {
             <Icon name="grid" />
           </button>
         ) : null}
-        <button
-          className="avatar tiny"
-          id="headerAvatar"
-          onClick={() => go('perfil')}
-          aria-label="Abrir perfil del entrenador"
-        >
-          <img src={data.profile.photo || 'assets/coach.png'} alt="Foto del entrenador" />
-        </button>
       </div>
     </header>
   )

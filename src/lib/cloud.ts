@@ -68,7 +68,6 @@ export function clientToRow(c: Client, trainerId: string): Row {
     tone: c.tone,
     archived: c.archived,
     joined: nz(c.joined),
-    sort_order: c.order ?? 0,
   }
 }
 

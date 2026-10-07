@@ -160,17 +160,62 @@ export function PublicHome() {
             <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar sesión <Icon name="arrow" /></button>
             <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
           </section>
-        ) : mode === 'login' ? (
+        ) : mode === 'login' || mode === 'signup' ? (
           <section className="simple-access" aria-labelledby="login-title">
-            <h1 id="login-title" className="shiny-text">Bienvenido de vuelta<span>.</span></h1>
-            <form className="entry-form" onSubmit={onLogin}>
-              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
-              <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
-              <button className="entry-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
-              {error ? <p className="entry-error">{error}</p> : null}
-              <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
-            </form>
-            <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
+            <div className="auth-switch" role="tablist" aria-label="Acceso">
+              <span className={`auth-switch-pill ${mode === 'signup' ? 'right' : ''}`} aria-hidden="true" />
+              <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setError(''); setMode('login') }}>Iniciar sesión</button>
+              <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={() => { setError(''); setMode('signup') }}>Crear cuenta</button>
+            </div>
+            <div key={mode} className="auth-form-anim">
+              {mode === 'login' ? (
+                <>
+                  <h1 className="shiny-text">Bienvenido<span>.</span></h1>
+                  <form className="entry-form" onSubmit={onLogin}>
+                    <label>Correo electrónico<input name="email" type="email" required autoComplete="email" defaultValue={savedEmail} placeholder="tucorreo@ejemplo.com" /></label>
+                    <label>Contraseña<PasswordInput name="password" required autoComplete="current-password" placeholder="Tu contraseña" /></label>
+                    <button className="entry-forgot" type="button" onClick={() => { setError(''); setMode('recover') }}>¿Olvidaste tu contraseña?</button>
+                    {error ? <p className="entry-error">{error}</p> : null}
+                    <button className="simple-access-primary" type="submit">Entrar <Icon name="arrow" /></button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <h1 className="shiny-text">Crea tu cuenta<span>.</span></h1>
+                  <form className="entry-form" onSubmit={onSignup}>
+                    <label>Nombre completo<input name="name" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
+                    <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
+                    <div className="entry-row">
+                      <label>Contraseña<PasswordInput name="password" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
+                      <label>Repetir contraseña<PasswordInput name="confirm" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
+                    </div>
+                    <div className="entry-row">
+                      <label>Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>
+                      <label>Cédula
+                        <div className="entry-id">
+                          <select name="idType" defaultValue="V" aria-label="Tipo de cédula">
+                            <option value="V">V</option>
+                            <option value="E">E</option>
+                            <option value="R">R</option>
+                          </select>
+                          <input name="idNumber" required inputMode="numeric" pattern="\d{5,10}" placeholder="12345678" />
+                        </div>
+                      </label>
+                    </div>
+                    <label>Instagram<input name="instagram" placeholder="@tuusuario" maxLength={60} /></label>
+                    <div className="entry-captcha">
+                      <label className="entry-robot">
+                        <input type="checkbox" checked={robot} onChange={(e) => setRobot(e.target.checked)} />
+                        <span>No soy un robot</span>
+                      </label>
+                      <label className="entry-math">¿Cuánto es {captcha.a} + {captcha.b}?<input value={captchaAnswer} onChange={(e) => setCaptchaAnswer(e.target.value)} inputMode="numeric" placeholder="Respuesta" /></label>
+                    </div>
+                    {error ? <p className="entry-error">{error}</p> : null}
+                    <button className="simple-access-primary" type="submit" disabled={signingUp}>{signingUp ? 'Creando cuenta…' : 'Crear cuenta'} <Icon name="arrow" /></button>
+                  </form>
+                </>
+              )}
+            </div>
           </section>
         ) : mode === 'recover' ? (
           <section className="simple-access" aria-labelledby="recover-title">
@@ -181,43 +226,6 @@ export function PublicHome() {
               <button className="simple-access-primary" type="submit">Enviar enlace <Icon name="arrow" /></button>
             </form>
             <button className="entry-back" type="button" onClick={() => { setError(''); setMode('login') }}>‹ Volver</button>
-          </section>
-        ) : mode === 'signup' ? (
-          <section className="simple-access" aria-labelledby="signup-title">
-            <h1 id="signup-title" className="shiny-text">Crea tu espacio<span>.</span></h1>
-            <form className="entry-form" onSubmit={onSignup}>
-              <label>Nombre completo<input name="name" required minLength={3} maxLength={80} autoComplete="name" placeholder="Tu nombre y apellido" /></label>
-              <label>Correo electrónico<input name="email" type="email" required autoComplete="email" placeholder="tucorreo@ejemplo.com" /></label>
-              <div className="entry-row">
-                <label>Contraseña<PasswordInput name="password" required minLength={PASS_MIN} autoComplete="new-password" placeholder={`Mínimo ${PASS_MIN}`} /></label>
-                <label>Repetir contraseña<PasswordInput name="confirm" required minLength={PASS_MIN} autoComplete="new-password" placeholder="Repite la clave" /></label>
-              </div>
-              <div className="entry-row">
-                <label>Teléfono<input name="phone" type="tel" required pattern="^[+]?[\d\s()-]{7,20}$" placeholder="+58 412 000 0000" /></label>
-                <label>Cédula
-                  <div className="entry-id">
-                    <select name="idType" defaultValue="V" aria-label="Tipo de cédula">
-                      <option value="V">V</option>
-                      <option value="E">E</option>
-                      <option value="R">R</option>
-                    </select>
-                    <input name="idNumber" required inputMode="numeric" pattern="\d{5,10}" placeholder="12345678" />
-                  </div>
-                </label>
-              </div>
-              <label>Instagram<input name="instagram" placeholder="@tuusuario" maxLength={60} /></label>
-              <div className="entry-captcha">
-                <label className="entry-robot">
-                  <input type="checkbox" checked={robot} onChange={(e) => setRobot(e.target.checked)} />
-                  <span>No soy un robot</span>
-                </label>
-                <label className="entry-math">¿Cuánto es {captcha.a} + {captcha.b}?<input value={captchaAnswer} onChange={(e) => setCaptchaAnswer(e.target.value)} inputMode="numeric" placeholder="Respuesta" /></label>
-              </div>
-              {error ? <p className="entry-error">{error}</p> : null}
-              <button className="simple-access-primary" type="submit" disabled={signingUp}>{signingUp ? 'Creando cuenta…' : 'Crear cuenta'} <Icon name="arrow" /></button>
-            </form>
-            <button className="simple-access-secondary" type="button" onClick={() => { setError(''); setMode('login') }}>Ya tengo cuenta, iniciar sesión</button>
-            <button className="entry-back" type="button" onClick={() => { setError(''); setMode('menu') }}>‹ Volver</button>
           </section>
         ) : (
           <section className="simple-access entry-waiting" role="status" aria-live="polite">

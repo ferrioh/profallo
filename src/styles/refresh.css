@@ -573,6 +573,15 @@ dialog.app-sheet{max-width:none}
 .entry-form input,.entry-form select{min-height:42px;padding:9px 12px;font-size:14px}
 .simple-access .simple-access-primary{margin-top:16px;min-height:46px}
 .simple-access .simple-access-secondary{min-height:42px;font-size:13px}
+/* Switch animado Iniciar sesión / Crear cuenta (estilo React Bits) */
+.auth-switch{position:relative;display:grid;grid-template-columns:1fr 1fr;background:#ffffff12;border:1px solid #ffffff22;border-radius:99px;padding:4px;margin:0 auto 16px;width:100%;max-width:420px}
+.auth-switch-pill{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:99px;background:#d2ff62;box-shadow:0 6px 18px #d2ff6255;transition:transform .42s cubic-bezier(.34,1.3,.5,1)}
+.auth-switch-pill.right{transform:translateX(100%)}
+.auth-switch button{position:relative;z-index:1;background:transparent;border:0;color:#c8ccbf;font-weight:700;font-size:14px;padding:11px;border-radius:99px;min-height:46px;transition:color .25s ease}
+.auth-switch button.active{color:#182a0c}
+.auth-form-anim{animation:authFormIn .42s cubic-bezier(.22,1,.36,1) both}
+@keyframes authFormIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.auth-switch-pill,.auth-form-anim{transition:none;animation:none}}
 .entry-waiting .entry-confirm-icon{width:84px;height:84px}
 /* Registro / login */
 .entry-form{display:grid;gap:12px;margin-top:18px;text-align:left}

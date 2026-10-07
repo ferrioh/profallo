@@ -533,8 +533,8 @@ export function RoutineFormModal({ id }: { id?: string }) {
   const { data, commit, closeModal, toast, error, setError } = useForm()
   const r = data.routines.find((x) => x.id === id)
   const [exercises, setExercises] = useState<Exercise[]>(
-    r?.exercises?.length
-      ? r.exercises.map((e) => ({ ...e }))
+    (r?.exercises ?? []).filter((e) => e.name?.trim()).length
+      ? (r?.exercises ?? []).filter((e) => e.name?.trim()).map((e) => ({ ...e }))
       : [{ name: '', sets: 3, reps: '10–12', rest: 60 }],
   )
   const [duration, setDuration] = useState(r?.duration ?? 50)
@@ -551,12 +551,14 @@ export function RoutineFormModal({ id }: { id?: string }) {
     const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
     setError('')
     try {
-      const clean = exercises.map((ex) => ({
-        name: ex.name.trim(),
-        sets: Number(ex.sets),
-        reps: ex.reps.trim(),
-        rest: Number(ex.rest),
-      }))
+      const clean = exercises
+        .filter((ex) => ex.name.trim())
+        .map((ex) => ({
+          name: ex.name.trim(),
+          sets: Number(ex.sets),
+          reps: ex.reps.trim(),
+          rest: Number(ex.rest),
+        }))
       if (!x.name?.trim() || !clean.length || clean.some((ex) => !ex.name || !ex.reps))
         throw new Error('Añade un nombre y completa todos los ejercicios.')
       commit((d) => {
@@ -601,7 +603,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
           </option>
         ))}
       </SelectField>
-      <div><label>Duración del plan</label><select name="duration" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{[20, 30, 40, 45, 50, 60, 75, 90].map((m) => <option key={m} value={m}>{m} min</option>)}</select></div>
+      <div><label>Duración del plan</label><select name="duration" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{[...new Set([20, 30, 40, 45, 50, 60, 75, 90, duration])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{m} min</option>)}</select></div>
       <div className="full editor-intro">
         <span className="editor-step">02</span>
         <div>
@@ -620,11 +622,7 @@ export function RoutineFormModal({ id }: { id?: string }) {
                   prev.map((item, j) => (j === i ? { ...item, ...patch } : item)),
                 )
               }
-              onRemove={() => {
-                if (exercises.length > 1)
-                  setExercises((prev) => prev.filter((_, j) => j !== i))
-                else toast('La rutina necesita al menos un ejercicio.')
-              }}
+              onRemove={() => setExercises((prev) => prev.filter((_, j) => j !== i))}
               onRestClick={() => setTimePicker({ mode: 'rest', index: i })}
             />
           ))}

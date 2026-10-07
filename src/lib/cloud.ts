@@ -79,7 +79,9 @@ export function rowToRoutine(r: Row): Routine {
     level: or(r.level),
     duration: Number(r.duration ?? 50),
     notes: or(r.notes),
-    exercises: Array.isArray(r.exercises) ? (r.exercises as Routine['exercises']) : [],
+    exercises: Array.isArray(r.exercises)
+      ? (r.exercises as Routine['exercises']).filter((e) => e && typeof e.name === 'string' && e.name.trim())
+      : [],
     focusZones: Array.isArray(r.focus_zones) ? (r.focus_zones as BodyZone[]) : [],
   }
 }

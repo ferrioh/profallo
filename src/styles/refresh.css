@@ -1194,3 +1194,10 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .sr-star::before{content:'★';position:absolute;left:0;top:0;color:#ffd23f;width:var(--fill,0%);overflow:hidden;text-shadow:0 0 6px #ffd23f66}
 @keyframes starPop{from{opacity:0;transform:scale(.4) rotate(-18deg)}to{opacity:1;transform:scale(1) rotate(0)}}
 @media(prefers-reduced-motion:reduce){.sr-star{animation:none}}
+/* GlassSurface en el login */
+.auth-glass{width:100%!important;max-height:96dvh;border-radius:26px 26px 0 0!important;align-self:end}
+.auth-glass .glass-surface__content{padding:0;align-items:stretch;justify-content:flex-start;height:auto}
+.auth-sheet{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;border-top:0!important;box-shadow:none!important;min-height:auto!important}
+/* Botones del login mas minimalistas (coherentes con el switch) */
+.simple-access .simple-access-primary{margin-top:14px;min-height:46px;border-radius:99px;justify-content:space-between;padding:0 16px 0 20px;font-weight:700}
+.simple-access .simple-access-primary svg{width:18px;height:18px}

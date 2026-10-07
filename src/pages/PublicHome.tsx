@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
 import { EntryLoader } from '../components/EntryLoader'
 import { PasswordInput } from '../components/PasswordInput'
+import GlassSurface from '../components/GlassSurface'
 import { PASS_MIN, login as doLogin, signup as doSignup } from '../lib/auth'
 import { cloudGetProfile, cloudResetPassword, cloudSignIn, cloudSignOut, cloudSignUp } from '../lib/cloud'
 
@@ -175,7 +176,8 @@ export function PublicHome() {
             <button className="simple-access-secondary" type="button" onClick={goSignup}>Crear cuenta</button>
           </section>
         ) : mode === 'login' || mode === 'signup' ? (
-          <section className="simple-access">
+          <GlassSurface className="auth-glass" width="100%" height="auto" borderRadius={26} backgroundOpacity={0.05} brightness={42} opacity={0.9} displace={0.7} distortionScale={-140}>
+            <section className="simple-access auth-sheet">
             <div key={mode} className="auth-form-anim">
               {mode === 'login' ? (
                 <form className="entry-form" onSubmit={onLogin}>
@@ -231,7 +233,8 @@ export function PublicHome() {
               <button type="button" role="tab" aria-selected={mode === 'login'} className={mode === 'login' ? 'active' : ''} onClick={() => { setError(''); setMode('login') }}>Iniciar sesión</button>
               <button type="button" role="tab" aria-selected={mode === 'signup'} className={mode === 'signup' ? 'active' : ''} onClick={goSignup}>Crear cuenta</button>
             </div>
-          </section>
+            </section>
+          </GlassSurface>
         ) : mode === 'recover' ? (
           <section className="simple-access" aria-labelledby="recover-title">
             <h1 id="recover-title">Recuperar contraseña<span>.</span></h1>

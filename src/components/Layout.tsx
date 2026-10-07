@@ -8,6 +8,7 @@ import { cloudSignOut } from '../lib/cloud'
 import { buildNotifications, notificationStateOf } from '../lib/notifications'
 import { cloudSubscribeAdminMessages, cloudMyAdminMessages, type AdminMessage } from '../lib/cloud'
 import { playTick } from '../lib/sound'
+import GlassSurface from './GlassSurface'
 
 export const NAV: Array<[View, string, IconName]> = [
   ['inicio', 'Inicio', 'grid'],
@@ -135,6 +136,9 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
+      <GlassSurface className="sidebar-glass" width="100%" height="100%" borderRadius={0} backgroundOpacity={0.06} brightness={36} opacity={0.9} blur={12} displace={1.1} distortionScale={-160} saturation={1.4} mixBlendMode="screen">
+        <span />
+      </GlassSurface>
       <a className="brand" href="#inicio">
         <span className="brand-mark">p</span>
         profallo

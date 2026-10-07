@@ -1201,3 +1201,7 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 /* Botones del login mas minimalistas (coherentes con el switch) */
 .simple-access .simple-access-primary{margin-top:14px;min-height:46px;border-radius:99px;justify-content:space-between;padding:0 16px 0 20px;font-weight:700}
 .simple-access .simple-access-primary svg{width:18px;height:18px}
+/* Barra del navegador con GlassSurface (vidrio liquido real) */
+.sidebar{background:transparent!important}
+.sidebar-glass{position:absolute;inset:0;z-index:0;border-radius:inherit!important;pointer-events:none}
+.sidebar > *:not(.sidebar-glass){position:relative;z-index:1}

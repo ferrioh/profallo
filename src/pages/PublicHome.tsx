@@ -15,7 +15,7 @@ const SLIDES = [
 
 export function PublicHome() {
   const { enter, go, toast, cloudEnabled } = useApp()
-  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting' | 'recover'>('login')
+  const [mode, setMode] = useState<'menu' | 'login' | 'signup' | 'waiting' | 'recover'>('menu')
   const [error, setError] = useState('')
   const [slide, setSlide] = useState(0)
   const [phase, setPhase] = useState<'load' | 'out' | 'done'>('load')
@@ -172,7 +172,7 @@ export function PublicHome() {
         {mode === 'menu' ? (
           <section className="simple-access" aria-labelledby="entry-title">
             <h1 id="entry-title" className="shiny-text">Tu progreso, en tus manos<span>.</span></h1>
-            <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar sesión <Icon name="arrow" /></button>
+            <button className="simple-access-primary" type="button" onClick={() => { setError(''); setMode('login') }}>Iniciar <Icon name="arrow" /></button>
             <button className="simple-access-secondary" type="button" onClick={goSignup}>Crear cuenta</button>
           </section>
         ) : mode === 'login' || mode === 'signup' ? (

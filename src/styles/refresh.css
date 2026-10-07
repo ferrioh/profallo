@@ -712,7 +712,7 @@ dialog.app-sheet{max-width:none}
   #nav .nav-button span{display:none}
   #nav .nav-button.active{background:transparent;color:#18290d}
   /* Dock: los iconos se agrandan cerca de la bolita */
-  #nav .nav-button{transform:scale(var(--s,1));transition:transform .18s cubic-bezier(.34,1.4,.5,1)}
+  #nav .nav-button{transform:scale(var(--s,1));transform-origin:center bottom;transition:transform .2s cubic-bezier(.34,1.56,.64,1);will-change:transform}
   /* Bolita en "fluid glass" */
   #nav .nav-pill{background:linear-gradient(150deg,rgba(234,255,176,.42),rgba(210,255,98,.24) 60%,rgba(210,255,98,.12));box-shadow:0 8px 22px #d2ff6233,inset 0 1px 0 #ffffff8c,inset 0 -1px 0 #ffffff1f;backdrop-filter:blur(12px) saturate(1.8);-webkit-backdrop-filter:blur(12px) saturate(1.8);border:1px solid #d2ff6288}
   @media(prefers-reduced-motion:reduce){#nav .nav-button{transition:none}}

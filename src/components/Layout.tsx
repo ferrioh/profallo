@@ -77,11 +77,14 @@ export function Sidebar() {
     return best
   }
   function dockBump(clientX: number | null) {
+    const nav = navRef.current
+    const navLeft = nav ? nav.getBoundingClientRect().left : 0
     navButtons().forEach((el) => {
       if (clientX == null) { el.style.setProperty('--s', '1'); return }
-      const r = el.getBoundingClientRect()
-      const d = Math.abs(clientX - (r.left + r.width / 2))
-      el.style.setProperty('--s', Math.max(1, 1.22 - d / 240).toFixed(3))
+      // Usa offsetLeft/offsetWidth (no afectados por el scale) para evitar jitter.
+      const center = navLeft + el.offsetLeft + el.offsetWidth / 2
+      const d = Math.abs(clientX - center)
+      el.style.setProperty('--s', Math.max(1, 1.5 - d / 170).toFixed(3))
     })
   }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
@@ -90,6 +93,8 @@ export function Sidebar() {
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   function onNavMove(e: ReactPointerEvent<HTMLElement>) {
+    // Magnificación tipo Dock (también al pasar el mouse, sin arrastrar).
+    dockBump(e.clientX)
     if (!dragRef.current) return
     // Movilidad libre: el píldora sigue el dedo sin saltos.
     const d = e.clientX - dragRef.current.startX
@@ -97,7 +102,9 @@ export function Sidebar() {
     setDragDx(Math.max(-w, Math.min(w, d)))
     // Tracker: recuerda el botón más cercano para dejarlo ahí al soltar.
     dragRef.current.target = nearestIndex(e.clientX)
-    dockBump(e.clientX)
+  }
+  function onNavLeave() {
+    dockBump(null)
   }
   function onNavUp() {
     const target = dragRef.current?.target
@@ -158,6 +165,7 @@ export function Sidebar() {
         onPointerMove={onNavMove}
         onPointerUp={onNavUp}
         onPointerCancel={onNavUp}
+        onPointerLeave={onNavLeave}
       >
         <span
           className="nav-pill"

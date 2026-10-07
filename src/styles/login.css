@@ -88,3 +88,10 @@
 @keyframes rt3dSwap{from{opacity:0;transform:rotateX(-90deg) translateY(-.18em);filter:blur(4px)}
   to{opacity:1;transform:rotateX(0) translateY(0);filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.entry-start-wrap{animation:none}.entry-start svg{animation:none!important}.rt-char{animation:none;opacity:1}}
+
+/* Boton de guardar con estado (gris sin cambios / check al guardar) */
+.save-btn{transition:background .25s ease,border-color .25s ease,color .25s ease,opacity .25s ease!important}
+.save-btn:disabled{opacity:.45;filter:grayscale(.7);cursor:default}
+.save-btn.saved{background:#3ec36a!important;border-color:#3ec36a!important;color:#06210f!important;animation:savePop .5s cubic-bezier(.34,1.56,.64,1)!important}
+@keyframes savePop{0%{scale:1}45%{scale:1.05}100%{scale:1}}
+@media(prefers-reduced-motion:reduce){.save-btn.saved{animation:none!important}}

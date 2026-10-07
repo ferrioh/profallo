@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useApp } from '../context/AppContext'
 import { Icon } from '../components/Icon'
+import { SaveButton } from '../components/SaveButton'
 import { PageHead } from '../components/ui'
 import { LineChart } from '../components/ui'
 import { AnalyticsView } from '../components/Analytics'
@@ -78,6 +79,10 @@ export function AdminPage() {
   const [premiumReqs, setPremiumReqs] = useState<PremiumRequestRow[] | null>(null)
   const [paySettings, setPaySettings] = useState<AppSettings>({ pay_pagomovil: '', pay_binance: '', pay_zelle: '', backup_enabled: true, shareholders: [], slides: DEFAULT_SLIDES })
   const [slides, setSlides] = useState<string[]>(DEFAULT_SLIDES)
+  const [payDirty, setPayDirty] = useState(false)
+  const [socialDirty, setSocialDirty] = useState(false)
+  const payFormRef = useRef<HTMLFormElement>(null)
+  const socialFormRef = useRef<HTMLFormElement>(null)
   const [analytics, setAnalytics] = useState<UserAnalyticsRow[] | null>(null)
   const [shareName, setShareName] = useState('')
   const [sharePercent, setSharePercent] = useState('')
@@ -98,6 +103,8 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
   const cloudList = cloudAccounts ?? []
   const freeAccs = cloudList.filter((a) => a.membership !== 'premium')
   const premAccs = cloudList.filter((a) => a.membership === 'premium')
+  const cleanSlides = slides.map((s) => s.trim()).filter(Boolean)
+  const slidesDirty = JSON.stringify(cleanSlides) !== JSON.stringify(paySettings.slides)
 
   useEffect(() => {
     if (!cloudEnabled) return
@@ -345,14 +352,15 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     })
   }
 
-  function savePaySettings(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+  async function applyPaySettings(): Promise<boolean> {
+    const form = payFormRef.current
+    if (!form) return false
+    const x = Object.fromEntries(new FormData(form)) as Record<string, string>
     const s = { pay_pagomovil: x.pay_pagomovil ?? '', pay_binance: x.pay_binance ?? '', pay_zelle: x.pay_zelle ?? '', backup_enabled: x.backup_enabled === 'on', shareholders: paySettings.shareholders, slides: paySettings.slides }
-    cloudSaveAppSettings(s).then((ok) => {
-      if (ok) { setPaySettings(s); toast('Datos de pago guardados.') }
-      else toast('No se pudieron guardar los datos de pago.')
-    })
+    const ok = await cloudSaveAppSettings(s)
+    if (ok) { setPaySettings(s); setPayDirty(false); toast('Datos de pago guardados.') }
+    else toast('No se pudieron guardar los datos de pago.')
+    return ok
   }
 
   function saveShareholders(list: AppSettings['shareholders']) {
@@ -380,14 +388,17 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     saveShareholders(paySettings.shareholders.filter((s) => s.id !== id))
   }
 
-  function saveSocial(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const x = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+  async function applySocial(): Promise<boolean> {
+    const form = socialFormRef.current
+    if (!form) return false
+    const x = Object.fromEntries(new FormData(form)) as Record<string, string>
     commit((d) => {
       d.profile.instagram = (x.instagram ?? '').trim()
       d.profile.tiktok = (x.tiktok ?? '').trim()
     })
+    setSocialDirty(false)
     toast('Enlaces de la empresa guardados.')
+    return true
   }
 
   function setSlideUrl(index: number, url: string) {
@@ -411,14 +422,13 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     input.click()
   }
 
-  function saveSlides() {
+  async function saveSlides(): Promise<boolean> {
     const clean = slides.map((s) => s.trim()).filter(Boolean)
     const next = { ...paySettings, slides: clean }
-    setPaySettings(next)
-    cloudSaveAppSettings(next).then((ok) => {
-      if (ok) toast('Slides de la portada guardadas.')
-      else toast('No se pudieron guardar las slides.')
-    })
+    const ok = await cloudSaveAppSettings(next)
+    if (ok) { setPaySettings(next); setSlides(clean); toast('Slides de la portada guardadas.') }
+    else toast('No se pudieron guardar las slides.')
+    return ok
   }
 
   return (
@@ -695,7 +705,7 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
       {tab === 'pagos' ? (
         <section className="admin-social">
           <div className="section-line"><div><span className="eyebrow">PAGOS</span><h2>Datos para recibir el pago</h2></div></div>
-          <form onSubmit={savePaySettings}>
+          <form ref={payFormRef} onInput={() => setPayDirty(true)} onSubmit={(e) => { e.preventDefault(); void applyPaySettings() }}>
             <div className="form-grid">
               <div className="full"><label>Pago Móvil</label><textarea name="pay_pagomovil" defaultValue={paySettings.pay_pagomovil} rows={2} placeholder="Banco, teléfono y cédula del titular" /></div>
               <div className="full"><label>Binance</label><textarea name="pay_binance" defaultValue={paySettings.pay_binance} rows={2} placeholder="Email / Wallet y red (BEP20, etc.)" /></div>
@@ -707,7 +717,7 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
                 </label>
               </div>
             </div>
-            <div className="form-foot"><button className="button primary" type="submit">Guardar datos de pago <Icon name="check" /></button></div>
+            <div className="form-foot"><SaveButton onSave={applyPaySettings} canSave={payDirty} label="Guardar datos de pago" /></div>
           </form>
         </section>
       ) : null}
@@ -943,19 +953,19 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
               </div>
             ))}
           </div>
-          <div className="form-foot"><button className="button primary" type="button" onClick={saveSlides}>Guardar slides <Icon name="check" /></button></div>
+          <div className="form-foot"><SaveButton onSave={saveSlides} canSave={slidesDirty} label="Guardar slides" /></div>
         </section>
       ) : null}
 
       {tab === 'redes' ? (
         <section className="admin-social">
           <div className="section-line"><div><span className="eyebrow">REDES DE LA EMPRESA</span><h2>Enlaces del perfil</h2></div></div>
-          <form onSubmit={saveSocial}>
+          <form ref={socialFormRef} onInput={() => setSocialDirty(true)} onSubmit={(e) => { e.preventDefault(); void applySocial() }}>
             <div className="form-grid">
               <div className="full"><label>Instagram (URL)</label><input name="instagram" defaultValue={data.profile.instagram} placeholder="https://instagram.com/tu-usuario" maxLength={200} /></div>
               <div className="full"><label>TikTok (URL)</label><input name="tiktok" defaultValue={data.profile.tiktok} placeholder="https://tiktok.com/@tu-usuario" maxLength={200} /></div>
             </div>
-            <div className="form-foot"><button className="button primary" type="submit">Guardar enlaces <Icon name="check" /></button></div>
+            <div className="form-foot"><SaveButton onSave={applySocial} canSave={socialDirty} label="Guardar enlaces" /></div>
           </form>
         </section>
       ) : null}

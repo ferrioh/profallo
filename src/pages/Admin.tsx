@@ -405,6 +405,16 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
     setSlides((prev) => prev.map((s, i) => (i === index ? url : s)))
   }
 
+  function moveSlide(index: number, dir: number) {
+    setSlides((prev) => {
+      const j = index + dir
+      if (j < 0 || j >= prev.length) return prev
+      const next = [...prev]
+      ;[next[index], next[j]] = [next[j], next[index]]
+      return next
+    })
+  }
+
   async function pickSlide(index: number) {
     const input = document.createElement('input')
     input.type = 'file'
@@ -947,6 +957,8 @@ const [backups, setBackups] = useState<BackupRow[] | null>(null)
                     <div className="slide-slot-actions">
                       <button className="button light" type="button" onClick={() => pickSlide(i)}>Subir imagen</button>
                       <button className="button light" type="button" onClick={() => setSlideUrl(i, '')}>Quitar</button>
+                      <button className="button light slide-move" type="button" disabled={i === 0} onClick={() => moveSlide(i, -1)} aria-label="Mover arriba" title="Mover arriba"><Icon name="chevronUp" /></button>
+                      <button className="button light slide-move" type="button" disabled={i === 2} onClick={() => moveSlide(i, 1)} aria-label="Mover abajo" title="Mover abajo"><Icon name="chevronDown" /></button>
                     </div>
                   </div>
                 </div>

@@ -1219,3 +1219,7 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .slide-slot-actions{display:flex;gap:8px;flex-wrap:wrap}
 .slide-slot-actions .button{min-height:40px}
 @media(max-width:560px){.slide-thumb{width:92px;height:60px}}
+
+.slide-slot-actions .slide-move{width:40px;min-width:40px;padding:0;justify-content:center}
+.slide-slot-actions .slide-move:disabled{opacity:.4}
+.slide-slot-actions .slide-move svg{width:16px;height:16px}

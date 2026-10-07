@@ -190,6 +190,7 @@ export function Sidebar() {
             className={`nav-button ${activeView === v ? 'active' : ''}`}
             onClick={() => { playTick(); go(v) }}
             title={t}
+            data-label={t}
             aria-label={t}
             aria-current={activeView === v ? 'page' : undefined}
           >

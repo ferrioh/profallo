@@ -1203,5 +1203,5 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .simple-access .simple-access-primary svg{width:18px;height:18px}
 /* Barra del navegador con GlassSurface (vidrio liquido real) */
 .sidebar{background:transparent!important}
-.sidebar-glass{position:absolute;inset:0;z-index:0;border-radius:inherit!important;pointer-events:none}
+.sidebar-glass{position:absolute!important;inset:0;width:100%;height:100%;z-index:0;border-radius:inherit!important;pointer-events:none}
 .sidebar > *:not(.sidebar-glass){position:relative;z-index:1}

@@ -348,7 +348,7 @@ export function SessionFormModal({ id, date }: { id?: string; date?: string }) {
         value={s?.date ?? date ?? ui.calendarDate}
         required
       />
-      <div><label>Hora</label><input type="hidden" name="time" value={sessionTime} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker('clock')}><Icon name="clock" />{new Intl.DateTimeFormat('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true }).format(new Date(`2000-01-01T${sessionTime}:00`))}<Icon name="chevron" /></button></div>
+      <div><label>Hora</label><input type="time" name="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)} required /></div>
       <div><label>Duración</label><input type="hidden" name="duration" value={sessionDuration} /><button className="time-picker-trigger" type="button" onClick={() => setTimePicker('duration')}><Icon name="clock" />{sessionDuration} min<Icon name="chevron" /></button></div>
       <SelectField name="status" label="Estado" value={s?.status ?? 'Programada'}>
         {SESSION_STATUSES.map((x) => (

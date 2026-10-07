@@ -17,6 +17,7 @@ export function useAutoScroll(speed = 0.03, loop = true) {
     let raf = 0
     let last = performance.now()
     let pos = el.scrollLeft
+    let paused = false
     let dragging = false
     let startX = 0
     let startPos = 0
@@ -39,7 +40,7 @@ export function useAutoScroll(speed = 0.03, loop = true) {
     const tick = (now: number) => {
       const dt = Math.min(64, now - last)
       last = now
-      if (!dragging) {
+      if (!paused) {
         if (Math.abs(velocity) > speed) {
           pos = wrap(pos + velocity * dt)
           velocity *= 0.94
@@ -54,16 +55,23 @@ export function useAutoScroll(speed = 0.03, loop = true) {
     raf = requestAnimationFrame(tick)
 
     const down = (e: PointerEvent) => {
-      dragging = true
+      // Pausa el auto-deslizamiento, pero NO capturamos el puntero todavía:
+      // así un clic normal (sin arrastrar) llega a la ficha.
+      paused = true
+      dragging = false
       startX = e.clientX
       startPos = el.scrollLeft
       pos = el.scrollLeft
       velocity = 0
       prevX = e.clientX
       prevT = performance.now()
-      try { el.setPointerCapture(e.pointerId) } catch { /* ignore */ }
     }
     const move = (e: PointerEvent) => {
+      if (!paused) return
+      if (!dragging && Math.abs(e.clientX - startX) > 6) {
+        dragging = true
+        try { el.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+      }
       if (!dragging) return
       pos = wrap(startPos - (e.clientX - startX))
       el.scrollLeft = pos
@@ -74,6 +82,7 @@ export function useAutoScroll(speed = 0.03, loop = true) {
       prevT = t
     }
     const up = () => {
+      paused = false
       if (!dragging) return
       dragging = false
       velocity = Math.max(-3, Math.min(3, velocity))

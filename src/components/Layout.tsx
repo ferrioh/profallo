@@ -94,6 +94,8 @@ export function Sidebar() {
     })
   }
   function onNavDown(e: ReactPointerEvent<HTMLElement>) {
+    // El arrastre del píldora es solo para móvil; en escritorio no interferimos con el clic.
+    if (!window.matchMedia('(max-width:560px)').matches) return
     dragRef.current = { startX: e.clientX, target: navIndex() }
     setDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)

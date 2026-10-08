@@ -20,7 +20,6 @@ export function CalendarPage() {
   const dayClients = new Set(daySessions.map(s => s.client)).size
   const monthTitle = longDate(`${ui.calendarMonth}-01`, { month: 'long', year: 'numeric' })
   const dayTitle = longDate(ui.calendarDate, {weekday: 'long', day: 'numeric', month: 'long'})
-  const isPastDay = ui.calendarDate < TODAY
 
   const changeMonth = (n: number) => {
     const d = parseDate(`${ui.calendarMonth}-01`)
@@ -94,8 +93,7 @@ export function CalendarPage() {
                   />
                 )
               const day = `${ui.calendarMonth}-${String(n).padStart(2, '0')}`
-              if (day < TODAY)
-                return <div className="month-cell empty" aria-hidden="true" key={day} />
+              const isPast = day < TODAY
               const ses = data.sessions.filter(
                 (s) => s.date === day && s.status !== 'Cancelada',
               )
@@ -110,7 +108,7 @@ export function CalendarPage() {
                   aria-pressed={day === ui.calendarDate}
                 >
                   <strong>{n}</strong>
-                  {ses.length ? <span className="calendar-day-dots" aria-hidden="true"><i className="session-dot" /></span> : null}
+                  {!isPast && ses.length ? <span className="calendar-day-dots" aria-hidden="true"><i className="session-dot" /></span> : null}
                 </button>
               )
             })}
@@ -121,23 +119,19 @@ export function CalendarPage() {
           <span className="eyebrow">AGENDA DEL DÍA</span>
           <h2>{dayTitle.charAt(0).toUpperCase() + dayTitle.slice(1)}</h2>
           <div className="calendar-day-stats" aria-label="Resumen del día">
-            <div><Icon name="calendar" /><strong>{isPastDay ? 0 : daySessions.length}</strong><span>Sesiones</span></div>
-            <div><Icon name="users" /><strong>{isPastDay ? 0 : dayClients}</strong><span>Clientes</span></div>
+            <div><Icon name="calendar" /><strong>{daySessions.length}</strong><span>Sesiones</span></div>
+            <div><Icon name="users" /><strong>{dayClients}</strong><span>Clientes</span></div>
           </div>
           <div style={{ marginTop: 18 }}>
-            {isPastDay ? (
-              <div className="empty-state">Los días pasados ya no se muestran.</div>
-            ) : (
-              <Agenda
-                day={ui.calendarDate}
-                data={data}
-                money={money}
-                onOpen={(kind, id) => {
-                  if (kind === 'payment') actions.editPayment(id)
-                  else actions.focusSession(id)
-                }}
-              />
-            )}
+            <Agenda
+              day={ui.calendarDate}
+              data={data}
+              money={money}
+              onOpen={(kind, id) => {
+                if (kind === 'payment') actions.editPayment(id)
+                else actions.focusSession(id)
+              }}
+            />
           </div>
           <button
             className="button dark"

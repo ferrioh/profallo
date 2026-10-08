@@ -72,6 +72,9 @@ export function ClientProfilePage() {
   const attendance = progressFor(data, client.id)
   const pastSessions = sessions.filter(s => s.date <= TODAY)
   const upcoming = sessions.filter(s => s.date >= TODAY)
+  const history = data.sessions
+    .filter(s => s.client === client.id)
+    .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
   const training = pastSessions.length ? Math.round(completed.length / pastSessions.length * 100) : 0
   const paymentRate = payments.length ? Math.round(paid.length / payments.length * 100) : 0
   const activeClient = client
@@ -135,6 +138,23 @@ export function ClientProfilePage() {
     <div className="client-profile-grid">
       <section className="profile-dark-card tone-white reveal"><div className="section-line"><div><span className="eyebrow">EVOLUCIÓN</span><h2>Mediciones</h2></div><button className="button small" onClick={() => { patchUi({ progressClient: client.id }); actions.newMeasurement() }}>Añadir medición</button></div>{measurements.slice(0,4).map(m => <div className="profile-row" key={m.id}><span>{longDate(m.date)}</span><b>{m.weight} kg</b><button onClick={() => actions.editMeasurement(m.id)}>Editar</button></div>)}{!measurements.length && <p>El progreso aparecerá después de la primera medición.</p>}</section>
     </div>
+    <section className="profile-dark-card reveal">
+      <div className="section-line"><div><span className="eyebrow">HISTORIAL</span><h2>Lo que le has mandado y ha hecho</h2></div></div>
+      {history.length ? history.slice(0, 40).map((s) => {
+        const sr = findRoutine(data, s.routine)
+        const cls = s.status === 'Completada' ? 'done' : s.status === 'Cancelada' ? 'off' : 'pending'
+        return (
+          <div className="history-row" key={s.id}>
+            <span className="history-date">{longDate(s.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+            <span className="history-main">
+              <b>{sr?.name || s.title || 'Entrenamiento'}</b>
+              {s.notes ? <small>{s.notes}</small> : null}
+            </span>
+            <small className={`history-status ${cls}`}>{s.status}</small>
+          </div>
+        )
+      }) : <p>Aún no hay historial de entrenamientos.</p>}
+    </section>
     <section className="profile-dark-card reveal"><span className="eyebrow">INFORMACIÓN Y NOTAS</span><p>{client.notes || 'Sin observaciones.'}</p><div className="client-contact"><span>{client.idNumber ? `Cédula ${client.idNumber}` : 'Sin cédula'}</span><span>{client.email || 'Sin correo'}</span><span>{client.phone || 'Sin teléfono'}</span><span>Plan {client.plan} · {money(client.fee)} {client.frequency === 'quincenal' ? 'quincenal' : 'al mes'}</span>{client.joined ? <span className="client-since"><Icon name="calendar" /> Desde {longDate(client.joined, { day: 'numeric', month: 'short', year: 'numeric' })}</span> : null}</div></section>
 
     {shareCode ? createPortal(

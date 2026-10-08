@@ -1229,3 +1229,16 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .client-list-item{position:relative}
 .client-list-item .cli-drag{position:relative;top:auto;left:auto;flex:none;width:30px;height:30px;background:#00000038;color:#a8adb0}
 .client-card.dragging,.client-list-item.dragging{opacity:.92;box-shadow:0 24px 60px #000000a6,0 0 0 2px #d2ff6266;z-index:6}
+
+/* Historial del cliente */
+.history-row{display:grid;grid-template-columns:112px 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid #ffffff14}
+.history-row:first-of-type{border-top:0}
+.history-date{color:#9aa0a6;font-size:12px;font-weight:600;text-transform:capitalize}
+.history-main{min-width:0;display:grid;gap:2px}
+.history-main b{color:#fff;font-size:14px}
+.history-main small{color:#a8adb0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-status{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;justify-self:end}
+.history-status.done{background:#d2ff6222;color:#d2ff62}
+.history-status.pending{background:#ffffff14;color:#cbd0d3}
+.history-status.off{background:#ff9a8a1f;color:#ff9a8a}
+@media(max-width:480px){.history-row{grid-template-columns:1fr auto}.history-date{grid-column:1/-1}}

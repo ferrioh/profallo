@@ -1242,3 +1242,6 @@ main,.overview-stage,.modern-grid,.focus-stack,.dashboard-home,.home-overview,.a
 .history-status.pending{background:#ffffff14;color:#cbd0d3}
 .history-status.off{background:#ff9a8a1f;color:#ff9a8a}
 @media(max-width:480px){.history-row{grid-template-columns:1fr auto}.history-date{grid-column:1/-1}}
+
+.history-modal-body{padding:8px 16px 14px}
+.history-modal-body .history-row:first-of-type{border-top:0}

@@ -43,6 +43,7 @@ export function ClientProfilePage() {
   const [metric, setMetric] = useState<MetricKey>('weight')
   const [openSession, setOpenSession] = useState<string | null>(ui.focusSession || null)
   const [shareCode, setShareCode] = useState<string | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
   useReveal(ui.selectedClient)
   useEffect(() => {
     if (ui.focusSession) setOpenSession(ui.focusSession)
@@ -124,6 +125,7 @@ export function ClientProfilePage() {
     </header>
     <div className="client-profile-actions reveal">
       <button className="button" onClick={shareFicha}><Icon name="share" /> Compartir semana del cliente</button>
+      <button className="button" onClick={() => setHistoryOpen(true)}><Icon name="clock" /> Historial</button>
     </div>
     <div className="client-visual-dashboard reveal">
       <section className="client-visual-card daily-card"><div className="visual-card-top"><span>Actividad del cliente</span><small>Progreso registrado</small></div><div className="daily-card-content"><div className="activity-metrics"><div><span>Asistencia</span><strong>{attendance}<small>%</small></strong><small>{completed.length} sesiones realizadas</small></div><div><span>Entrenamientos</span><strong>{completed.length}<small> / {pastSessions.length}</small></strong><small>{training}% completados</small></div><div><span>Pagos</span><strong>{paid.length}<small> / {payments.length}</small></strong><small>{paymentRate}% realizados</small></div></div><ActivityRings attendance={attendance} training={training} payments={paymentRate} /></div><div className="ring-legend"><span><i /> Asistencia</span><span><i /> Entrenamientos</span><span><i /> Pagos</span></div></section>
@@ -138,23 +140,6 @@ export function ClientProfilePage() {
     <div className="client-profile-grid">
       <section className="profile-dark-card tone-white reveal"><div className="section-line"><div><span className="eyebrow">EVOLUCIÓN</span><h2>Mediciones</h2></div><button className="button small" onClick={() => { patchUi({ progressClient: client.id }); actions.newMeasurement() }}>Añadir medición</button></div>{measurements.slice(0,4).map(m => <div className="profile-row" key={m.id}><span>{longDate(m.date)}</span><b>{m.weight} kg</b><button onClick={() => actions.editMeasurement(m.id)}>Editar</button></div>)}{!measurements.length && <p>El progreso aparecerá después de la primera medición.</p>}</section>
     </div>
-    <section className="profile-dark-card reveal">
-      <div className="section-line"><div><span className="eyebrow">HISTORIAL</span><h2>Lo que le has mandado y ha hecho</h2></div></div>
-      {history.length ? history.slice(0, 40).map((s) => {
-        const sr = findRoutine(data, s.routine)
-        const cls = s.status === 'Completada' ? 'done' : s.status === 'Cancelada' ? 'off' : 'pending'
-        return (
-          <div className="history-row" key={s.id}>
-            <span className="history-date">{longDate(s.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-            <span className="history-main">
-              <b>{sr?.name || s.title || 'Entrenamiento'}</b>
-              {s.notes ? <small>{s.notes}</small> : null}
-            </span>
-            <small className={`history-status ${cls}`}>{s.status}</small>
-          </div>
-        )
-      }) : <p>Aún no hay historial de entrenamientos.</p>}
-    </section>
     <section className="profile-dark-card reveal"><span className="eyebrow">INFORMACIÓN Y NOTAS</span><p>{client.notes || 'Sin observaciones.'}</p><div className="client-contact"><span>{client.idNumber ? `Cédula ${client.idNumber}` : 'Sin cédula'}</span><span>{client.email || 'Sin correo'}</span><span>{client.phone || 'Sin teléfono'}</span><span>Plan {client.plan} · {money(client.fee)} {client.frequency === 'quincenal' ? 'quincenal' : 'al mes'}</span>{client.joined ? <span className="client-since"><Icon name="calendar" /> Desde {longDate(client.joined, { day: 'numeric', month: 'short', year: 'numeric' })}</span> : null}</div></section>
 
     {shareCode ? createPortal(
@@ -169,6 +154,34 @@ export function ClientProfilePage() {
             <button className="button primary" type="button" onClick={() => doShare(`${location.origin}/c/${shareCode}`)}>
               <Icon name="share" /> Compartir
             </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    ) : null}
+
+    {historyOpen ? createPortal(
+      <div className="share-modal-backdrop" onClick={() => setHistoryOpen(false)}>
+        <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="share-modal-head">Historial · {client.name}</div>
+          <div className="share-modal-body history-modal-body">
+            {history.length ? history.map((s) => {
+              const sr = findRoutine(data, s.routine)
+              const cls = s.status === 'Completada' ? 'done' : s.status === 'Cancelada' ? 'off' : 'pending'
+              return (
+                <div className="history-row" key={s.id}>
+                  <span className="history-date">{longDate(s.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                  <span className="history-main">
+                    <b>{sr?.name || s.title || 'Entrenamiento'}</b>
+                    {s.notes ? <small>{s.notes}</small> : null}
+                  </span>
+                  <small className={`history-status ${cls}`}>{s.status}</small>
+                </div>
+              )
+            }) : <p className="visual-empty">Aún no hay historial de entrenamientos.</p>}
+          </div>
+          <div className="share-modal-foot">
+            <button className="button light" type="button" onClick={() => setHistoryOpen(false)}>Cerrar</button>
           </div>
         </div>
       </div>,

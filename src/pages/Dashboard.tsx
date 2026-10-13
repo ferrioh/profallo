@@ -287,7 +287,7 @@ export function Dashboard() {
             <Icon name="tiktok" />
           </a>
         </div>
-        <p className="profile-copyright">© Profallo by Ferrioh 2026</p>
+        <p className="profile-copyright">© Profallo 2026</p>
       </footer>
     </div>
   )

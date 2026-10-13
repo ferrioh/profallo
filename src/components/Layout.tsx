@@ -7,7 +7,6 @@ import { currentAccount, useAuthVersion } from '../lib/auth'
 import { cloudSignOut } from '../lib/cloud'
 import { buildNotifications, notificationStateOf } from '../lib/notifications'
 import { cloudSubscribeAdminMessages, cloudMyAdminMessages, type AdminMessage } from '../lib/cloud'
-import { playTick } from '../lib/sound'
 import GlassSurface from './GlassSurface'
 
 export const NAV: Array<[View, string, IconName]> = [
@@ -126,7 +125,6 @@ export function Sidebar() {
       if (el) setPill({ left: el.offsetLeft + 3, width: Math.max(0, el.offsetWidth - 6), ready: true })
       const v = NAV[target]?.[0]
       if (v && v !== activeView) {
-        playTick()
         go(v)
       }
     }
@@ -190,7 +188,7 @@ export function Sidebar() {
           <button
             key={v}
             className={`nav-button ${activeView === v ? 'active' : ''}`}
-            onClick={() => { playTick(); go(v) }}
+            onClick={() => go(v)}
             title={t}
             data-label={t}
             aria-label={t}

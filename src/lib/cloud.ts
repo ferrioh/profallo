@@ -414,14 +414,45 @@ export async function loadCloudData(userId: string, base: Profile): Promise<AppD
   }
 }
 
+const MISSING_COLUMN_PATTERNS = [
+  /Could not find the '([^']+)' column/i,
+  /column "([^"]+)" of relation/i,
+  /column '([^']+)' does not exist/i,
+  /column "([^"]+)" does not exist/i,
+]
+
+/** Columnas que PostgREST/Postgres reportan como inexistentes en el esquema. */
+function missingColumns(message: string): string[] {
+  const found = new Set<string>()
+  for (const re of MISSING_COLUMN_PATTERNS) {
+    const m = message.match(re)
+    if (m) found.add(m[1])
+  }
+  return [...found]
+}
+
 async function syncTable(table: string, _trainerId: string, rows: Row[]): Promise<boolean> {
   if (!supabase) return false
   // Upsert únicamente: NUNCA borramos datos de la nube automáticamente
   // (evita perder clientes/rutinas si el estado local llega incompleto).
   if (!rows.length) return true
-  const { error } = await supabase.from(table).upsert(rows)
-  if (error) console.error(`[profallo] fallo al guardar ${table}:`, error.message)
-  return !error
+  let pending = rows
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const { error } = await supabase.from(table).upsert(pending)
+    if (!error) return true
+    // Si a la base le faltan columnas nuevas, las quitamos y reintentamos.
+    const cols = missingColumns(error.message).filter((c) => pending.some((r) => c in r))
+    if (!cols.length) {
+      console.error(`[profallo] fallo al guardar ${table}:`, error.message)
+      return false
+    }
+    pending = pending.map((r) => {
+      const copy = { ...r }
+      for (const c of cols) delete copy[c]
+      return copy
+    })
+  }
+  return false
 }
 
 export async function saveCloudData(userId: string, data: AppData): Promise<string | null> {
@@ -429,29 +460,32 @@ export async function saveCloudData(userId: string, data: AppData): Promise<stri
   const row = profileToRow(data.profile, userId)
   row.notification_state = data.notificationState ?? {}
   row.data_updated_at = new Date().toISOString()
-  let prof = await supabase.from('profiles').upsert(row)
-  if (prof.error && /username|profiles_.*idx/i.test(prof.error.message)) {
-    // Choque de nombre de usuario único: guarda el resto sin username y avisa.
-    const free = { ...row, username: null }
-    const r2 = await supabase.from('profiles').upsert(free)
-    if (!r2.error) return 'USERNAME'
-  }
-  if (prof.error && /email/i.test(prof.error.message)) {
-    // Choque de correo único: reintenta sin tocar el email (no bloquea la foto, etc.).
-    const noEmail = { ...row }
-    delete noEmail.email
-    prof = await supabase.from('profiles').upsert(noEmail)
-  }
-  if (prof.error) {
-    // Reintento sin columnas opcionales (por si la base aún no tiene tiktok/bio/accent/reviews/etc.).
-    const safe = { ...row }
-    delete safe.tiktok
-    delete safe.bio
-    delete safe.accent
-    delete safe.reviews
-    delete safe.notification_state
-    delete safe.data_updated_at
-    prof = await supabase.from('profiles').upsert(safe)
+  let current: Row = { ...row }
+  let prof = await supabase.from('profiles').upsert(current)
+  for (let attempt = 0; prof.error && attempt < 20; attempt++) {
+    const message = prof.error.message
+    // Esquema incompleto: quita las columnas que no existen y reintenta.
+    const cols = missingColumns(message).filter((c) => c in current)
+    if (cols.length) {
+      for (const c of cols) delete current[c]
+      prof = await supabase.from('profiles').upsert(current)
+      continue
+    }
+    if (/email/i.test(message) && 'email' in current) {
+      // Choque de correo único: reintenta sin tocar el email (no bloquea la foto, etc.).
+      delete current.email
+      prof = await supabase.from('profiles').upsert(current)
+      continue
+    }
+    if (/username|profiles_.*idx/i.test(message) && current.username != null) {
+      // Choque de nombre de usuario único: guarda el resto sin username y avisa.
+      current = { ...current, username: null }
+      const r2 = await supabase.from('profiles').upsert(current)
+      if (!r2.error) return 'USERNAME'
+      prof = r2
+      continue
+    }
+    break
   }
   if (prof.error) {
     console.error('[profallo] fallo al guardar el perfil:', prof.error.message)

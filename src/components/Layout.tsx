@@ -44,8 +44,8 @@ export function Verified() {
   )
 }
 
-const PILL_MIN_WIDTH = 70
-const PILL_EXTRA = 26
+const PILL_MIN_WIDTH = 66
+const PILL_EXTRA = 18
 
 export function Sidebar() {
   const { data, view, go, stats, leave, cloudEnabled, cloudProfile } = useApp()
@@ -68,12 +68,11 @@ export function Sidebar() {
     return nav ? Array.from(nav.querySelectorAll<HTMLElement>('.nav-button')) : []
   }
   function pillFor(el: HTMLElement) {
+    const nav = navRef.current
     const width = Math.max(PILL_MIN_WIDTH, el.offsetWidth + PILL_EXTRA)
-    return {
-      left: el.offsetLeft + el.offsetWidth / 2 - width / 2,
-      width,
-      ready: true,
-    }
+    const raw = el.offsetLeft + el.offsetWidth / 2 - width / 2
+    const left = nav ? Math.max(0, Math.min(raw, nav.clientWidth - width)) : raw
+    return { left, width, ready: true }
   }
   function nearestIndex(clientX: number) {
     const btns = navButtons()
@@ -114,10 +113,16 @@ export function Sidebar() {
     // Magnificación tipo Dock (también al pasar el mouse, sin arrastrar).
     dockBump(e.clientX, e.clientY)
     if (!dragRef.current) return
-    // Movilidad libre: el píldora sigue el dedo sin saltos.
+    // Movilidad libre: el óvalo sigue el dedo sin salirse del dock.
     const d = e.clientX - dragRef.current.startX
-    const w = navRef.current?.clientWidth ?? 320
-    setDragDx(Math.max(-w, Math.min(w, d)))
+    const nav = navRef.current
+    if (nav) {
+      const minDx = -pill.left
+      const maxDx = nav.clientWidth - pill.left - pill.width
+      setDragDx(Math.max(minDx, Math.min(maxDx, d)))
+    } else {
+      setDragDx(d)
+    }
     // Tracker: recuerda el botón más cercano para dejarlo ahí al soltar.
     dragRef.current.target = nearestIndex(e.clientX)
   }

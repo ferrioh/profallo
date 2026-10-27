@@ -44,7 +44,8 @@ export function Verified() {
   )
 }
 
-const PILL_SIZE = 54
+const PILL_MIN_WIDTH = 70
+const PILL_EXTRA = 26
 
 export function Sidebar() {
   const { data, view, go, stats, leave, cloudEnabled, cloudProfile } = useApp()
@@ -67,9 +68,10 @@ export function Sidebar() {
     return nav ? Array.from(nav.querySelectorAll<HTMLElement>('.nav-button')) : []
   }
   function pillFor(el: HTMLElement) {
+    const width = Math.max(PILL_MIN_WIDTH, el.offsetWidth + PILL_EXTRA)
     return {
-      left: el.offsetLeft + el.offsetWidth / 2 - PILL_SIZE / 2,
-      width: PILL_SIZE,
+      left: el.offsetLeft + el.offsetWidth / 2 - width / 2,
+      width,
       ready: true,
     }
   }

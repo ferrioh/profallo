@@ -707,20 +707,21 @@ dialog.app-sheet{max-width:none}
 .wide-track i{transform-origin:left;animation:barIn .8s cubic-bezier(.22,1,.36,1) both}
 @media(max-width:560px){
   #nav{position:relative;touch-action:pan-y}
-  #nav .nav-pill{display:block;position:absolute;top:50%;transform:translateY(-50%);height:54px;width:54px;border-radius:50%;background:var(--lime);box-shadow:0 10px 22px #d2ff6240;transition:left .3s cubic-bezier(.4,0,.2,1),width .3s cubic-bezier(.4,0,.2,1),opacity .2s ease,transform .3s cubic-bezier(.4,0,.2,1);z-index:0;pointer-events:none}
-  #nav .nav-button{position:relative;z-index:1}
+  #nav .nav-pill{display:block;position:absolute;top:50%;transform:translateY(-50%);height:58px;width:70px;border-radius:999px;background:#ffffff1f;box-shadow:0 8px 18px #00000038;transition:left .3s cubic-bezier(.4,0,.2,1),width .3s cubic-bezier(.4,0,.2,1),opacity .2s ease,transform .3s cubic-bezier(.4,0,.2,1);z-index:0;pointer-events:none}
+  #nav .nav-button{position:relative;z-index:1;min-height:52px}
   #nav .nav-button span{display:none}
-  #nav .nav-button.active{background:transparent;color:#18290d}
+  #nav .nav-button.active{background:transparent;color:#fff}
   /* Dock: los iconos se agrandan y se levantan cerca de la bolita */
   #nav .nav-button{transform:translateY(calc((var(--s,1) - 1) * -16px)) scale(var(--s,1))!important;transform-origin:center bottom;transition:transform .22s cubic-bezier(.34,1.56,.64,1)!important;will-change:transform}
-  /* Bolita en verde del layout */
+  /* Óvalo translúcido de selección, estilo dock */
   #nav .nav-pill{
-    background:radial-gradient(circle at 32% 26%,#f4ffd6 0%,#dcff7a 32%,#d2ff62 52%,#a6dc3d 78%,#78a828 100%);
-    box-shadow:0 12px 24px #d2ff624d,0 4px 10px #00000021,inset 0 2px 4px #ffffffd9,inset 0 -5px 10px #5f8a1c59;
-    border:1px solid #ffffff5c;
+    background:linear-gradient(180deg,#ffffff2e 0%,#ffffff17 48%,#ffffff0d 100%);
+    border:1px solid #ffffff1f;
+    box-shadow:0 10px 22px #00000038,inset 0 1px 0 #ffffff2e;
+    -webkit-backdrop-filter:blur(10px) saturate(1.25);
+    backdrop-filter:blur(10px) saturate(1.25);
   }
-  #nav .nav-pill::before{content:'';position:absolute;left:24%;bottom:11%;width:52%;height:16%;border-radius:50%;background:radial-gradient(circle,#6d9b2359,#6d9b2300 70%);filter:blur(2px);pointer-events:none}
-  #nav .nav-pill::after{content:'';position:absolute;left:20%;top:13%;width:34%;height:27%;border-radius:50%;background:radial-gradient(circle,#ffffffd9 0%,#ffffff66 45%,#ffffff00 72%);filter:blur(.5px);pointer-events:none}
+  #nav .nav-pill::after{content:'';position:absolute;inset:1px;border-radius:inherit;background:linear-gradient(180deg,#ffffff1f,#ffffff00 52%);pointer-events:none}
   @media(prefers-reduced-motion:reduce){#nav .nav-button{transition:none}}
 }
 /* Notificaciones */

@@ -44,6 +44,8 @@ export function Verified() {
   )
 }
 
+const PILL_SIZE = 54
+
 export function Sidebar() {
   const { data, view, go, stats, leave, cloudEnabled, cloudProfile } = useApp()
   useAuthVersion()
@@ -63,6 +65,13 @@ export function Sidebar() {
   function navButtons() {
     const nav = navRef.current
     return nav ? Array.from(nav.querySelectorAll<HTMLElement>('.nav-button')) : []
+  }
+  function pillFor(el: HTMLElement) {
+    return {
+      left: el.offsetLeft + el.offsetWidth / 2 - PILL_SIZE / 2,
+      width: PILL_SIZE,
+      ready: true,
+    }
   }
   function nearestIndex(clientX: number) {
     const btns = navButtons()
@@ -122,7 +131,7 @@ export function Sidebar() {
     setDragDx(0)
     if (target != null) {
       const el = navButtons()[target]
-      if (el) setPill({ left: el.offsetLeft + 3, width: Math.max(0, el.offsetWidth - 6), ready: true })
+      if (el) setPill(pillFor(el))
       const v = NAV[target]?.[0]
       if (v && v !== activeView) {
         go(v)
@@ -140,7 +149,7 @@ export function Sidebar() {
         setPill((p) => ({ ...p, ready: false }))
         return
       }
-      setPill({ left: el.offsetLeft + 3, width: Math.max(0, el.offsetWidth - 6), ready: true })
+      setPill(pillFor(el))
     }
     update()
     window.addEventListener('resize', update)
